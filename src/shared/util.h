@@ -39,6 +39,8 @@
 #include <unistd.h>
 #include <locale.h>
 
+#include <pthread_np.h>
+
 #include "macro.h"
 #include "time-util.h"
 
@@ -137,7 +139,6 @@ bool streq_ptr(const char *a, const char *b) _pure_;
 #define malloc0(n) (calloc((n), 1))
 
 typedef int(* __compar_fn_t)(const void *, const void *); /* here for non-glibc compatibility */
-typedef cpu_set_t cpuset_t /* FreeBSD compatibility */
 
 static inline const char* yes_no(bool b) {
         return b ? "yes" : "no";
@@ -417,7 +418,7 @@ int rm_rf_dangerous(const char *path, bool only_dirs, bool delete_root, bool hon
 
 int pipe_eof(int fd);
 
-cpu_set_t* cpu_set_malloc(unsigned *ncpus);
+cpuset_t* cpu_set_malloc(unsigned *ncpus); /* cpuset_t instead of cpu_set_t */
 
 int status_vprintf(const char *status, bool ellipse, bool ephemeral, const char *format, va_list ap) _printf_attr_(4,0);
 int status_printf(const char *status, bool ellipse, bool ephemeral, const char *format, ...) _printf_attr_(4,5);
