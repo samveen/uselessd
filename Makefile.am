@@ -247,10 +247,6 @@ AM_V_XSLT = $(AM_V_XSLT_$(V))
 AM_V_XSLT_ = $(AM_V_XSLT_$(AM_DEFAULT_VERBOSITY))
 AM_V_XSLT_0 = @echo "  XSLT    " $@;
 
-AM_V_GPERF = $(AM_V_GPERF_$(V))
-AM_V_GPERF_ = $(AM_V_GPERF_$(AM_DEFAULT_VERBOSITY))
-AM_V_GPERF_0 = @echo "  GPERF   " $@;
-
 AM_V_LN = $(AM_V_LN_$(V))
 AM_V_LN_ = $(AM_V_LN_$(AM_DEFAULT_VERBOSITY))
 AM_V_LN_0 = @echo "  LN      " $@;
@@ -926,12 +922,6 @@ libsystemd_core_la_SOURCES += \
 	src/core/kmod-setup.h
 endif
 
-nodist_libsystemd_core_la_SOURCES = \
-	src/core/load-fragment-gperf.c \
-	src/core/load-fragment-gperf-nulstr.c \
-	src/core/syscall-from-name.h \
-	src/core/syscall-to-name.h
-
 libsystemd_core_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(DBUS_CFLAGS) \
@@ -953,40 +943,6 @@ libsystemd_core_la_LIBADD = \
 	$(AUDIT_LIBS) \
 	$(CAP_LIBS) \
 	$(KMOD_LIBS)
-
-src/core/load-fragment-gperf-nulstr.c: src/core/load-fragment-gperf.gperf
-	$(AM_V_at)$(MKDIR_P) $(dir $@)
-	$(AM_V_GEN)$(AWK) 'BEGIN{ keywords=0 ; FS="," ; print "extern const char load_fragment_gperf_nulstr[];" ; print "const char load_fragment_gperf_nulstr[] ="} ; keyword==1 { print "\"" $$1 "\\0\"" } ; /%%/ { keyword=1} ; END { print ";" }' < $< > $@
-
-EXTRA_DIST += \
-	src/core/load-fragment-gperf.gperf.m4
-
-CLEANFILES += \
-	src/core/load-fragment-gperf.gperf \
-	src/core/load-fragment-gperf.c \
-	src/core/load-fragment-gperf-nulstr.c \
-	src/core/syscall-list.txt \
-	src/core/syscall-from-name.gperf
-
-BUILT_SOURCES += \
-	src/core/syscall-from-name.h \
-	src/core/syscall-to-name.h
-
-src/core/syscall-list.txt: Makefile
-	$(AM_V_at)$(MKDIR_P) $(dir $@)
-	$(AM_V_GEN)$(CPP) $(CFLAGS) $(AM_CPPFLAGS) $(CPPFLAGS) -dM -include sys/syscall.h - < /dev/null | $(AWK) '/^#define[ \t]+__NR_[^ ]+[ \t]+[0-9(]/ { sub(/__NR_/, "", $$2); if ($$2 !~ /SYSCALL_BASE/) print $$2; }' > $@
-
-src/core/syscall-from-name.gperf: src/core/syscall-list.txt Makefile
-	$(AM_V_at)$(MKDIR_P) $(dir $@)
-	$(AM_V_GEN)$(AWK) 'BEGIN{ print "struct syscall_name { const char* name; int id; };"; print "%null-strings"; print "%%";} { printf "%s, __NR_%s\n", $$1, $$1 }' < $< > $@
-
-src/core/syscall-from-name.h: src/core/syscall-from-name.gperf Makefile
-	$(AM_V_at)$(MKDIR_P) $(dir $@)
-	$(AM_V_GPERF)$(GPERF) -L ANSI-C -t --ignore-case -N lookup_syscall -H hash_syscall_name -p -C < $< > $@
-
-src/core/syscall-to-name.h: src/core/syscall-list.txt Makefile
-	$(AM_V_at)$(MKDIR_P) $(dir $@)
-	$(AM_V_GEN)$(AWK) 'BEGIN{ print "const char* const syscall_names[] = { "} { printf "[SYSCALL_TO_INDEX(__NR_%s)] = \"%s\",\n", $$1, $$1 } END{print "};"}' < $< > $@
 
 # ------------------------------------------------------------------------------
 systemd_SOURCES = \
@@ -2056,9 +2012,6 @@ libsystemd_journal_internal_la_LIBADD = \
 	libsystemd-shared.la \
 	libsystemd-label.la
 
-nodist_libsystemd_journal_internal_la_SOURCES = \
-	src/journal/journald-gperf.c
-
 if HAVE_ACL
 libsystemd_journal_internal_la_LIBADD += \
 	libsystemd-acl.la
@@ -2197,11 +2150,7 @@ EXTRA_DIST += \
 	src/journal/libsystemd-journal.pc.in \
 	src/journal/libsystemd-journal.sym \
 	units/systemd-journald.service.in \
-	units/systemd-journal-flush.service.in \
-	src/journal/journald-gperf.gperf
-
-CLEANFILES += \
-	src/journal/journald-gperf.c
+	units/systemd-journal-flush.service.in
 
 # ------------------------------------------------------------------------------
 if ENABLE_BINFMT
@@ -2372,10 +2321,6 @@ src/%.policy.in: src/%.policy.in.in Makefile
 %.sh: %.sh.in Makefile
 	$(SED_PROCESS)
 	$(AM_V_GEN)chmod +x $@
-
-src/%.c: src/%.gperf
-	$(AM_V_at)$(MKDIR_P) $(dir $@)
-	$(AM_V_GPERF)$(GPERF) < $< > $@
 
 src/%: src/%.m4
 	$(AM_V_at)$(MKDIR_P) $(dir $@)

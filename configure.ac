@@ -96,10 +96,6 @@ GOBJECT_INTROSPECTION_CHECK([1.31.1])
 
 AC_CHECK_TOOL(OBJCOPY, objcopy)
 AC_CHECK_TOOL(STRINGS, strings)
-AC_CHECK_TOOL(GPERF, gperf)
-if test -z "$GPERF" ; then
-        AC_MSG_ERROR([*** gperf not found])
-fi
 
 # ------------------------------------------------------------------------------
 address_sanitizer_cflags=
@@ -218,10 +214,6 @@ AC_CHECK_HEADERS([linux/btrfs.h], [], [])
 AC_SEARCH_LIBS([clock_gettime], [rt], [], [])
 
 save_LIBS="$LIBS"
-LIBS=
-AC_SEARCH_LIBS([cap_init], [cap], [], [AC_MSG_ERROR([*** POSIX caps library not found])])
-CAP_LIBS="$LIBS"
-AC_SUBST(CAP_LIBS)
 
 LIBS=
 AC_SEARCH_LIBS([mq_open], [rt], [], [AC_MSG_ERROR([*** POSIX RT library not found])])
