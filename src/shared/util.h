@@ -137,6 +137,7 @@ bool streq_ptr(const char *a, const char *b) _pure_;
 #define malloc0(n) (calloc((n), 1))
 
 typedef int(* __compar_fn_t)(const void *, const void *); /* here for non-glibc compatibility */
+typedef cpu_set_t cpuset_t /* FreeBSD compatibility */
 
 static inline const char* yes_no(bool b) {
         return b ? "yes" : "no";
