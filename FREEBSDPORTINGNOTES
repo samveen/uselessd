@@ -1,0 +1,3 @@
+bsd-devel branch
+
+disable libcap2 checks in configure.ac
