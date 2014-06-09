@@ -29,13 +29,13 @@
 #include <syslog.h>
 #include <sched.h>
 #include <sys/resource.h>
-#include <linux/sched.h>
+#include <sys/sched.h> /* FreeBSD */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <dirent.h>
 #include <sys/ioctl.h>
-#include <linux/vt.h>
+//#include <linux/vt.h>
 #include <linux/tiocl.h>
 #include <termios.h>
 #include <stdarg.h>
@@ -1606,6 +1606,7 @@ int chvt(int vt) {
         if (fd < 0)
                 return -errno;
 
+        /*
         if (vt < 0) {
                 int tiocl[2] = {
                         TIOCL_GETKMSGREDIRECT,
@@ -1621,7 +1622,8 @@ int chvt(int vt) {
         if (ioctl(fd, VT_ACTIVATE, vt) < 0)
                 return -errno;
 
-        return 0;
+        return 0; */
+        // TODO: Address in FreeBSD.
 }
 
 int read_one_char(FILE *f, char *ret, usec_t t, bool *need_nl) {
@@ -4031,7 +4033,7 @@ int vt_disallocate(const char *name) {
         if (fd < 0)
                 return fd;
 
-        r = ioctl(fd, VT_DISALLOCATE, u);
+        // r = ioctl(fd, VT_DISALLOCATE, u); /* Linux-specific, address later */
         close_nointr_nofail(fd);
 
         if (r >= 0)
