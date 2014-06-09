@@ -4550,16 +4550,16 @@ static const char *const log_level_table[] = {
 
 DEFINE_STRING_TABLE_LOOKUP_WITH_FALLBACK(log_level, int, LOG_DEBUG);
 
+/* Removed SCHED_IDLE and SCHED_BATCH: Linux-specific. */
 static const char* const sched_policy_table[] = {
         [SCHED_OTHER] = "other",
-        [SCHED_BATCH] = "batch",
-        [SCHED_IDLE] = "idle",
         [SCHED_FIFO] = "fifo",
         [SCHED_RR] = "rr"
 };
 
 DEFINE_STRING_TABLE_LOOKUP_WITH_FALLBACK(sched_policy, int, INT_MAX);
 
+/* Removed Linux-only rlimit values. */
 static const char* const rlimit_table[] = {
         [RLIMIT_CPU] = "LimitCPU",
         [RLIMIT_FSIZE] = "LimitFSIZE",
@@ -4571,11 +4571,6 @@ static const char* const rlimit_table[] = {
         [RLIMIT_AS] = "LimitAS",
         [RLIMIT_NPROC] = "LimitNPROC",
         [RLIMIT_MEMLOCK] = "LimitMEMLOCK",
-        [RLIMIT_LOCKS] = "LimitLOCKS",
-        [RLIMIT_SIGPENDING] = "LimitSIGPENDING",
-        [RLIMIT_MSGQUEUE] = "LimitMSGQUEUE",
-        [RLIMIT_NICE] = "LimitNICE",
-        [RLIMIT_RTPRIO] = "LimitRTPRIO",
         [RLIMIT_RTTIME] = "LimitRTTIME"
 };
 
