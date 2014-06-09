@@ -46,7 +46,7 @@
 //#include <sys/prctl.h>
 #include <sys/utsname.h>
 #include <pwd.h>
-#include <netinet/ip.h>
+//#include <netinet/ip.h>
 #include <linux/kd.h>
 #include <dlfcn.h>
 #include <sys/wait.h>
@@ -54,8 +54,8 @@
 #include <glob.h>
 #include <grp.h>
 #include <sys/mman.h>
-#include <sys/vfs.h>
-#include <linux/magic.h>
+#include <sys/mount.h> // was <sys/vfs.h> on Linux
+//#include <linux/magic.h>
 #include <limits.h>
 #include <langinfo.h>
 #include <locale.h>
@@ -74,6 +74,11 @@
 #include "env-util.h"
 #include "fileio.h"
 #include "device-nodes.h"
+
+/* Here temporarily to appease compiler
+ * for values used in is_temporary_fs() */
+#define TMPFS_MAGIC             0x01021994
+#define RAMFS_MAGIC             0x858458f6
 
 int saved_argc = 0;
 char **saved_argv = NULL;
