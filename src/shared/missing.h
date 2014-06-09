@@ -28,8 +28,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <linux/oom.h>
-#include <linux/input.h>
+//#include <linux/oom.h>
+//#include <linux/input.h>
 
 #ifdef HAVE_AUDIT
 #include <libaudit.h>
@@ -85,11 +85,12 @@
 #define IP_TRANSPARENT 19
 #endif
 
+/*
 #if !HAVE_DECL_PIVOT_ROOT
 static inline int pivot_root(const char *new_root, const char *put_old) {
         return syscall(SYS_pivot_root, new_root, put_old);
 }
-#endif
+#endif */
 
 #ifdef __x86_64__
 #  ifndef __NR_fanotify_init
@@ -130,11 +131,12 @@ static inline int pivot_root(const char *new_root, const char *put_old) {
 #  endif
 #endif
 
+/*
 #ifndef HAVE_FANOTIFY_INIT
 static inline int fanotify_init(unsigned int flags, unsigned int event_f_flags) {
         return syscall(__NR_fanotify_init, flags, event_f_flags);
 }
-#endif
+#endif */
 
 #ifndef HAVE_FANOTIFY_MARK
 static inline int fanotify_mark(int fanotify_fd, unsigned int flags, uint64_t mask,
@@ -224,11 +226,12 @@ struct btrfs_ioctl_fs_info_args {
 #define MS_PRIVATE  (1 << 18)
 #endif
 
+/*
 #if !HAVE_DECL_GETTID
 static inline pid_t gettid(void) {
         return (pid_t) syscall(SYS_gettid);
 }
-#endif
+#endif */
 
 #ifndef SCM_SECURITY
 #define SCM_SECURITY 0x03

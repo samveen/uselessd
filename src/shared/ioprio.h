@@ -44,6 +44,7 @@ enum {
         IOPRIO_WHO_USER,
 };
 
+/*
 static inline int ioprio_set(int which, int who, int ioprio)
 {
         return syscall(__NR_ioprio_set, which, who, ioprio);
@@ -52,6 +53,6 @@ static inline int ioprio_set(int which, int who, int ioprio)
 static inline int ioprio_get(int which, int who)
 {
         return syscall(__NR_ioprio_get, which, who);
-}
+}* until further notice... */
 
 #endif
