@@ -75,6 +75,15 @@
 #include "fileio.h"
 #include "device-nodes.h"
 
+/*
+ * Definitions for IP type of service (ip_tos).
+ * Taken from <netinet/ip.h>.
+ */
+#define	IPTOS_LOWDELAY		0x10
+#define	IPTOS_THROUGHPUT	0x08
+#define	IPTOS_RELIABILITY	0x04
+#define IPTOS_LOWCOST       0x02 /* IPTOS_MINCOST on *BSD */
+
 /* Here temporarily to appease compiler
  * for values used in is_temporary_fs() */
 #define TMPFS_MAGIC             0x01021994
@@ -2771,8 +2780,9 @@ int fchmod_and_fchown(int fd, mode_t mode, uid_t uid, gid_t gid) {
         return 0;
 }
 
-cpu_set_t* cpu_set_malloc(unsigned *ncpus) {
-        cpu_set_t *r;
+/* Changed cpu_set_t to cpuset_t. */
+cpuset_t* cpu_set_malloc(unsigned *ncpus) {
+        cpuset_t *r;
         unsigned n = 1024;
 
         /* Allocates the cpuset in the right size */
@@ -4580,6 +4590,7 @@ static const char* const ip_tos_table[] = {
 
 DEFINE_STRING_TABLE_LOOKUP_WITH_FALLBACK(ip_tos, int, 0xff);
 
+/* Excluding SIGPWR due to lack of it on non-Linux. */
 static const char *const __signal_table[] = {
         [SIGHUP] = "HUP",
         [SIGINT] = "INT",
@@ -4612,7 +4623,6 @@ static const char *const __signal_table[] = {
         [SIGPROF] = "PROF",
         [SIGWINCH] = "WINCH",
         [SIGIO] = "IO",
-        [SIGPWR] = "PWR",
         [SIGSYS] = "SYS"
 };
 
