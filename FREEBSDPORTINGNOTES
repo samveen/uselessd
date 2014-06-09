@@ -1,3 +1,89 @@
 bsd-devel branch
 
 disable libcap2 checks in configure.ac
+temporarily disabled gperf in build
+
+replaced type cpu_set_t with cpuset_t in src/shared/util.h
+replaced <linux/sched.h> with <sys/sched.h> in src/shared/util.c
+
+address lack of <linux/vt.h> in src/shared/util.c
+VT functions are used in vt_disallocate() and chvt(), which are then
+employed in src/core/main.c and src/core/execute.c, respectively.
+TODO: Replace them.
+
+address lack of <linux/tiocl.h> in src/shared/util.c (linux kernel vconsole defs)
+commented for now
+
+<sys/inotify.h> needs to be rm'd and/or replaced with kqueue() where applicable
+in util.c this is in acquire_terminal(), same function appears in tty-ask-password-agent
+and src/core/execute.c
+
+prctl() usage in util.c must be addressed
+
+temporarily commented out <netinet/ip.h>, will address exact issues as they come up later
+
+replaced <sys/vfs.h> with <sys/mount.h>
+
+temporarily placed (useless on FreeBSD) TMPFS and RAMFS magic values for is_temporary_fs() function
+in src/shared/util.c
+
+currently: src/shared/ioprio.h and src/shared/missing.h errors (__NR_ioprio_set, __NR_ioprio_get and
+<linux/oom.h>)
+used in src/core/execute.[ch], src/core/dbus-execute.c and src/core/load-fragment.c
+
+files modified:
+	src/shared/util.h
+	src/shared/util.c
+
+----------
+
+Partial list of Linux-specific interfaces in systemd:
+
+cgroups
+namespaces
+selinux
+autofs4
+capabilities
+udev
+oom score adjust
+RLIMIT_RTTIME
+RLIMIT_RTPRIO
+ionice
+SCHED_RESET_ON_FORK
+/proc/$PID/stat
+fanotify
+inotify
+TIOCVHANGUP
+IP_TRANSPORT
+audit
+F_SETPIPE_SZ
+CLONE_xxx
+BTRFS_IOC_DEFRAG
+PR_SET_NAME
+PR_CAPBSET_DROP
+PR_SET_PDEATHSIG
+PR_GET_SECUREBITS
+/proc/$PID/comm
+/proc/$PID/cmdline
+/proc/cmdline
+numerous GNU APIs like asprintf
+SOCK CLOEXEC, O CLOEXEC
+/proc/$PID/fd
+/dev/tty0
+TIOCLINUX
+VT_ACTIVATE
+TIOCNXCL
+KDSKBMODE
+/dev/random
+/dev/char/
+openat() and friends
+/proc/$PID/root
+waitid()
+/dev/disk/by-label/
+/dev/disk/by-uuid/
+/sys/class/tty/console/active
+/sys/class/dmi/id
+/proc/$PID/cgroup
+\033[3J
+/dev/rtc
+settimeofday() and its semantics
