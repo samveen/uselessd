@@ -47,7 +47,7 @@
 #include <sys/utsname.h>
 #include <pwd.h>
 //#include <netinet/ip.h>
-#include <linux/kd.h>
+//#include <linux/kd.h>
 #include <dlfcn.h>
 #include <sys/wait.h>
 #include <sys/time.h>
@@ -1774,7 +1774,8 @@ int reset_terminal_fd(int fd, bool switch_to_text) {
                 ioctl(fd, KDSETMODE, KD_TEXT);
 
         /* Enable console unicode mode */
-        ioctl(fd, KDSKBMODE, K_UNICODE);
+        //ioctl(fd, KDSKBMODE, K_UNICODE);
+        //Linux-specific, disable for now
 
         if (tcgetattr(fd, &termios) < 0) {
                 r = -errno;
@@ -1785,8 +1786,9 @@ int reset_terminal_fd(int fd, bool switch_to_text) {
          * hardware is set up we don't touch assuming that somebody
          * else will do that for us */
 
-        termios.c_iflag &= ~(IGNBRK | BRKINT | ISTRIP | INLCR | IGNCR | IUCLC);
-        termios.c_iflag |= ICRNL | IMAXBEL | IUTF8;
+		/* IUTF8 and IUCLC are Linux-only <termios.h> extensions, rm them. */
+        termios.c_iflag &= ~(IGNBRK | BRKINT | ISTRIP | INLCR | IGNCR);
+        termios.c_iflag |= ICRNL | IMAXBEL;
         termios.c_oflag |= ONLCR;
         termios.c_cflag |= CREAD;
         termios.c_lflag = ISIG | ICANON | IEXTEN | ECHO | ECHOE | ECHOK | ECHOCTL | ECHOPRT | ECHOKE;
@@ -2311,8 +2313,10 @@ void rename_process(const char name[8]) {
 
         //prctl(PR_SET_NAME, name);
 
-        if (program_invocation_name)
-                strncpy(program_invocation_name, name, strlen(program_invocation_name));
+		/* Replace GNU-specific program_invocation_name()
+		 * with getprogname(). */
+        if (getprogname())
+                strncpy(getprogname(), name, strlen(getprogname()));
 
         if (saved_argc > 0) {
                 int i;
@@ -2620,7 +2624,7 @@ int rm_rf_children_dangerous(int fd, bool only_dirs, bool honour_sticky, struct 
                                 continue;
 
                         subdir_fd = openat(fd, de->d_name,
-                                           O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW|O_NOATIME);
+                                           O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
                         if (subdir_fd < 0) {
                                 if (ret == 0 && errno != ENOENT)
                                         ret = -errno;
@@ -2694,7 +2698,7 @@ static int rm_rf_internal(const char *path, bool only_dirs, bool delete_root, bo
                 return -EPERM;
         }
 
-        fd = open(path, O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW|O_NOATIME);
+        fd = open(path, O_RDONLY|O_NONBLOCK|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
         if (fd < 0) {
 
                 if (errno != ENOTDIR)
