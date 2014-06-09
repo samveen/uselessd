@@ -43,7 +43,7 @@
 #include <sys/poll.h>
 #include <libgen.h>
 #include <ctype.h>
-#include <sys/prctl.h>
+//#include <sys/prctl.h>
 #include <sys/utsname.h>
 #include <pwd.h>
 #include <netinet/ip.h>
@@ -2288,7 +2288,7 @@ void rename_process(const char name[8]) {
          * "systemd"). If you pass a longer string it will be
          * truncated */
 
-        prctl(PR_SET_NAME, name);
+        //prctl(PR_SET_NAME, name);
 
         if (program_invocation_name)
                 strncpy(program_invocation_name, name, strlen(program_invocation_name));
@@ -4811,8 +4811,8 @@ int fork_agent(pid_t *pid, const int except[], unsigned n_except, const char *pa
         /* In the child:
          *
          * Make sure the agent goes away when the parent dies */
-        if (prctl(PR_SET_PDEATHSIG, SIGTERM) < 0)
-                _exit(EXIT_FAILURE);
+        //if (prctl(PR_SET_PDEATHSIG, SIGTERM) < 0)
+                //_exit(EXIT_FAILURE);
 
         /* Check whether our parent died before we were able
          * to set the death signal */
