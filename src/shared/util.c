@@ -75,6 +75,13 @@
 #include "fileio.h"
 #include "device-nodes.h"
 
+/* FreeBSD purposely does not define
+ * HOST_NAME_MAX, so we set it manually
+ * to 255, as per SUSv2 and kernel. */
+#ifndef HOST_NAME_MAX
+	#define HOST_NAME_MAX 255
+#endif
+
 /*
  * Definitions for IP type of service (ip_tos).
  * Taken from <netinet/ip.h>.
