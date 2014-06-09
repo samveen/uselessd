@@ -75,6 +75,11 @@
 #include "fileio.h"
 #include "device-nodes.h"
 
+/* Handle lack of _NSIG. */
+#ifndef _NSIG
+	#define _NSIG SIGRTMIN
+#endif
+
 /* FreeBSD purposely does not define
  * HOST_NAME_MAX, so we set it manually
  * to 255, as per SUSv2 and kernel. */
@@ -1770,8 +1775,8 @@ int reset_terminal_fd(int fd, bool switch_to_text) {
         ioctl(fd, TIOCNXCL);
 
         /* Switch to text mode */
-        if (switch_to_text)
-                ioctl(fd, KDSETMODE, KD_TEXT);
+        //if (switch_to_text)
+                //ioctl(fd, KDSETMODE, KD_TEXT);
 
         /* Enable console unicode mode */
         //ioctl(fd, KDSKBMODE, K_UNICODE);
@@ -5024,6 +5029,9 @@ void warn_melody(void) {
 
         /* Yeah, this is synchronous. Kinda sucks. But well... */
 
+        // TODO: Replace with ioctl() or echo call to /dev/speaker.
+
+		/*
         ioctl(fd, KIOCSOUND, (int)(1193180/440));
         usleep(125*USEC_PER_MSEC);
 
@@ -5034,6 +5042,7 @@ void warn_melody(void) {
         usleep(125*USEC_PER_MSEC);
 
         ioctl(fd, KIOCSOUND, 0);
+        */
 }
 
 int make_console_stdio(void) {
