@@ -23,7 +23,6 @@
 #include <stdio.h>
 #include <stddef.h>
 #include <stdarg.h>
-#include <features.h>
 
 enum
 {				/* C type: */
