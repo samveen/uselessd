@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/prctl.h>
+//#include <sys/prctl.h>
 
 #include "pager.h"
 #include "util.h"
@@ -91,8 +91,8 @@ int pager_open(bool jump_to_end) {
                         setenv("LESS", "FRSXMK", 1);
 
                 /* Make sure the pager goes away when the parent dies */
-                if (prctl(PR_SET_PDEATHSIG, SIGTERM) < 0)
-                        _exit(EXIT_FAILURE);
+                //if (prctl(PR_SET_PDEATHSIG, SIGTERM) < 0)
+                        //_exit(EXIT_FAILURE);
 
                 /* Check whether our parent died before we were able
                  * to set the death signal */
