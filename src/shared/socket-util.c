@@ -192,34 +192,6 @@ int socket_address_parse(SocketAddress *a, const char *s) {
         return 0;
 }
 
-int socket_address_parse_netlink(SocketAddress *a, const char *s) {
-        int family;
-        unsigned group = 0;
-        _cleanup_free_ char *sfamily = NULL;
-        assert(a);
-        assert(s);
-
-        zero(*a);
-        a->type = SOCK_RAW;
-
-        errno = 0;
-        if (sscanf(s, "%ms %u", &sfamily, &group) < 1)
-                return errno > 0 ? -errno : -EINVAL;
-
-        family = netlink_family_from_string(sfamily);
-        if (family < 0)
-                return -EINVAL;
-
-        a->sockaddr.nl.nl_family = AF_NETLINK;
-        a->sockaddr.nl.nl_groups = group;
-
-        a->type = SOCK_RAW;
-        a->size = sizeof(struct sockaddr_nl);
-        a->protocol = family;
-
-        return 0;
-}
-
 int socket_address_verify(const SocketAddress *a) {
         assert(a);
 
@@ -268,16 +240,6 @@ int socket_address_verify(const SocketAddress *a) {
                 }
 
                 if (a->type != SOCK_STREAM && a->type != SOCK_DGRAM && a->type != SOCK_SEQPACKET)
-                        return -EINVAL;
-
-                return 0;
-
-        case AF_NETLINK:
-
-                if (a->size != sizeof(struct sockaddr_nl))
-                        return -EINVAL;
-
-                if (a->type != SOCK_RAW && a->type != SOCK_DGRAM)
                         return -EINVAL;
 
                 return 0;
@@ -363,19 +325,6 @@ int socket_address_print(const SocketAddress *a, char **p) {
                 return 0;
         }
 
-        case AF_NETLINK: {
-                _cleanup_free_ char *sfamily = NULL;
-
-                r = netlink_family_to_string_alloc(a->protocol, &sfamily);
-                if (r < 0)
-                        return r;
-                r = asprintf(p, "%s %u", sfamily, a->sockaddr.nl.nl_groups);
-                if (r < 0)
-                        return -ENOMEM;
-
-                return 0;
-        }
-
         default:
                 return -EINVAL;
         }
@@ -442,16 +391,6 @@ bool socket_address_equal(const SocketAddress *a, const SocketAddress *b) {
 
                 break;
 
-        case AF_NETLINK:
-
-                if (a->protocol != b->protocol)
-                        return false;
-
-                if (a->sockaddr.nl.nl_groups != b->sockaddr.nl.nl_groups)
-                        return false;
-
-                break;
-
         default:
                 /* Cannot compare, so we assume the addresses are different */
                 return false;
@@ -470,18 +409,6 @@ bool socket_address_is(const SocketAddress *a, const char *s, int type) {
                 return false;
 
         b.type = type;
-
-        return socket_address_equal(a, &b);
-}
-
-bool socket_address_is_netlink(const SocketAddress *a, const char *s) {
-        struct SocketAddress b;
-
-        assert(a);
-        assert(s);
-
-        if (socket_address_parse_netlink(&b, s) < 0)
-                return false;
 
         return socket_address_equal(a, &b);
 }
@@ -603,7 +530,8 @@ int make_socket_fd(const char* address, int flags) {
 
         return fd;
 }
-
+/*
+ * TODO: Address lack of Netlink socket IPC in non-Linux.
 static const char* const netlink_family_table[] = {
         [NETLINK_ROUTE] = "route",
         [NETLINK_FIREWALL] = "firewall",
@@ -622,9 +550,9 @@ static const char* const netlink_family_table[] = {
         [NETLINK_GENERIC] = "generic",
         [NETLINK_SCSITRANSPORT] = "scsitransport",
         [NETLINK_ECRYPTFS] = "ecryptfs"
-};
+};*/
 
-DEFINE_STRING_TABLE_LOOKUP_WITH_FALLBACK(netlink_family, int, INT_MAX);
+//DEFINE_STRING_TABLE_LOOKUP_WITH_FALLBACK(netlink_family, int, INT_MAX);
 
 static const char* const socket_address_bind_ipv6_only_table[_SOCKET_ADDRESS_BIND_IPV6_ONLY_MAX] = {
         [SOCKET_ADDRESS_DEFAULT] = "default",
