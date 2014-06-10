@@ -260,8 +260,6 @@ rootbin_PROGRAMS = \
 	systemd-machine-id-setup
 
 bin_PROGRAMS = \
-	systemd-cgls \
-	systemd-cgtop \
 	systemd-detect-virt \
 	systemd-delta \
 	systemd-analyze
@@ -1684,20 +1682,6 @@ systemd_reply_password_LDADD = \
 	libsystemd-shared.la
 
 # ------------------------------------------------------------------------------
-systemd_cgls_SOURCES = \
-	src/cgls/cgls.c
-
-systemd_cgls_LDADD = \
-	libsystemd-shared.la
-
-# ------------------------------------------------------------------------------
-systemd_cgtop_SOURCES = \
-	src/cgtop/cgtop.c
-
-systemd_cgtop_LDADD = \
-	libsystemd-shared.la
-
-# ------------------------------------------------------------------------------
 systemd_tty_ask_password_agent_SOURCES = \
 	src/tty-ask-password-agent/tty-ask-password-agent.c
 
@@ -2151,58 +2135,6 @@ EXTRA_DIST += \
 	src/journal/libsystemd-journal.sym \
 	units/systemd-journald.service.in \
 	units/systemd-journal-flush.service.in
-
-# ------------------------------------------------------------------------------
-if ENABLE_BINFMT
-systemd_binfmt_SOURCES = \
-	src/binfmt/binfmt.c
-
-systemd_binfmt_LDADD = \
-	libsystemd-shared.la
-
-rootlibexec_PROGRAMS += \
-	systemd-binfmt
-
-dist_systemunit_DATA += \
-	units/proc-sys-fs-binfmt_misc.automount \
-	units/proc-sys-fs-binfmt_misc.mount
-
-nodist_systemunit_DATA += \
-	units/systemd-binfmt.service
-
-INSTALL_DIRS += \
-	$(prefix)/lib/binfmt.d \
-	$(sysconfdir)/binfmt.d
-
-SYSINIT_TARGET_WANTS += \
-	systemd-binfmt.service \
-	proc-sys-fs-binfmt_misc.automount
-
-endif
-
-EXTRA_DIST += \
-	units/systemd-binfmt.service.in
-
-# ------------------------------------------------------------------------------
-if ENABLE_VCONSOLE
-systemd_vconsole_setup_SOURCES = \
-	src/vconsole/vconsole-setup.c
-
-systemd_vconsole_setup_LDADD = \
-	libsystemd-shared.la
-
-rootlibexec_PROGRAMS += \
-	systemd-vconsole-setup
-
-nodist_systemunit_DATA += \
-	units/systemd-vconsole-setup.service
-
-SYSINIT_TARGET_WANTS += \
-	systemd-vconsole-setup.service
-endif
-
-EXTRA_DIST += \
-	units/systemd-vconsole-setup.service.in
 
 # ------------------------------------------------------------------------------
 if ENABLE_QUOTACHECK
