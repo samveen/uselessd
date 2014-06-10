@@ -25,8 +25,6 @@
 #include <netinet/in.h>
 #include <sys/un.h>
 #include <net/if.h>
-#include <asm/types.h>
-#include <linux/netlink.h>
 
 #include "macro.h"
 #include "util.h"
