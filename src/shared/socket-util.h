@@ -34,7 +34,6 @@ union sockaddr_union {
         struct sockaddr_in in4;
         struct sockaddr_in6 in6;
         struct sockaddr_un un;
-        struct sockaddr_nl nl;
         struct sockaddr_storage storage;
 };
 
