@@ -20,7 +20,6 @@
 ***/
 
 #include <utmpx.h>
-#include <utmp.h>
 #include <errno.h>
 #include <assert.h>
 #include <string.h>
@@ -28,15 +27,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/poll.h>
+#include <paths.h>
 
 #include "macro.h"
 #include "path-util.h"
 #include "utmp-wtmp.h"
-
-/* here for forwards compatibility and stricter libcs */
-int utmpxname(const char *file) {
-        return utmpname(file);
-}
 
 int utmp_get_runlevel(int *runlevel, int *previous) {
         struct utmpx *found, lookup = { .ut_type = RUN_LVL };
@@ -66,9 +61,6 @@ int utmp_get_runlevel(int *runlevel, int *previous) {
 
                 return 0;
         }
-
-        if (utmpxname(_PATH_UTMPX) < 0)
-                return -errno;
 
         setutxent();
 
@@ -127,9 +119,6 @@ static int write_entry_utmp(const struct utmpx *store) {
          * each entry type resp. user; i.e. basically a key/value
          * table. */
 
-        if (utmpxname(_PATH_UTMPX) < 0)
-                return -errno;
-
         setutxent();
 
         if (!pututxline(store))
@@ -149,7 +138,7 @@ static int write_entry_wtmp(const struct utmpx *store) {
         simply appended to * the end; i.e. basically a log. */
 
         errno = 0;
-        updwtmpx(_PATH_WTMPX, store);
+        pututxline(store);
         return -errno;
 }
 
@@ -208,7 +197,7 @@ _pure_ static const char *sanitize_id(const char *id) {
         return id + l - sizeof(((struct utmpx*) NULL)->ut_id);
 }
 
-int utmp_put_init_process(const char *id, pid_t pid, pid_t sid, const char *line) {
+int utmp_put_init_process(const char *id, pid_t pid, const char *line) {
         struct utmpx store;
 
         assert(id);
@@ -217,7 +206,6 @@ int utmp_put_init_process(const char *id, pid_t pid, pid_t sid, const char *line
 
         store.ut_type = INIT_PROCESS;
         store.ut_pid = pid;
-        store.ut_session = sid;
 
         strncpy(store.ut_id, sanitize_id(id), sizeof(store.ut_id));
 
@@ -227,7 +215,7 @@ int utmp_put_init_process(const char *id, pid_t pid, pid_t sid, const char *line
         return write_entry_both(&store);
 }
 
-int utmp_put_dead_process(const char *id, pid_t pid, int code, int status) {
+int utmp_put_dead_process(const char *id, pid_t pid) {
         struct utmpx lookup, store, store_wtmp, *found;
 
         assert(id);
@@ -246,8 +234,6 @@ int utmp_put_dead_process(const char *id, pid_t pid, int code, int status) {
 
         memcpy(&store, found, sizeof(store));
         store.ut_type = DEAD_PROCESS;
-        store.ut_exit.e_termination = code;
-        store.ut_exit.e_exit = status;
 
         zero(store.ut_user);
         zero(store.ut_host);
@@ -321,15 +307,17 @@ static int write_to_terminal(const char *tty, const char *message) {
 
                 t = now(CLOCK_MONOTONIC);
 
+                /* TODO: Implement some way to return
+                 * process execution time.
                 if (t >= end)
-                        return -ETIME;
+                        return -ETIME; */
 
                 k = poll(&pollfd, 1, (end - t) / USEC_PER_MSEC);
                 if (k < 0)
                         return -errno;
-
+                /*
                 if (k == 0)
-                        return -ETIME;
+                        return -ETIME; */
 
                 n = write(fd, p, left);
                 if (n < 0) {

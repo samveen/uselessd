@@ -23,6 +23,11 @@
 
 #include "util.h"
 
+/* Definitions to address the FreeBSD migration of <utmpx.h>
+ * and complete deprecation of <utmp.h>.
+ */
+#define RUN_LVL 1 // taken from glibc's bits/utmp.h
+
 /* taken from <paths.h>, here for compatibility */
 #define _PATH_UTMPX	"/var/run/utmp"
 #define _PATH_WTMPX	"/var/log/wtmp"
@@ -33,7 +38,7 @@ int utmp_put_shutdown(void);
 int utmp_put_reboot(usec_t timestamp);
 int utmp_put_runlevel(int runlevel, int previous);
 
-int utmp_put_dead_process(const char *id, pid_t pid, int code, int status);
-int utmp_put_init_process(const char *id, pid_t pid, pid_t sid, const char *line);
+int utmp_put_dead_process(const char *id, pid_t pid);
+int utmp_put_init_process(const char *id, pid_t pid, const char *line);
 
 int utmp_wall(const char *message, bool (*match_tty)(const char *tty));
