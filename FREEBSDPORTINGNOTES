@@ -27,13 +27,33 @@ replaced <sys/vfs.h> with <sys/mount.h>
 temporarily placed (useless on FreeBSD) TMPFS and RAMFS magic values for is_temporary_fs() function
 in src/shared/util.c
 
-currently: src/shared/ioprio.h and src/shared/missing.h errors (__NR_ioprio_set, __NR_ioprio_get and
+src/shared/ioprio.h and src/shared/missing.h errors (__NR_ioprio_set, __NR_ioprio_get and
 <linux/oom.h>)
 used in src/core/execute.[ch], src/core/dbus-execute.c and src/core/load-fragment.c
+(commented out until further notice)
+
+whole bunch of undefined names in util.c ->
+Removed SIGPWR due to lack of it on non-Linux
+Added definitions for IPTOS_*
+Replaced cpu_set_t type with cpuset_t
+Removed RLIMIT_LOCKS, RLIMIT_SIGPENDING, RLIMIT_MSGQUEUE, RLIMIT_NICE and RLIMIT_RTPRIO
+Removed SCHED_IDLE and SCHED_BATCH
+Define HOST_NAME_MAX as 255
+Remove Linux-specific <termios.h> extensions (IUTF8 and IUCLC)
+Comment out K_UNICODE
+Remove O_NOATIME modifier for open() [O_NOATIME means don't alter timestamp/last modified]
+Replace program_invocation_name() with getprogname()
+Commented out KDSETMODE and KD_TEXT ioctl
+Comment out KIOCSOUND, replace with ioctl or echo to /dev/speaker later on
+
+
+CURRENTLY: <features.h> undefined in src/shared/printf.h
 
 files modified:
 	src/shared/util.h
 	src/shared/util.c
+	src/shared/missing.h
+	src/shared/ioprio.h
 
 ----------
 
