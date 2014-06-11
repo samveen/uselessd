@@ -33,7 +33,6 @@
 #include <stdarg.h>
 #include <ctype.h>
 #include <sys/time.h>
-#include <linux/rtc.h>
 
 #include "macro.h"
 #include "util.h"
@@ -41,48 +40,6 @@
 #include "strv.h"
 #include "hwclock.h"
 #include "fileio.h"
-
-int hwclock_get_time(struct tm *tm) {
-        int fd;
-        int err = 0;
-
-        assert(tm);
-
-        fd = open("/dev/rtc", O_RDONLY|O_CLOEXEC);
-        if (fd < 0)
-                return -errno;
-
-        /* This leaves the timezone fields of struct tm
-         * uninitialized! */
-        if (ioctl(fd, RTC_RD_TIME, tm) < 0)
-                err = -errno;
-
-        /* We don't know daylight saving, so we reset this in order not
-         * to confused mktime(). */
-        tm->tm_isdst = -1;
-
-        close_nointr_nofail(fd);
-
-        return err;
-}
-
-int hwclock_set_time(const struct tm *tm) {
-        int fd;
-        int err = 0;
-
-        assert(tm);
-
-        fd = open("/dev/rtc", O_RDONLY|O_CLOEXEC);
-        if (fd < 0)
-                return -errno;
-
-        if (ioctl(fd, RTC_SET_TIME, tm) < 0)
-                err = -errno;
-
-        close_nointr_nofail(fd);
-
-        return err;
-}
 
 int hwclock_is_localtime(void) {
         _cleanup_fclose_ FILE *f;
