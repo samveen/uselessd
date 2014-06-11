@@ -23,7 +23,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/types.h>
