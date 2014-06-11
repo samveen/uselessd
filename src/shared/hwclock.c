@@ -32,7 +32,6 @@
 #include <sys/ioctl.h>
 #include <stdarg.h>
 #include <ctype.h>
-#include <sys/prctl.h>
 #include <sys/time.h>
 #include <linux/rtc.h>
 

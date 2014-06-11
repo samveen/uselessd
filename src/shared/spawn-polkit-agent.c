@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/prctl.h>
 #include <signal.h>
 #include <fcntl.h>
 #include <errno.h>
