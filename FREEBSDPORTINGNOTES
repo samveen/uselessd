@@ -46,14 +46,81 @@ Replace program_invocation_name() with getprogname()
 Commented out KDSETMODE and KD_TEXT ioctl
 Comment out KIOCSOUND, replace with ioctl or echo to /dev/speaker later on
 
+<features.h> undefined in src/shared/printf.h removed
 
-CURRENTLY: <features.h> undefined in src/shared/printf.h
+<asm/types.h> in src/shared/socket-util.h not found, these are internal
+kernel typedefs, removed header
+
+<linux/netlink.h> not found, removed
+
+program_invocation_short_name() in log.c, replace with getprogname()
+nl field has incomplete type
+
+removed struct nl header
+
+prctl() usage in pager.c, commented out
+
+comment out netlink table in socket-util.c, rid of AF_NETLINK and nl union member
+usages
+
+removed socket_address_is_netlink() and socket_address_parse_netlink(),
+later on address function usages in load-fragment.c and socket.c in core
+
+<utmp.h> undefined in utmp-wtmp.c, seems absent, rm and leave
+<utmpx.h> only
+added definition for RUN_LVL in utmp-wtmp.h, taken from glibc
+comment out ETIME, as it's Linux-specific, replace later
+remove sid struct member in utmp_put_init_process(), address in execute.c later
+remove code, status parameters and ut_exit struct member in utmp_put_dead_process(),
+address in execute.c later
+edit function declarations in utmp-wtmp.h
+remove redundant utmpname() function, path's already set in FreeBSD from <paths.h>
+replace updwtmpx() with pututxline()
+
+watchdog.c uses <linux/watchdog.h>
+Rid of watchdog.[ch], as they heavily rely on Linux-specific interfaces
+later on: address their lack in dbus-manager.c, manager.c, shutdown.c, main.c
+and test-watchdog.c
+
+spawn-ask-password-agent.c uses <sys/prctl.h>, removed
+appears to be unused
+spawn-polkit-agent.c, as well, seemingly unused
+hwclock.c, too
+
+hwclock.c needs <linux/rtc.h>, try to duplicate functionality
+using FreeBSD interfaces, or ignore for now
+hwclock_* functions are used only in main.c and dbus-manager.c
+hwclock_get_time() and hwclock_set_time() unused
+
+time-dst.c needs <endian.h>, replace with <sys/endian.h>,
+also remove <byteswap.h>
+
+socket-label.c can't find SO_BINDTODEVICE, replace with IP_RECVIF
+
+label.c uses <malloc.h>, instead of <stdlib.h>, replaced
+
+ask-password-api.c uses <sys/inotify.h>
 
 files modified:
 	src/shared/util.h
 	src/shared/util.c
 	src/shared/missing.h
 	src/shared/ioprio.h
+	src/shared/printf.h
+	src/shared/socket-util.h
+	src/shared/log.c
+	src/shared/pager.c
+	src/shared/socket-util.c
+	src/shared/utmp-wtmp.c
+	src/shared/utmp-wtmp.h
+	[removed] src/shared/watchdog.c
+	[removed] src/shared/watchdog.h
+	src/shared/spawn-ask-password-agent.c
+	src/shared/spawn-polkit-agent.c
+	src/shared/hwclock.c
+	src/shared/time-dst.c
+	src/shared/socket-label.c
+	src/shared/label.c
 
 ----------
 
