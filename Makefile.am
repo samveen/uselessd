@@ -639,7 +639,6 @@ libsystemd_shared_la_SOURCES = \
 	src/shared/unit-name.h \
 	src/shared/utmp-wtmp.c \
 	src/shared/utmp-wtmp.h \
-	src/shared/watchdog.c \
 	src/shared/watchdog.h \
 	src/shared/spawn-ask-password-agent.c \
 	src/shared/spawn-ask-password-agent.h \
