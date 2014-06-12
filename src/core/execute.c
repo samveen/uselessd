@@ -49,7 +49,6 @@
 #include "execute.h"
 #include "strv.h"
 #include "macro.h"
-#include "capability.h"
 #include "util.h"
 #include "log.h"
 #include "sd-messages.h"
@@ -1391,14 +1390,6 @@ int exec_spawn(ExecCommand *command,
                                 }
                         }
 
-                        if (context->capability_bounding_set_drop) {
-                                err = capability_bounding_set_drop(context->capability_bounding_set_drop, false);
-                                if (err < 0) {
-                                        r = EXIT_CAPABILITIES;
-                                        goto fail_child;
-                                }
-                        }
-
                         if (context->user) {
                                 err = enforce_user(context, uid);
                                 if (err < 0) {
@@ -1957,42 +1948,6 @@ void exec_context_dump(ExecContext *c, FILE* f, const char *prefix) {
                         prefix, strna(lvl_str));
                 free(lvl_str);
                 free(fac_str);
-        }
-
-        if (c->capabilities) {
-                char *t;
-                if ((t = cap_to_text(c->capabilities, NULL))) {
-                        fprintf(f, "%sCapabilities: %s\n",
-                                prefix, t);
-                        cap_free(t);
-                }
-        }
-
-        if (c->secure_bits)
-                fprintf(f, "%sSecure Bits:%s%s%s%s%s%s\n",
-                        prefix,
-                        (c->secure_bits & 1<<SECURE_KEEP_CAPS) ? " keep-caps" : "",
-                        (c->secure_bits & 1<<SECURE_KEEP_CAPS_LOCKED) ? " keep-caps-locked" : "",
-                        (c->secure_bits & 1<<SECURE_NO_SETUID_FIXUP) ? " no-setuid-fixup" : "",
-                        (c->secure_bits & 1<<SECURE_NO_SETUID_FIXUP_LOCKED) ? " no-setuid-fixup-locked" : "",
-                        (c->secure_bits & 1<<SECURE_NOROOT) ? " noroot" : "",
-                        (c->secure_bits & 1<<SECURE_NOROOT_LOCKED) ? "noroot-locked" : "");
-
-        if (c->capability_bounding_set_drop) {
-                unsigned long l;
-                fprintf(f, "%sCapabilityBoundingSet:", prefix);
-
-                for (l = 0; l <= cap_last_cap(); l++)
-                        if (!(c->capability_bounding_set_drop & ((uint64_t) 1ULL << (uint64_t) l))) {
-                                char *t;
-
-                                if ((t = cap_to_name(l))) {
-                                        fprintf(f, " %s", t);
-                                        cap_free(t);
-                                }
-                        }
-
-                fputs("\n", f);
         }
 
         if (c->user)

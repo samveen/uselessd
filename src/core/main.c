@@ -50,7 +50,6 @@
 #include "watchdog.h"
 #include "path-util.h"
 #include "switch-root.h"
-#include "capability.h"
 #include "killall.h"
 #include "env-util.h"
 #include "hwclock.h"
@@ -94,7 +93,6 @@ static usec_t arg_runtime_watchdog = 0;
 static usec_t arg_shutdown_watchdog = 10 * USEC_PER_MINUTE;
 static char **arg_default_environment = NULL;
 static struct rlimit *arg_default_rlimit[RLIMIT_NLIMITS] = {};
-static uint64_t arg_capability_bounding_set_drop = 0;
 static nsec_t arg_timer_slack_nsec = (nsec_t) -1;
 
 static FILE* serialization = NULL;
@@ -639,7 +637,6 @@ static int parse_config_file(void) {
                 { "Manager", "JoinControllers",       config_parse_join_controllers, 0, &arg_join_controllers },
                 { "Manager", "RuntimeWatchdogSec",    config_parse_sec,          0, &arg_runtime_watchdog    },
                 { "Manager", "ShutdownWatchdogSec",   config_parse_sec,          0, &arg_shutdown_watchdog   },
-                { "Manager", "CapabilityBoundingSet", config_parse_bounding_set, 0, &arg_capability_bounding_set_drop },
                 { "Manager", "TimerSlackNSec",        config_parse_nsec,         0, &arg_timer_slack_nsec    },
                 { "Manager", "DefaultEnvironment",    config_parse_environ,      0, &arg_default_environment },
                 { "Manager", "DefaultLimitCPU",       config_parse_limit,        0, &arg_default_rlimit[RLIMIT_CPU]},
@@ -1496,19 +1493,6 @@ int main(int argc, char *argv[]) {
         if (arg_timer_slack_nsec != (nsec_t) -1)
                 if (prctl(PR_SET_TIMERSLACK, arg_timer_slack_nsec) < 0)
                         log_error("Failed to adjust timer slack: %m");
-
-        if (arg_capability_bounding_set_drop) {
-                r = capability_bounding_set_drop_usermode(arg_capability_bounding_set_drop);
-                if (r < 0) {
-                        log_error("Failed to drop capability bounding set of usermode helpers: %s", strerror(-r));
-                        goto finish;
-                }
-                r = capability_bounding_set_drop(arg_capability_bounding_set_drop, true);
-                if (r < 0) {
-                        log_error("Failed to drop capability bounding set: %s", strerror(-r));
-                        goto finish;
-                }
-        }
 
         if (arg_running_as == SYSTEMD_USER) {
                 /* Become reaper of our children */
