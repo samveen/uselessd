@@ -794,23 +794,6 @@ int journal_file_verify(
                 entry_array_path[] = "/var/tmp/journal-entry-array-XXXXXX";
         unsigned i;
         bool found_last;
-#ifdef HAVE_GCRYPT
-        uint64_t last_tag = 0;
-#endif
-        assert(f);
-
-        if (key) {
-#ifdef HAVE_GCRYPT
-                r = journal_file_parse_verification_key(f, key);
-                if (r < 0) {
-                        log_error("Failed to parse seed.");
-                        return r;
-                }
-#else
-                return -ENOTSUP;
-#endif
-        } else if (f->seal)
-                return -ENOKEY;
 
         data_fd = mkostemp(data_path, O_CLOEXEC);
         if (data_fd < 0) {
@@ -836,11 +819,7 @@ int journal_file_verify(
         }
         unlink(entry_array_path);
 
-#ifdef HAVE_GCRYPT
-        if ((le32toh(f->header->compatible_flags) & ~HEADER_COMPATIBLE_SEALED) != 0)
-#else
         if (f->header->compatible_flags != 0)
-#endif
         {
                 log_error("Cannot verify file with unknown extensions.");
                 r = -ENOTSUP;
@@ -1034,70 +1013,6 @@ int journal_file_verify(
                                 r = -EBADMSG;
                                 goto fail;
                         }
-
-#ifdef HAVE_GCRYPT
-                        if (f->seal) {
-                                uint64_t q, rt;
-
-                                log_debug("Checking tag %"PRIu64"...", le64toh(o->tag.seqnum));
-
-                                rt = f->fss_start_usec + o->tag.epoch * f->fss_interval_usec;
-                                if (entry_realtime_set && entry_realtime >= rt + f->fss_interval_usec) {
-                                        log_error("Tag/entry realtime timestamp out of synchronization at "OFSfmt, p);
-                                        r = -EBADMSG;
-                                        goto fail;
-                                }
-
-                                /* OK, now we know the epoch. So let's now set
-                                 * it, and calculate the HMAC for everything
-                                 * since the last tag. */
-                                r = journal_file_fsprg_seek(f, le64toh(o->tag.epoch));
-                                if (r < 0)
-                                        goto fail;
-
-                                r = journal_file_hmac_start(f);
-                                if (r < 0)
-                                        goto fail;
-
-                                if (last_tag == 0) {
-                                        r = journal_file_hmac_put_header(f);
-                                        if (r < 0)
-                                                goto fail;
-
-                                        q = le64toh(f->header->header_size);
-                                } else
-                                        q = last_tag;
-
-                                while (q <= p) {
-                                        r = journal_file_move_to_object(f, -1, q, &o);
-                                        if (r < 0)
-                                                goto fail;
-
-                                        r = journal_file_hmac_put_object(f, -1, o, q);
-                                        if (r < 0)
-                                                goto fail;
-
-                                        q = q + ALIGN64(le64toh(o->object.size));
-                                }
-
-                                /* Position might have changed, let's reposition things */
-                                r = journal_file_move_to_object(f, -1, p, &o);
-                                if (r < 0)
-                                        goto fail;
-
-                                if (memcmp(o->tag.tag, gcry_md_read(f->hmac, 0), TAG_LENGTH) != 0) {
-                                        log_error("Tag failed verification at "OFSfmt, p);
-                                        r = -EBADMSG;
-                                        goto fail;
-                                }
-
-                                f->hmac_running = false;
-                                last_tag_realtime = rt;
-                                last_sealed_realtime = entry_realtime;
-                        }
-
-                        last_tag = p + ALIGN64(le64toh(o->object.size));
-#endif
 
                         last_epoch = le64toh(o->tag.epoch);
 
