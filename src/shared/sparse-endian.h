@@ -21,9 +21,9 @@
 #ifndef SPARSE_ENDIAN_H
 #define SPARSE_ENDIAN_H
 
-#include <endian.h>
+#include <sys/endian.h>
+#include <sys/types.h>
 #include <stdint.h>
-#include <byteswap.h>
 
 #ifdef __CHECKER__
 #define __bitwise __attribute__((bitwise))
