@@ -21,7 +21,6 @@
 
 #include <unistd.h>
 #include <stddef.h>
-#include <sys/epoll.h>
 
 #include "systemd/sd-messages.h"
 #include "socket-util.h"
@@ -463,12 +462,6 @@ int server_open_syslog_socket(Server *s) {
         }
 
         zero(ev);
-        ev.events = EPOLLIN;
-        ev.data.fd = s->syslog_fd;
-        if (epoll_ctl(s->epoll_fd, EPOLL_CTL_ADD, s->syslog_fd, &ev) < 0) {
-                log_error("Failed to add syslog server fd to epoll object: %m");
-                return -errno;
-        }
 
         return 0;
 }

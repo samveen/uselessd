@@ -10,6 +10,7 @@ address lack of <linux/vt.h> in src/shared/util.c
 VT functions are used in vt_disallocate() and chvt(), which are then
 employed in src/core/main.c and src/core/execute.c, respectively.
 TODO: Replace them.
+removed gettid() in ternary op
 
 address lack of <linux/tiocl.h> in src/shared/util.c (linux kernel vconsole defs)
 commented for now
@@ -99,7 +100,46 @@ socket-label.c can't find SO_BINDTODEVICE, replace with IP_RECVIF
 
 label.c uses <malloc.h>, instead of <stdlib.h>, replaced
 
-ask-password-api.c uses <sys/inotify.h>
+ask-password-api.c uses <sys/inotify.h> and <sys/signalfd.h>
+comment out relevant bits, use SCM_CREDS instead of SCM_CREDENTIALS
+SO_PASSCRED undefined, comment out and replace with cmsgcred() Unix
+domain socket pass, or similar later on
+added <sys/ucred.h> header
+replace ucred->uid check with the preferred priv_check_cred() method
+(experimental)
+
+sd-journal.c: inotify usage
+important: sd_journal_get_fd() and sd_journal_process()
+must reimplement later
+replaced <sys/vfs.h> with <sys/mount.h>
+Defined Linux magic values CODA_SUPER_MAGIC, NCP_SUPER_MAGIC,
+NFS_SUPER_MAGIC and SMB_SUPER_MAGIC
+
+sparse-endian.h: switched <endian.h> to <sys/endian.h>
+add <sys/types.h>
+
+journal-file.c: replace ENODATA with ENOATTR
+replace fdatasync() with fsync()
+
+journal-verify.c: remove GCRYPT conditional code
+
+journal-send.c: replace program_invocation_short_name()
+with getprogname(), add <sys/endian.h>
+
+dbus-common.c: epoll() usage
+rid of bus_events_to_flags() and bus_flags_to_events()
+remove case for ETIME
+replace SO_PEERCREDS with SCM_CREDS
+replace ucred->uid check with priv_check_cred()
+comment out problematic assertion
+
+dbus-loop.c: remove it, as it's unused
+
+journald-kmsg.c: uses /dev/kmsg, remove entirely
+references are in journald-syslog.c, journald-stream.c,
+journald-server.c, journald-native.c and journald.c
+
+Currently: various errors in journald-syslog.c
 
 files modified:
 	src/shared/util.h
@@ -121,6 +161,25 @@ files modified:
 	src/shared/time-dst.c
 	src/shared/socket-label.c
 	src/shared/label.c
+	src/shared/ask-password-api.c
+	src/shared/sparse-endian.h
+	src/shared/dbus-common.c
+	[removed] src/shared/dbus-loop.c
+	[removed] src/shared/dbus-loop.h
+
+	src/journal/sd-journal.c
+	src/systemd/sd-journal.h
+	src/journal/journal-file.c
+	src/journal/journal-verify.c
+	src/journal/journal-send.c
+	src/journal/journald-syslog.c
+	src/journal/journald-stream.c
+	src/journal/journald-server.c
+	src/journal/journald-server.h
+	src/journal/journald-native.c
+	src/journal/journald.c
+	[removed] src/journal/journald-kmsg.c
+	[removed] src/journal/journald-kmsg.h
 
 ----------
 
