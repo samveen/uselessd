@@ -23,10 +23,10 @@
 #include <fcntl.h>
 #include <stddef.h>
 #include <unistd.h>
-#include <sys/inotify.h>
+//#include <sys/inotify.h>
 #include <sys/poll.h>
-#include <sys/vfs.h>
-#include <linux/magic.h>
+#include <sys/mount.h>
+//#include <linux/magic.h>
 
 #include "sd-journal.h"
 #include "journal-def.h"
@@ -41,6 +41,12 @@
 #include "missing.h"
 #include "catalog.h"
 #include "replace-var.h"
+
+/* Taken from <linux/magic.h> */
+#define CODA_SUPER_MAGIC        0x73757245
+#define NCP_SUPER_MAGIC         0x564c
+#define NFS_SUPER_MAGIC         0x6969
+#define SMB_SUPER_MAGIC         0x517B
 
 #define JOURNAL_FILES_MAX 1024
 
@@ -1458,6 +1464,7 @@ static int add_directory(sd_journal *j, const char *prefix, const char *dirname)
         } else if (m->is_root)
                 return 0;
 
+		/*
         if (m->wd <= 0 && j->inotify_fd >= 0) {
 
                 m->wd = inotify_add_watch(j->inotify_fd, m->path,
@@ -1467,7 +1474,7 @@ static int add_directory(sd_journal *j, const char *prefix, const char *dirname)
 
                 if (m->wd > 0 && hashmap_put(j->directories_by_wd, INT_TO_PTR(m->wd), m) < 0)
                         inotify_rm_watch(j->inotify_fd, m->wd);
-        }
+        }*/
 
         for (;;) {
                 struct dirent *de;
@@ -1537,6 +1544,7 @@ static int add_root_directory(sd_journal *j, const char *p) {
         } else if (!m->is_root)
                 return 0;
 
+		/*
         if (m->wd <= 0 && j->inotify_fd >= 0) {
 
                 m->wd = inotify_add_watch(j->inotify_fd, m->path,
@@ -1545,7 +1553,7 @@ static int add_root_directory(sd_journal *j, const char *p) {
 
                 if (m->wd > 0 && hashmap_put(j->directories_by_wd, INT_TO_PTR(m->wd), m) < 0)
                         inotify_rm_watch(j->inotify_fd, m->wd);
-        }
+        }*/
 
         if (j->no_new_files)
                 return 0;
@@ -1589,8 +1597,8 @@ static int remove_directory(sd_journal *j, Directory *d) {
         if (d->wd > 0) {
                 hashmap_remove(j->directories_by_wd, INT_TO_PTR(d->wd));
 
-                if (j->inotify_fd >= 0)
-                        inotify_rm_watch(j->inotify_fd, d->wd);
+                //if (j->inotify_fd >= 0)
+                        //inotify_rm_watch(j->inotify_fd, d->wd);
         }
 
         hashmap_remove(j->directories_by_path, d->path);
@@ -1659,7 +1667,7 @@ static int add_current_paths(sd_journal *j) {
         return 0;
 }
 
-
+/*
 static int allocate_inotify(sd_journal *j) {
         assert(j);
 
@@ -1676,7 +1684,7 @@ static int allocate_inotify(sd_journal *j) {
         }
 
         return 0;
-}
+}*/
 
 static sd_journal *journal_new(int flags, const char *path) {
         sd_journal *j;
@@ -1686,7 +1694,7 @@ static sd_journal *journal_new(int flags, const char *path) {
                 return NULL;
 
         j->original_pid = getpid();
-        j->inotify_fd = -1;
+        //j->inotify_fd = -1;
         j->flags = flags;
         j->data_threshold = DEFAULT_DATA_THRESHOLD;
 
@@ -1828,8 +1836,8 @@ _public_ void sd_journal_close(sd_journal *j) {
         hashmap_free(j->directories_by_path);
         hashmap_free(j->directories_by_wd);
 
-        if (j->inotify_fd >= 0)
-                close_nointr_nofail(j->inotify_fd);
+        //if (j->inotify_fd >= 0)
+                //close_nointr_nofail(j->inotify_fd);
 
         if (j->mmap)
                 mmap_cache_unref(j->mmap);
@@ -2118,6 +2126,7 @@ _public_ void sd_journal_restart_data(sd_journal *j) {
         j->current_field = 0;
 }
 
+// stub
 _public_ int sd_journal_get_fd(sd_journal *j) {
         int r;
 
@@ -2126,12 +2135,13 @@ _public_ int sd_journal_get_fd(sd_journal *j) {
         if (journal_pid_changed(j))
                 return -ECHILD;
 
-        if (j->inotify_fd >= 0)
-                return j->inotify_fd;
+        //if (j->inotify_fd >= 0)
+                //return j->inotify_fd;
 
+		/*
         r = allocate_inotify(j);
         if (r < 0)
-                return r;
+                return r;*/
 
         /* Iterate through all dirs again, to add them to the
          * inotify */
@@ -2144,7 +2154,7 @@ _public_ int sd_journal_get_fd(sd_journal *j) {
         if (r < 0)
                 return r;
 
-        return j->inotify_fd;
+        return r;
 }
 
 _public_ int sd_journal_get_events(sd_journal *j) {
@@ -2154,10 +2164,10 @@ _public_ int sd_journal_get_events(sd_journal *j) {
                 return -EINVAL;
         if (journal_pid_changed(j))
                 return -ECHILD;
-
+		/*
         fd = sd_journal_get_fd(j);
         if (fd < 0)
-                return fd;
+                return fd; */
 
         return POLLIN;
 }
@@ -2171,10 +2181,10 @@ _public_ int sd_journal_get_timeout(sd_journal *j, uint64_t *timeout_usec) {
                 return -ECHILD;
         if (!timeout_usec)
                 return -EINVAL;
-
+		/*
         fd = sd_journal_get_fd(j);
         if (fd < 0)
-                return fd;
+                return fd; */
 
         if (!j->on_network) {
                 *timeout_usec = (uint64_t) -1;
@@ -2188,6 +2198,7 @@ _public_ int sd_journal_get_timeout(sd_journal *j, uint64_t *timeout_usec) {
         return 1;
 }
 
+/*
 static void process_inotify_event(sd_journal *j, struct inotify_event *e) {
         Directory *d;
         int r;
@@ -2195,7 +2206,7 @@ static void process_inotify_event(sd_journal *j, struct inotify_event *e) {
         assert(j);
         assert(e);
 
-        /* Is this a subdirectory we watch? */
+        // Is this a subdirectory we watch?
         d = hashmap_get(j->directories_by_wd, INT_TO_PTR(e->wd));
         if (d) {
                 sd_id128_t id;
@@ -2204,7 +2215,7 @@ static void process_inotify_event(sd_journal *j, struct inotify_event *e) {
                     (endswith(e->name, ".journal") ||
                      endswith(e->name, ".journal~"))) {
 
-                        /* Event for a journal file */
+                        // Event for a journal file
 
                         if (e->mask & (IN_CREATE|IN_MOVED_TO|IN_MODIFY|IN_ATTRIB)) {
                                 r = add_file(j, d->path, e->name);
@@ -2223,7 +2234,7 @@ static void process_inotify_event(sd_journal *j, struct inotify_event *e) {
 
                 } else if (!d->is_root && e->len == 0) {
 
-                        /* Event for a subdirectory */
+                        // Event for a subdirectory
 
                         if (e->mask & (IN_DELETE_SELF|IN_MOVE_SELF|IN_UNMOUNT)) {
                                 r = remove_directory(j, d);
@@ -2234,7 +2245,7 @@ static void process_inotify_event(sd_journal *j, struct inotify_event *e) {
 
                 } else if (d->is_root && (e->mask & IN_ISDIR) && e->len > 0 && sd_id128_from_string(e->name, &id) >= 0) {
 
-                        /* Event for root directory */
+                         // Event for root directory
 
                         if (e->mask & (IN_CREATE|IN_MOVED_TO|IN_MODIFY|IN_ATTRIB)) {
                                 r = add_directory(j, d->path, e->name);
@@ -2250,7 +2261,7 @@ static void process_inotify_event(sd_journal *j, struct inotify_event *e) {
                 return;
 
         log_warning("Unknown inotify event.");
-}
+}*/
 
 static int determine_change(sd_journal *j) {
         bool b;
@@ -2263,6 +2274,7 @@ static int determine_change(sd_journal *j) {
         return b ? SD_JOURNAL_INVALIDATE : SD_JOURNAL_APPEND;
 }
 
+/*
 _public_ int sd_journal_process(sd_journal *j) {
         uint8_t buffer[sizeof(struct inotify_event) + FILENAME_MAX] _alignas_(struct inotify_event);
         bool got_something = false;
@@ -2303,8 +2315,9 @@ _public_ int sd_journal_process(sd_journal *j) {
         }
 
         return determine_change(j);
-}
+}*/
 
+// stub
 _public_ int sd_journal_wait(sd_journal *j, uint64_t timeout_usec) {
         int r;
         uint64_t t;
@@ -2314,20 +2327,20 @@ _public_ int sd_journal_wait(sd_journal *j, uint64_t timeout_usec) {
         if (journal_pid_changed(j))
                 return -ECHILD;
 
-        if (j->inotify_fd < 0) {
+        //if (j->inotify_fd < 0) {
 
                 /* This is the first invocation, hence create the
                  * inotify watch */
-                r = sd_journal_get_fd(j);
-                if (r < 0)
-                        return r;
+               // r = sd_journal_get_fd(j);
+                //if (r < 0)
+                        //return r;
 
                 /* The journal might have changed since the context
                  * object was created and we weren't watching before,
                  * hence don't wait for anything, and return
                  * immediately. */
-                return determine_change(j);
-        }
+                //return determine_change(j);
+        //}
 
         r = sd_journal_get_timeout(j, &t);
         if (r < 0)
@@ -2342,15 +2355,15 @@ _public_ int sd_journal_wait(sd_journal *j, uint64_t timeout_usec) {
                 if (timeout_usec == (uint64_t) -1 || timeout_usec > t)
                         timeout_usec = t;
         }
-
+/*
         do {
                 r = fd_wait_for_event(j->inotify_fd, POLLIN, timeout_usec);
         } while (r == -EINTR);
 
         if (r < 0)
-                return r;
+                return r; */
 
-        return sd_journal_process(j);
+        return r;
 }
 
 _public_ int sd_journal_get_cutoff_realtime_usec(sd_journal *j, uint64_t *from, uint64_t *to) {
