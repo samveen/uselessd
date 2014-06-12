@@ -43,7 +43,6 @@ typedef enum StdoutStreamState {
         STDOUT_STREAM_PRIORITY,
         STDOUT_STREAM_LEVEL_PREFIX,
         STDOUT_STREAM_FORWARD_TO_SYSLOG,
-        STDOUT_STREAM_FORWARD_TO_KMSG,
         STDOUT_STREAM_FORWARD_TO_CONSOLE,
         STDOUT_STREAM_RUNNING
 } StdoutStreamState;
@@ -64,7 +63,6 @@ struct StdoutStream {
         int priority;
         bool level_prefix:1;
         bool forward_to_syslog:1;
-        bool forward_to_kmsg:1;
         bool forward_to_console:1;
 
         char buffer[LINE_MAX+1];
@@ -94,9 +92,6 @@ static int stdout_stream_log(StdoutStream *s, const char *p) {
 
         if (s->forward_to_syslog || s->server->forward_to_syslog)
                 server_forward_syslog(s->server, syslog_fixup_facility(priority), s->identifier, p, &s->ucred, NULL);
-
-        if (s->forward_to_kmsg || s->server->forward_to_kmsg)
-                server_forward_kmsg(s->server, priority, s->identifier, p, &s->ucred);
 
         if (s->forward_to_console || s->server->forward_to_console)
                 server_forward_console(s->server, priority, s->identifier, p, &s->ucred);
@@ -202,17 +197,6 @@ static int stdout_stream_line(StdoutStream *s, char *p) {
                 }
 
                 s->forward_to_syslog = !!r;
-                s->state = STDOUT_STREAM_FORWARD_TO_KMSG;
-                return 0;
-
-        case STDOUT_STREAM_FORWARD_TO_KMSG:
-                r = parse_boolean(p);
-                if (r < 0) {
-                        log_warning("Failed to parse copy to kmsg line.");
-                        return -EINVAL;
-                }
-
-                s->forward_to_kmsg = !!r;
                 s->state = STDOUT_STREAM_FORWARD_TO_CONSOLE;
                 return 0;
 

@@ -30,7 +30,6 @@
 
 #include "journal-authenticate.h"
 #include "journald-server.h"
-#include "journald-kmsg.h"
 #include "journald-syslog.h"
 
 int main(int argc, char *argv[]) {
@@ -60,7 +59,6 @@ int main(int argc, char *argv[]) {
 
         server_vacuum(&server);
         server_flush_to_var(&server);
-        server_flush_dev_kmsg(&server);
 
         log_debug("systemd-journald running as pid %lu", (unsigned long) getpid());
         server_driver_message(&server, SD_MESSAGE_JOURNAL_START, "Journal started");

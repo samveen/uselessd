@@ -45,7 +45,6 @@
 #include "journal-authenticate.h"
 #include "journald-server.h"
 #include "journald-rate-limit.h"
-#include "journald-kmsg.h"
 #include "journald-syslog.h"
 #include "journald-stream.h"
 #include "journald-console.h"
@@ -1110,24 +1109,6 @@ int process_event(Server *s, struct epoll_event *ev) {
                 server_sync(s);
                 return 1;
 
-        } else if (ev->data.fd == s->dev_kmsg_fd) {
-                int r;
-
-                if (ev->events & EPOLLERR)
-                        log_warning("/dev/kmsg buffer overrun, some messages lost.");
-
-                if (!(ev->events & EPOLLIN)) {
-                        log_error("Got invalid event from epoll for %s: %"PRIx32,
-                                  "/dev/kmsg", ev->events);
-                        return -EIO;
-                }
-
-                r = server_read_dev_kmsg(s);
-                if (r < 0)
-                        return r;
-
-                return 1;
-
         } else if (ev->data.fd == s->native_fd ||
                    ev->data.fd == s->syslog_fd) {
 
@@ -1347,12 +1328,7 @@ static int server_parse_proc_cmdline(Server *s) {
                                 log_warning("Failed to parse forward to syslog switch %s. Ignoring.", word + 35);
                         else
                                 s->forward_to_syslog = r;
-                } else if (startswith(word, "systemd.journald.forward_to_kmsg=")) {
-                        r = parse_boolean(word + 33);
-                        if (r < 0)
-                                log_warning("Failed to parse forward to kmsg switch %s. Ignoring.", word + 33);
-                        else
-                                s->forward_to_kmsg = r;
+
                 } else if (startswith(word, "systemd.journald.forward_to_console=")) {
                         r = parse_boolean(word + 36);
                         if (r < 0)
@@ -1449,7 +1425,7 @@ int server_init(Server *s) {
 
         zero(*s);
         s->sync_timer_fd = s->syslog_fd = s->native_fd = s->stdout_fd =
-                s->signal_fd = s->epoll_fd = s->dev_kmsg_fd = -1;
+                s->signal_fd = s->epoll_fd = -1;
         s->compress = true;
         s->seal = true;
 
@@ -1463,7 +1439,6 @@ int server_init(Server *s) {
 
         s->max_level_store = LOG_DEBUG;
         s->max_level_syslog = LOG_DEBUG;
-        s->max_level_kmsg = LOG_NOTICE;
         s->max_level_console = LOG_INFO;
 
         memset(&s->system_metrics, 0xFF, sizeof(s->system_metrics));
@@ -1547,14 +1522,6 @@ int server_init(Server *s) {
         if (r < 0)
                 return r;
 
-        r = server_open_dev_kmsg(s);
-        if (r < 0)
-                return r;
-
-        r = server_open_kernel_seqnum(s);
-        if (r < 0)
-                return r;
-
         r = server_open_sync_timer(s);
         if (r < 0)
                 return r;
@@ -1624,17 +1591,11 @@ void server_done(Server *s) {
         if (s->stdout_fd >= 0)
                 close_nointr_nofail(s->stdout_fd);
 
-        if (s->dev_kmsg_fd >= 0)
-                close_nointr_nofail(s->dev_kmsg_fd);
-
         if (s->sync_timer_fd >= 0)
                 close_nointr_nofail(s->sync_timer_fd);
 
         if (s->rate_limit)
                 journal_rate_limit_free(s->rate_limit);
-
-        if (s->kernel_seqnum)
-                munmap(s->kernel_seqnum, sizeof(uint64_t));
 
         free(s->buffer);
         free(s->tty_path);

@@ -672,8 +672,6 @@ noinst_LTLIBRARIES += \
 libsystemd_dbus_la_SOURCES = \
 	src/shared/dbus-common.c \
 	src/shared/dbus-common.h \
-	src/shared/dbus-loop.c \
-	src/shared/dbus-loop.h \
 	src/shared/polkit.c \
 	src/shared/polkit.h
 
@@ -1969,8 +1967,6 @@ libsystemd_journal_la_LIBADD = \
 
 libsystemd_journal_internal_la_SOURCES = \
 	$(libsystemd_journal_la_SOURCES) \
-	src/journal/journald-kmsg.c \
-	src/journal/journald-kmsg.h \
 	src/journal/journald-syslog.c \
 	src/journal/journald-syslog.h \
 	src/journal/journald-stream.c \
