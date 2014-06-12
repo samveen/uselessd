@@ -623,8 +623,6 @@ libsystemd_shared_la_SOURCES = \
 	src/shared/conf-files.h \
 	src/shared/cgroup-util.c \
 	src/shared/cgroup-util.h \
-	src/shared/cgroup-show.c \
-	src/shared/cgroup-show.h \
 	src/shared/unit-name.c \
 	src/shared/unit-name.h \
 	src/shared/utmp-wtmp.c \
