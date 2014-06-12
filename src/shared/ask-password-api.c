@@ -22,20 +22,47 @@
 #include <termios.h>
 #include <unistd.h>
 #include <sys/poll.h>
-#include <sys/inotify.h>
+//#include <sys/inotify.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/socket.h>
+#include <sys/param.h>
+#include <sys/priv.h>
+#include <bsm/audit.h>
 #include <string.h>
 #include <sys/un.h>
 #include <stddef.h>
-#include <sys/signalfd.h>
+//#include <sys/signalfd.h>
 
 #include "util.h"
 #include "mkdir.h"
 #include "strv.h"
 
 #include "ask-password-api.h"
+
+/* Directly taken from <sys/ucred.h>, as include
+ * directive does not always seem to properly work.
+ */
+struct ucred {
+	u_int	cr_ref;			/* reference count */
+#define	cr_startcopy cr_uid
+	uid_t	cr_uid;			/* effective user id */
+	uid_t	cr_ruid;		/* real user id */
+	uid_t	cr_svuid;		/* saved user id */
+	int	cr_ngroups;		/* number of groups */
+	gid_t	cr_rgid;		/* real group id */
+	gid_t	cr_svgid;		/* saved group id */
+	struct uidinfo	*cr_uidinfo;	/* per euid resource consumption */
+	struct uidinfo	*cr_ruidinfo;	/* per ruid resource consumption */
+	struct prison	*cr_prison;	/* jail(2) */
+	struct loginclass	*cr_loginclass; /* login class */
+	u_int		cr_flags;	/* credential flags */
+	void 		*cr_pspare2[2];	/* general use 2 */
+#define	cr_endcopy	cr_label
+	struct label	*cr_label;	/* MAC label */
+	gid_t	*cr_groups;		/* groups */
+	int	cr_agroups;		/* Available groups */
+};
 
 static void backspace_chars(int ttyfd, size_t p) {
 
@@ -71,17 +98,18 @@ int ask_password_tty(
         assert(message);
         assert(_passphrase);
 
+		/*
         if (flag_file) {
                 if ((notify = inotify_init1(IN_CLOEXEC|IN_NONBLOCK)) < 0) {
                         r = -errno;
                         goto finish;
                 }
 
-                if (inotify_add_watch(notify, flag_file, IN_ATTRIB /* for the link count */) < 0) {
+                if (inotify_add_watch(notify, flag_file, IN_ATTRIB // for the link count) < 0) {
                         r = -errno;
                         goto finish;
                 }
-        }
+        }*/
 
         if ((ttyfd = open("/dev/tty", O_RDWR|O_NOCTTY|O_CLOEXEC)) >= 0) {
 
@@ -125,7 +153,7 @@ int ask_password_tty(
                         y = now(CLOCK_MONOTONIC);
 
                         if (y > until) {
-                                r = -ETIME;
+                                //r = -ETIME;
                                 goto finish;
                         }
 
@@ -146,7 +174,7 @@ int ask_password_tty(
                         r = -errno;
                         goto finish;
                 } else if (k == 0) {
-                        r = -ETIME;
+                        //r = -ETIME;
                         goto finish;
                 }
 
@@ -278,11 +306,12 @@ static int create_socket(char **name) {
                 goto fail;
         }
 
+		/*
         if (setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &one, sizeof(one)) < 0) {
                 r = -errno;
                 log_error("SO_PASSCRED failed: %m");
                 goto fail;
-        }
+        }*/
 
         c = strdup(sa.un.sun_path);
         if (!c) {
@@ -349,11 +378,12 @@ int ask_password_agent(
 
         fd = -1;
 
+		/*
         if ((signal_fd = signalfd(-1, &mask, SFD_NONBLOCK|SFD_CLOEXEC)) < 0) {
                 log_error("signalfd(): %m");
                 r = -errno;
                 goto finish;
-        }
+        }*/
 
         if ((socket_fd = create_socket(&socket_name)) < 0) {
                 r = socket_fd;
@@ -420,7 +450,7 @@ int ask_password_agent(
 
                 if (until > 0 && until <= t) {
                         log_notice("Timed out");
-                        r = -ETIME;
+                        //r = -ETIME;
                         goto finish;
                 }
 
@@ -436,7 +466,7 @@ int ask_password_agent(
 
                 if (k <= 0) {
                         log_notice("Timed out");
-                        r = -ETIME;
+                        //r = -ETIME;
                         goto finish;
                 }
 
@@ -480,14 +510,14 @@ int ask_password_agent(
 
                 if (msghdr.msg_controllen < CMSG_LEN(sizeof(struct ucred)) ||
                     control.cmsghdr.cmsg_level != SOL_SOCKET ||
-                    control.cmsghdr.cmsg_type != SCM_CREDENTIALS ||
+                    control.cmsghdr.cmsg_type != SCM_CREDS ||
                     control.cmsghdr.cmsg_len != CMSG_LEN(sizeof(struct ucred))) {
                         log_warning("Received message without credentials. Ignoring.");
                         continue;
                 }
 
                 ucred = (struct ucred*) CMSG_DATA(&control.cmsghdr);
-                if (ucred->uid != 0) {
+                if (priv_check_cred(ucred, PRIV_CRED_SETUID) != 0) {
                         log_warning("Got request from unprivileged user. Ignoring.");
                         continue;
                 }
