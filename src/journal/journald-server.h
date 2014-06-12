@@ -23,9 +23,9 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
-#include <sys/epoll.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/ucred.h>
 
 #include "journal-file.h"
 #include "hashmap.h"
@@ -59,7 +59,6 @@ typedef struct Server {
         int syslog_fd;
         int native_fd;
         int stdout_fd;
-        int dev_kmsg_fd;
 
         JournalFile *runtime_journal;
         JournalFile *system_journal;
@@ -81,7 +80,6 @@ typedef struct Server {
         bool compress;
         bool seal;
 
-        bool forward_to_kmsg;
         bool forward_to_syslog;
         bool forward_to_console;
 
@@ -104,17 +102,12 @@ typedef struct Server {
 
         int max_level_store;
         int max_level_syslog;
-        int max_level_kmsg;
         int max_level_console;
 
         Storage storage;
         SplitMode split_mode;
 
         MMapCache *mmap;
-
-        bool dev_kmsg_readable;
-
-        uint64_t *kernel_seqnum;
 
         struct udev *udev;
 
