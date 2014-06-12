@@ -4430,7 +4430,7 @@ bool is_main_thread(void) {
         static __thread int cached = 0;
 
         if (_unlikely_(cached == 0))
-                cached = getpid() == gettid() ? 1 : -1;
+                cached = getpid() ? 1 : -1;
 
         return cached > 0;
 }
