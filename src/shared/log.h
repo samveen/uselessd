@@ -64,7 +64,6 @@ void log_close(void);
 void log_forget_fds(void);
 
 void log_close_syslog(void);
-void log_close_journal(void);
 void log_close_kmsg(void);
 void log_close_console(void);
 
