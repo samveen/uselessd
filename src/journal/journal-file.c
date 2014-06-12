@@ -219,7 +219,7 @@ static int journal_file_refresh_header(JournalFile *f) {
 
         /* Sync the online state to disk */
         msync(f->header, PAGE_ALIGN(sizeof(Header)), MS_SYNC);
-        fdatasync(f->fd);
+        fsync(f->fd);
 
         return 0;
 }
@@ -263,22 +263,22 @@ static int journal_file_verify_header(JournalFile *f) {
                 return -EBADMSG;
 
         if ((le64toh(f->header->header_size) + le64toh(f->header->arena_size)) > (uint64_t) f->last_stat.st_size)
-                return -ENODATA;
+                return -ENOATTR;
 
         if (le64toh(f->header->tail_object_offset) > (le64toh(f->header->header_size) + le64toh(f->header->arena_size)))
-                return -ENODATA;
+                return -ENOATTR;
 
         if (!VALID64(le64toh(f->header->data_hash_table_offset)) ||
             !VALID64(le64toh(f->header->field_hash_table_offset)) ||
             !VALID64(le64toh(f->header->tail_object_offset)) ||
             !VALID64(le64toh(f->header->entry_array_offset)))
-                return -ENODATA;
+                return -ENOATTR;
 
         if (le64toh(f->header->data_hash_table_offset) < le64toh(f->header->header_size) ||
             le64toh(f->header->field_hash_table_offset) < le64toh(f->header->header_size) ||
             le64toh(f->header->tail_object_offset) < le64toh(f->header->header_size) ||
             le64toh(f->header->entry_array_offset) < le64toh(f->header->header_size))
-                return -ENODATA;
+                return -ENOATTR;
 
         if (f->writable) {
                 uint8_t state;
@@ -2612,7 +2612,7 @@ int journal_file_open_reliably(
         r = journal_file_open(fname, flags, mode, compress, seal,
                               metrics, mmap_cache, template, ret);
         if (r != -EBADMSG && /* corrupted */
-            r != -ENODATA && /* truncated */
+            r != -ENOATTR && /* truncated */
             r != -EHOSTDOWN && /* other machine */
             r != -EPROTONOSUPPORT && /* incompatible feature */
             r != -EBUSY && /* unclean shutdown */
