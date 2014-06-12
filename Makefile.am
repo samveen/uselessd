@@ -715,21 +715,6 @@ libsystemd_label_la_LIBADD = \
 
 # ------------------------------------------------------------------------------
 noinst_LTLIBRARIES += \
-	libsystemd-capability.la
-
-libsystemd_capability_la_SOURCES = \
-	src/shared/capability.c \
-	src/shared/capability.h
-
-libsystemd_capability_la_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(CAP_CFLAGS)
-
-libsystemd_capability_la_LIBADD = \
-	$(CAP_LIBS)
-
-# ------------------------------------------------------------------------------
-noinst_LTLIBRARIES += \
 	libsystemd-audit.la
 
 libsystemd_audit_la_SOURCES = \
@@ -737,7 +722,7 @@ libsystemd_audit_la_SOURCES = \
 	src/shared/audit.h
 
 libsystemd_audit_la_LIBADD = \
-	libsystemd-capability.la
+	#libsystemd-capability.la
 
 # ------------------------------------------------------------------------------
 if HAVE_ACL
@@ -898,7 +883,6 @@ libsystemd_core_la_CFLAGS = \
 	-pthread
 
 libsystemd_core_la_LIBADD = \
-	libsystemd-capability.la \
 	libsystemd-units.la \
 	libsystemd-label.la \
 	libsystemd-shared.la \
@@ -1434,7 +1418,6 @@ systemd_tmpfiles_SOURCES = \
 systemd_tmpfiles_LDADD = \
 	libsystemd-label.la \
 	libsystemd-shared.la \
-	libsystemd-capability.la \
 	libsystemd-id128-internal.la
 
 rootbin_PROGRAMS += \
