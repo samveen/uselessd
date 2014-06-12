@@ -25,6 +25,7 @@
 #include <stddef.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/endian.h>
 
 #define SD_JOURNAL_SUPPRESS_LOCATION
 
@@ -275,16 +276,16 @@ _public_ int sd_journal_sendv(const struct iovec *iov, int n) {
         }
 
         if (!have_syslog_identifier &&
-            string_is_safe(program_invocation_short_name)) {
+            string_is_safe(getprogname())) {
 
-                /* Implicitly add program_invocation_short_name, if it
+                /* Implicitly add getprogname(), if it
                  * is not set explicitly. We only do this for
-                 * program_invocation_short_name, and nothing else
+                 * getprogname(), and nothing else
                  * since everything else is much nicer to retrieve
                  * from the outside. */
 
                 IOVEC_SET_STRING(w[j++], "SYSLOG_IDENTIFIER=");
-                IOVEC_SET_STRING(w[j++], program_invocation_short_name);
+                IOVEC_SET_STRING(w[j++], getprogname());
                 IOVEC_SET_STRING(w[j++], "\n");
         }
 
