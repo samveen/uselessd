@@ -108,23 +108,8 @@ added <sys/ucred.h> header
 replace ucred->uid check with the preferred priv_check_cred() method
 (experimental)
 
-sd-journal.c: inotify usage
-important: sd_journal_get_fd() and sd_journal_process()
-must reimplement later
-replaced <sys/vfs.h> with <sys/mount.h>
-Defined Linux magic values CODA_SUPER_MAGIC, NCP_SUPER_MAGIC,
-NFS_SUPER_MAGIC and SMB_SUPER_MAGIC
-
 sparse-endian.h: switched <endian.h> to <sys/endian.h>
 add <sys/types.h>
-
-journal-file.c: replace ENODATA with ENOATTR
-replace fdatasync() with fsync()
-
-journal-verify.c: remove GCRYPT conditional code
-
-journal-send.c: replace program_invocation_short_name()
-with getprogname(), add <sys/endian.h>
 
 dbus-common.c: epoll() usage
 rid of bus_events_to_flags() and bus_flags_to_events()
@@ -135,11 +120,31 @@ comment out problematic assertion
 
 dbus-loop.c: remove it, as it's unused
 
-journald-kmsg.c: uses /dev/kmsg, remove entirely
-references are in journald-syslog.c, journald-stream.c,
-journald-server.c, journald-native.c and journald.c
+<sys/prctl.h> in src/shared/capability.c
+Where capability.h is used: src/core/execute.c,
+src/core/main.c, src/shared/audit.[ch], src/tmpfiles/tmpfiles.c
+related function referenced in src/core/load-fragment.c
 
-Currently: various errors in journald-syslog.c
+TODO: Remove dependency on POSIX 1003.1e capabilities (in
+capability.c and audit.c).
+audit.h is included in selinux-access.c
+edited src/core/execute.c, src/tmpfiles/tmpfiles.c, src/shared/audit.c
+removed usage of have_effective_cap(), cap_last_cap()
+removed usage of unused function audit_session_from_pid()
+edited out capability bounding from main.c
+
+capability.[ch] removed
+
+selinux-access.c edited so as to not make use of
+audit_loginuid_from_pid()
+rekmove unused <sys/prctl.h> header
+
+CURRENTLY: address <sys/epoll.h> usage in the following:
+	src/core/automount.c[x],dbus.c,device.c[x],job.c,manager.c,
+			mount.c[x],path.c[x],socket.c[x],swap.c,unit.c
+
+			mount.c -> commented assert(EVENTS & EPOLLIN);
+			socket.c -> commented use of EPOLLIN to gauge readability
 
 files modified:
 	src/shared/util.h
@@ -166,20 +171,15 @@ files modified:
 	src/shared/dbus-common.c
 	[removed] src/shared/dbus-loop.c
 	[removed] src/shared/dbus-loop.h
+	src/shared/audit.c
+	src/shared/audit.h
+	[removed] src/shared/capability.c
+	[removed] src/shared/capability.h
 
-	src/journal/sd-journal.c
-	src/systemd/sd-journal.h
-	src/journal/journal-file.c
-	src/journal/journal-verify.c
-	src/journal/journal-send.c
-	src/journal/journald-syslog.c
-	src/journal/journald-stream.c
-	src/journal/journald-server.c
-	src/journal/journald-server.h
-	src/journal/journald-native.c
-	src/journal/journald.c
-	[removed] src/journal/journald-kmsg.c
-	[removed] src/journal/journald-kmsg.h
+	src/core/execute.c
+	src/tmpfiles/tmpfiles.c
+	src/core/main.c
+	src/core/selinux-access.c
 
 ----------
 
