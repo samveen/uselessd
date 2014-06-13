@@ -20,7 +20,6 @@
 ***/
 
 #include <sys/inotify.h>
-#include <sys/epoll.h>
 #include <sys/ioctl.h>
 #include <errno.h>
 #include <unistd.h>
@@ -66,10 +65,6 @@ int path_spec_watch(PathSpec *s, Unit *u) {
                 r = -errno;
                 goto fail;
         }
-
-        r = unit_watch_fd(u, s->inotify_fd, EPOLLIN, &s->watch);
-        if (r < 0)
-                goto fail;
 
         /* This assumes the path was passed through path_kill_slashes()! */
 
@@ -161,11 +156,6 @@ int path_spec_fd_event(PathSpec *s, uint32_t events) {
         ssize_t k;
         int l;
         int r = 0;
-
-        if (events != EPOLLIN) {
-                log_error("Got invalid poll event on inotify.");
-                return -EINVAL;
-        }
 
         if (ioctl(s->inotify_fd, FIONREAD, &l) < 0) {
                 log_error("FIONREAD failed: %m");

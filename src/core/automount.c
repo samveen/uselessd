@@ -24,7 +24,6 @@
 #include <sys/mount.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/epoll.h>
 #include <sys/stat.h>
 #include <linux/auto_fs4.h>
 #include <linux/auto_dev-ioctl.h>
@@ -257,9 +256,6 @@ static int automount_coldplug(Unit *u) {
 
                         assert(a->pipe_fd >= 0);
 
-                        r = unit_watch_fd(UNIT(a), a->pipe_fd, EPOLLIN, &a->pipe_watch);
-                        if (r < 0)
-                                return r;
                 }
 
                 automount_set_state(a, a->deserialized_state);
@@ -532,10 +528,6 @@ static void automount_enter_waiting(Automount *a) {
         close_nointr_nofail(ioctl_fd);
         ioctl_fd = -1;
 
-        r = unit_watch_fd(UNIT(a), p[0], EPOLLIN, &a->pipe_watch);
-        if (r < 0)
-                goto fail;
-
         a->pipe_fd = p[0];
         a->dev_id = st.st_dev;
 
@@ -756,11 +748,6 @@ static void automount_fd_event(Unit *u, int fd, uint32_t events, Watch *w) {
 
         assert(a);
         assert(fd == a->pipe_fd);
-
-        if (events != EPOLLIN) {
-                log_error_unit(u->id, "Got invalid poll event on pipe.");
-                goto fail;
-        }
 
         l = loop_read(a->pipe_fd, &packet, sizeof(packet), true);
         if (l != sizeof(packet)) {

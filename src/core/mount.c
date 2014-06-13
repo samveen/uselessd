@@ -22,7 +22,6 @@
 #include <errno.h>
 #include <stdio.h>
 #include <mntent.h>
-#include <sys/epoll.h>
 #include <signal.h>
 
 #include "manager.h"
@@ -1617,10 +1616,6 @@ static int mount_enumerate(Manager *m) {
         assert(m);
 
         if (!m->proc_self_mountinfo) {
-                struct epoll_event ev = {
-                        .events = EPOLLPRI,
-                        .data.ptr = &m->mount_watch,
-                };
 
                 m->proc_self_mountinfo = fopen("/proc/self/mountinfo", "re");
                 if (!m->proc_self_mountinfo)
@@ -1629,8 +1624,6 @@ static int mount_enumerate(Manager *m) {
                 m->mount_watch.type = WATCH_MOUNT;
                 m->mount_watch.fd = fileno(m->proc_self_mountinfo);
 
-                if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->mount_watch.fd, &ev) < 0)
-                        return -errno;
         }
 
         r = mount_load_proc_self_mountinfo(m, false);
@@ -1649,7 +1642,7 @@ void mount_fd_event(Manager *m, int events) {
         int r;
 
         assert(m);
-        assert(events & EPOLLPRI);
+        //assert(events & EPOLLPRI);
 
         /* The manager calls this for every fd event happening on the
          * /proc/self/mountinfo file, which informs us about mounting

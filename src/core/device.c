@@ -20,7 +20,6 @@
 ***/
 
 #include <errno.h>
-#include <sys/epoll.h>
 
 #include "unit.h"
 #include "device.h"

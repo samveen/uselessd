@@ -24,7 +24,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <sys/epoll.h>
 #include <signal.h>
 #include <arpa/inet.h>
 #include <mqueue.h>
@@ -1081,8 +1080,9 @@ static int socket_watch_fds(Socket *s) {
                         p->type == SOCKET_SOCKET &&
                         socket_address_can_accept(&p->address);
 
+				/* Checks if readable, comment out for now...
                 if ((r = unit_watch_fd(UNIT(s), p->fd, EPOLLIN, &p->fd_watch)) < 0)
-                        goto fail;
+                        goto fail; */
         }
 
         return 0;
@@ -1996,6 +1996,7 @@ static void socket_fd_event(Unit *u, int fd, uint32_t events, Watch *w) {
 
         log_debug_unit(u->id, "Incoming traffic on %s", u->id);
 
+/*
         if (events != EPOLLIN) {
 
                 if (events & EPOLLHUP)
@@ -2008,7 +2009,7 @@ static void socket_fd_event(Unit *u, int fd, uint32_t events, Watch *w) {
                                        u->id, events);
 
                 goto fail;
-        }
+        }*/
 
         if (w->socket_accept) {
                 for (;;) {
