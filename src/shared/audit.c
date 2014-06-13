@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <sys/prctl.h>
 #include <sys/capability.h>
 
 #include "macro.h"

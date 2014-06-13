@@ -38,7 +38,6 @@
 #include "log.h"
 #include "bus-errors.h"
 #include "dbus-common.h"
-#include "audit.h"
 #include "selinux-util.h"
 #include "audit-fd.h"
 
@@ -120,9 +119,10 @@ static int bus_get_audit_data(
         if (pid <= 0)
                 return -EIO;
 
+		/*
         r = audit_loginuid_from_pid(pid, &audit->loginuid);
         if (r < 0)
-                return r;
+                return r; */
 
         r = get_process_uid(pid, &audit->uid);
         if (r < 0)
@@ -279,9 +279,10 @@ static int get_audit_data(
         audit->uid = ucred.uid;
         audit->gid = ucred.gid;
 
+		/*
         r = audit_loginuid_from_pid(ucred.pid, &audit->loginuid);
         if (r < 0)
-                return r;
+                return r; */
 
         r = get_process_cmdline(ucred.pid, 0, true, &audit->cmdline);
         if (r < 0)
