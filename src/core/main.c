@@ -653,8 +653,6 @@ static int parse_config_file(void) {
                 { "Manager", "DefaultLimitSIGPENDING",config_parse_limit,        0, &arg_default_rlimit[RLIMIT_SIGPENDING]},
                 { "Manager", "DefaultLimitMSGQUEUE",  config_parse_limit,        0, &arg_default_rlimit[RLIMIT_MSGQUEUE]},
                 { "Manager", "DefaultLimitNICE",      config_parse_limit,        0, &arg_default_rlimit[RLIMIT_NICE]},
-                { "Manager", "DefaultLimitRTPRIO",    config_parse_limit,        0, &arg_default_rlimit[RLIMIT_RTPRIO]},
-                { "Manager", "DefaultLimitRTTIME",    config_parse_limit,        0, &arg_default_rlimit[RLIMIT_RTTIME]},
                 { NULL, NULL, NULL, 0, NULL }
         };
 

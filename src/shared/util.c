@@ -4586,8 +4586,7 @@ static const char* const rlimit_table[] = {
         [RLIMIT_NOFILE] = "LimitNOFILE",
         [RLIMIT_AS] = "LimitAS",
         [RLIMIT_NPROC] = "LimitNPROC",
-        [RLIMIT_MEMLOCK] = "LimitMEMLOCK",
-        [RLIMIT_RTTIME] = "LimitRTTIME"
+        [RLIMIT_MEMLOCK] = "LimitMEMLOCK"
 };
 
 DEFINE_STRING_TABLE_LOOKUP(rlimit, int);
@@ -4596,7 +4595,7 @@ static const char* const ip_tos_table[] = {
         [IPTOS_LOWDELAY] = "low-delay",
         [IPTOS_THROUGHPUT] = "throughput",
         [IPTOS_RELIABILITY] = "reliability",
-        [IPTOS_LOWCOST] = "low-cost",
+        [IPTOS_LOWCOST] = "low-cost"
 };
 
 DEFINE_STRING_TABLE_LOOKUP_WITH_FALLBACK(ip_tos, int, 0xff);
