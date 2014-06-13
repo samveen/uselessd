@@ -22,7 +22,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/epoll.h>
+//#include <sys/epoll.h>
 #include <signal.h>
 #include <sys/signalfd.h>
 #include <sys/wait.h>
@@ -93,10 +93,11 @@ static int manager_setup_notify(Manager *m) {
         } sa = {
                 .sa.sa_family = AF_UNIX,
         };
+        /*
         struct epoll_event ev = {
                 .events = EPOLLIN,
                 .data.ptr = &m->notify_watch,
-        };
+        };*/
         int one = 1, r;
 
         m->notify_watch.type = WATCH_NOTIFY;
@@ -126,11 +127,12 @@ static int manager_setup_notify(Manager *m) {
                 return -errno;
         }
 
+		/*
         r = epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->notify_watch.fd, &ev);
         if (r < 0) {
                 log_error("Failed to add notification socket fd to epoll: %m");
                 return -errno;
-        }
+        }*/
 
         sa.un.sun_path[0] = '@';
         m->notify_socket = strdup(sa.un.sun_path);
@@ -158,10 +160,10 @@ static int manager_jobs_in_progress_mod_timer(Manager *m) {
 }
 
 static int manager_watch_jobs_in_progress(Manager *m) {
-        struct epoll_event ev = {
+        /*struct epoll_event ev = {
                 .events = EPOLLIN,
                 .data.ptr = &m->jobs_in_progress_watch,
-        };
+        };*/
         int r;
 
         if (m->jobs_in_progress_watch.type != WATCH_INVALID)
@@ -180,12 +182,12 @@ static int manager_watch_jobs_in_progress(Manager *m) {
                 log_error("Failed to set up timer for jobs progress watch: %s", strerror(-r));
                 goto err;
         }
-
+/*
         if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->jobs_in_progress_watch.fd, &ev) < 0) {
                 log_error("Failed to add jobs progress timer fd to epoll: %m");
                 r = -errno;
                 goto err;
-        }
+        } */
 
         log_debug("Set up jobs progress timerfd.");
 
@@ -202,7 +204,7 @@ static void manager_unwatch_jobs_in_progress(Manager *m) {
         if (m->jobs_in_progress_watch.type != WATCH_JOBS_IN_PROGRESS)
                 return;
 
-        assert_se(epoll_ctl(m->epoll_fd, EPOLL_CTL_DEL, m->jobs_in_progress_watch.fd, NULL) >= 0);
+        //assert_se(epoll_ctl(m->epoll_fd, EPOLL_CTL_DEL, m->jobs_in_progress_watch.fd, NULL) >= 0);
         close_nointr_nofail(m->jobs_in_progress_watch.fd);
         watch_init(&m->jobs_in_progress_watch);
         m->jobs_in_progress_iteration = 0;
@@ -275,10 +277,10 @@ static void manager_print_jobs_in_progress(Manager *m) {
 }
 
 static int manager_watch_idle_pipe(Manager *m) {
-        struct epoll_event ev = {
+        /*struct epoll_event ev = {
                 .events = EPOLLIN,
                 .data.ptr = &m->idle_pipe_watch,
-        };
+        }; */
         int r;
 
         if (m->idle_pipe_watch.type != WATCH_INVALID)
@@ -294,12 +296,12 @@ static int manager_watch_idle_pipe(Manager *m) {
                 r = -errno;
                 goto err;
         }
-
+/*
         if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->idle_pipe_watch.fd, &ev) < 0) {
                 log_error("Failed to add idle_pipe fd to epoll: %m");
                 r = -errno;
                 goto err;
-        }
+        } */
 
         log_debug("Set up idle_pipe watch.");
 
@@ -316,17 +318,17 @@ static void manager_unwatch_idle_pipe(Manager *m) {
         if (m->idle_pipe_watch.type != WATCH_IDLE_PIPE)
                 return;
 
-        assert_se(epoll_ctl(m->epoll_fd, EPOLL_CTL_DEL, m->idle_pipe_watch.fd, NULL) >= 0);
+        //assert_se(epoll_ctl(m->epoll_fd, EPOLL_CTL_DEL, m->idle_pipe_watch.fd, NULL) >= 0);
         watch_init(&m->idle_pipe_watch);
 
         log_debug("Closed idle_pipe watch.");
 }
 
 static int manager_setup_time_change(Manager *m) {
-        struct epoll_event ev = {
+       /* struct epoll_event ev = {
                 .events = EPOLLIN,
                 .data.ptr = &m->time_change_watch,
-        };
+        };*/
 
         /* We only care for the cancellation event, hence we set the
          * timeout to the latest possible value. */
@@ -353,11 +355,11 @@ static int manager_setup_time_change(Manager *m) {
                 watch_init(&m->time_change_watch);
                 return 0;
         }
-
+/*
         if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->time_change_watch.fd, &ev) < 0) {
                 log_error("Failed to add timer change fd to epoll: %m");
                 return -errno;
-        }
+        }*/
 
         log_debug("Set up TFD_TIMER_CANCEL_ON_SET timerfd.");
 
@@ -393,10 +395,10 @@ static int enable_special_signals(Manager *m) {
 
 static int manager_setup_signals(Manager *m) {
         sigset_t mask;
-        struct epoll_event ev = {
+       /* struct epoll_event ev = {
                 .events = EPOLLIN,
                 .data.ptr = &m->signal_watch,
-        };
+        }; */
         struct sigaction sa = {
                 .sa_handler = SIG_DFL,
                 .sa_flags = SA_NOCLDSTOP|SA_RESTART,
@@ -445,8 +447,8 @@ static int manager_setup_signals(Manager *m) {
         if (m->signal_watch.fd < 0)
                 return -errno;
 
-        if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->signal_watch.fd, &ev) < 0)
-                return -errno;
+       // if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->signal_watch.fd, &ev) < 0)
+                //return -errno;
 
         if (m->running_as == SYSTEMD_SYSTEM)
                 return enable_special_signals(m);
@@ -510,7 +512,7 @@ int manager_new(SystemdRunningAs running_as, bool reexecuting, Manager **_m) {
         watch_init(&m->time_change_watch);
         watch_init(&m->jobs_in_progress_watch);
 
-        m->epoll_fd = m->dev_autofs_fd = -1;
+        //m->epoll_fd = m->dev_autofs_fd = -1;
         m->current_job_id = 1; /* start as id #1, so that we can leave #0 around as "null-like" value */
 
         r = manager_default_environment(m);
@@ -534,9 +536,9 @@ int manager_new(SystemdRunningAs running_as, bool reexecuting, Manager **_m) {
         if (!m->watch_bus)
                 goto fail;
 
-        m->epoll_fd = epoll_create1(EPOLL_CLOEXEC);
-        if (m->epoll_fd < 0)
-                goto fail;
+        //m->epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+       // if (m->epoll_fd < 0)
+              //  goto fail;
 
         r = manager_setup_signals(m);
         if (r < 0)
@@ -741,8 +743,8 @@ void manager_free(Manager *m) {
         hashmap_free(m->watch_pids);
         hashmap_free(m->watch_bus);
 
-        if (m->epoll_fd >= 0)
-                close_nointr_nofail(m->epoll_fd);
+        //if (m->epoll_fd >= 0)
+                //close_nointr_nofail(m->epoll_fd);
         if (m->signal_watch.fd >= 0)
                 close_nointr_nofail(m->signal_watch.fd);
         if (m->notify_watch.fd >= 0)
@@ -1648,8 +1650,8 @@ static int process_event(Manager *m, struct epoll_event *ev) {
         case WATCH_SIGNAL:
 
                 /* An incoming signal? */
-                if (ev->events != EPOLLIN)
-                        return -EINVAL;
+               // if (ev->events != EPOLLIN)
+                       // return -EINVAL;
 
                 if ((r = manager_process_signal_fd(m)) < 0)
                         return r;
@@ -1659,8 +1661,8 @@ static int process_event(Manager *m, struct epoll_event *ev) {
         case WATCH_NOTIFY:
 
                 /* An incoming daemon notification event? */
-                if (ev->events != EPOLLIN)
-                        return -EINVAL;
+               // if (ev->events != EPOLLIN)
+                        //return -EINVAL;
 
                 if ((r = manager_process_notify_fd(m)) < 0)
                         return r;
@@ -1724,8 +1726,8 @@ static int process_event(Manager *m, struct epoll_event *ev) {
                            NULL);
 
                 /* Restart the watch */
-                epoll_ctl(m->epoll_fd, EPOLL_CTL_DEL, m->time_change_watch.fd,
-                          NULL);
+                //epoll_ctl(m->epoll_fd, EPOLL_CTL_DEL, m->time_change_watch.fd,
+                          //NULL);
                 close_nointr_nofail(m->time_change_watch.fd);
                 watch_init(&m->time_change_watch);
                 manager_setup_time_change(m);
@@ -1785,7 +1787,7 @@ int manager_loop(Manager *m) {
                 return r;
 
         while (m->exit_code == MANAGER_RUNNING) {
-                struct epoll_event event;
+                //struct epoll_event event;
                 int n;
                 int wait_msec = -1;
 
@@ -1830,7 +1832,7 @@ int manager_loop(Manager *m) {
                                 wait_msec = 1;
                 } else
                         wait_msec = -1;
-
+/*
                 n = epoll_wait(m->epoll_fd, &event, 1, wait_msec);
                 if (n < 0) {
 
@@ -1847,7 +1849,7 @@ int manager_loop(Manager *m) {
                 if (r < 0)
                         return r;
         }
-
+*/
         return m->exit_code;
 }
 

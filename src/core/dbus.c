@@ -19,7 +19,7 @@
   along with systemd; If not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#include <sys/epoll.h>
+//#include <sys/epoll.h>
 #include <sys/timerfd.h>
 #include <errno.h>
 #include <unistd.h>
@@ -113,7 +113,7 @@ void bus_watch_event(Manager *m, Watch *w, int events) {
 static dbus_bool_t bus_add_watch(DBusWatch *bus_watch, void *data) {
         Manager *m = data;
         Watch *w;
-        struct epoll_event ev;
+        //struct epoll_event ev;
 
         assert(bus_watch);
         assert(m);
@@ -125,10 +125,10 @@ static dbus_bool_t bus_add_watch(DBusWatch *bus_watch, void *data) {
         w->type = WATCH_DBUS_WATCH;
         w->data.bus_watch = bus_watch;
 
-        zero(ev);
+       // zero(ev);
         ev.events = bus_flags_to_events(bus_watch);
         ev.data.ptr = w;
-
+/*
         if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, w->fd, &ev) < 0) {
 
                 if (errno != EEXIST) {
@@ -140,7 +140,7 @@ static dbus_bool_t bus_add_watch(DBusWatch *bus_watch, void *data) {
                  * same fd. epoll() does not like that. As a dirty
                  * hack we simply dup() the fd and hence get a second
                  * one we can safely add to the epoll(). */
-
+/*
                 if ((w->fd = dup(w->fd)) < 0) {
                         free(w);
                         return FALSE;
@@ -153,7 +153,7 @@ static dbus_bool_t bus_add_watch(DBusWatch *bus_watch, void *data) {
                 }
 
                 w->fd_is_dupped = true;
-        }
+        } */
 
         dbus_watch_set_data(bus_watch, w, NULL);
 
@@ -172,7 +172,7 @@ static void bus_remove_watch(DBusWatch *bus_watch, void *data) {
                 return;
 
         assert(w->type == WATCH_DBUS_WATCH);
-        assert_se(epoll_ctl(m->epoll_fd, EPOLL_CTL_DEL, w->fd, NULL) >= 0);
+        //assert_se(epoll_ctl(m->epoll_fd, EPOLL_CTL_DEL, w->fd, NULL) >= 0);
 
         if (w->fd_is_dupped)
                 close_nointr_nofail(w->fd);
@@ -183,7 +183,7 @@ static void bus_remove_watch(DBusWatch *bus_watch, void *data) {
 static void bus_toggle_watch(DBusWatch *bus_watch, void *data) {
         Manager *m = data;
         Watch *w;
-        struct epoll_event ev;
+        //struct epoll_event ev;
 
         assert(bus_watch);
         assert(m);
@@ -194,11 +194,11 @@ static void bus_toggle_watch(DBusWatch *bus_watch, void *data) {
 
         assert(w->type == WATCH_DBUS_WATCH);
 
-        zero(ev);
+        //zero(ev);
         ev.events = bus_flags_to_events(bus_watch);
         ev.data.ptr = w;
 
-        assert_se(epoll_ctl(m->epoll_fd, EPOLL_CTL_MOD, w->fd, &ev) == 0);
+       // assert_se(epoll_ctl(m->epoll_fd, EPOLL_CTL_MOD, w->fd, &ev) == 0);
 }
 
 static int bus_timeout_arm(Manager *m, Watch *w) {
@@ -234,7 +234,7 @@ void bus_timeout_event(Manager *m, Watch *w, int events) {
 static dbus_bool_t bus_add_timeout(DBusTimeout *timeout, void *data) {
         Manager *m = data;
         Watch *w;
-        struct epoll_event ev;
+       // struct epoll_event ev;
 
         assert(timeout);
         assert(m);
@@ -251,12 +251,12 @@ static dbus_bool_t bus_add_timeout(DBusTimeout *timeout, void *data) {
         if (bus_timeout_arm(m, w) < 0)
                 goto fail;
 
-        zero(ev);
-        ev.events = EPOLLIN;
+        //zero(ev);
+       // ev.events = EPOLLIN;
         ev.data.ptr = w;
 
-        if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, w->fd, &ev) < 0)
-                goto fail;
+        //if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, w->fd, &ev) < 0)
+                //goto fail;
 
         dbus_timeout_set_data(timeout, w, NULL);
 
@@ -283,7 +283,7 @@ static void bus_remove_timeout(DBusTimeout *timeout, void *data) {
 
         assert(w->type == WATCH_DBUS_TIMEOUT);
 
-        assert_se(epoll_ctl(m->epoll_fd, EPOLL_CTL_DEL, w->fd, NULL) >= 0);
+        //assert_se(epoll_ctl(m->epoll_fd, EPOLL_CTL_DEL, w->fd, NULL) >= 0);
         close_nointr_nofail(w->fd);
         free(w);
 }

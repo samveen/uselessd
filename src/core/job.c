@@ -22,7 +22,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <sys/timerfd.h>
-#include <sys/epoll.h>
+//#include <sys/epoll.h>
 
 #include "systemd/sd-id128.h"
 #include "systemd/sd-messages.h"
@@ -109,7 +109,7 @@ void job_free(Job *j) {
                 assert(j->timer_watch.data.job == j);
                 assert(j->timer_watch.fd >= 0);
 
-                assert_se(epoll_ctl(j->manager->epoll_fd, EPOLL_CTL_DEL, j->timer_watch.fd, NULL) >= 0);
+                //assert_se(epoll_ctl(j->manager->epoll_fd, EPOLL_CTL_DEL, j->timer_watch.fd, NULL) >= 0);
                 close_nointr_nofail(j->timer_watch.fd);
         }
 
@@ -861,10 +861,10 @@ finish:
 
 int job_start_timer(Job *j) {
         struct itimerspec its = {};
-        struct epoll_event ev = {
+       /* struct epoll_event ev = {
                 .data.ptr = &j->timer_watch,
                 .events = EPOLLIN,
-        };
+        }; */
         int fd, r;
 
         if (j->unit->job_timeout <= 0 ||
@@ -885,10 +885,10 @@ int job_start_timer(Job *j) {
                 goto fail;
         }
 
-        if (epoll_ctl(j->manager->epoll_fd, EPOLL_CTL_ADD, fd, &ev) < 0) {
+        /*if (epoll_ctl(j->manager->epoll_fd, EPOLL_CTL_ADD, fd, &ev) < 0) {
                 r = -errno;
                 goto fail;
-        }
+        } */
 
         j->timer_watch.type = WATCH_JOB_TIMER;
         j->timer_watch.fd = fd;
@@ -1063,16 +1063,16 @@ int job_deserialize(Job *j, FILE *f, FDSet *fds) {
 }
 
 int job_coldplug(Job *j) {
-        struct epoll_event ev = {
+       /* struct epoll_event ev = {
                 .data.ptr = &j->timer_watch,
                 .events = EPOLLIN,
-        };
+        }; */
 
         if (j->timer_watch.type != WATCH_JOB_TIMER)
                 return 0;
 
-        if (epoll_ctl(j->manager->epoll_fd, EPOLL_CTL_ADD, j->timer_watch.fd, &ev) < 0)
-                return -errno;
+        //if (epoll_ctl(j->manager->epoll_fd, EPOLL_CTL_ADD, j->timer_watch.fd, &ev) < 0)
+               // return -errno;
 
         return 0;
 }

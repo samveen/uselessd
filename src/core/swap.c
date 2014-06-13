@@ -23,7 +23,7 @@
 #include <limits.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/epoll.h>
+//#include <sys/epoll.h>
 #include <sys/stat.h>
 #include <sys/swap.h>
 
@@ -1019,7 +1019,8 @@ int swap_dispatch_reload(Manager *m) {
 
         m->request_reload = false;
 
-        return swap_fd_event(m, EPOLLPRI);
+        //return swap_fd_event(m, EPOLLPRI);
+        return 0;
 }
 
 int swap_fd_event(Manager *m, int events) {
@@ -1027,7 +1028,7 @@ int swap_fd_event(Manager *m, int events) {
         int r;
 
         assert(m);
-        assert(events & EPOLLPRI);
+        //assert(events & EPOLLPRI);
 
         r = swap_load_proc_swaps(m, true);
         if (r < 0) {
@@ -1169,10 +1170,10 @@ static int swap_enumerate(Manager *m) {
         assert(m);
 
         if (!m->proc_swaps) {
-                struct epoll_event ev = {
+                /*struct epoll_event ev = {
                         .events = EPOLLPRI,
                         .data.ptr = &m->swap_watch,
-                };
+                }; */
 
                 m->proc_swaps = fopen("/proc/swaps", "re");
                 if (!m->proc_swaps)
@@ -1181,8 +1182,8 @@ static int swap_enumerate(Manager *m) {
                 m->swap_watch.type = WATCH_SWAP;
                 m->swap_watch.fd = fileno(m->proc_swaps);
 
-                if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->swap_watch.fd, &ev) < 0)
-                        return -errno;
+                //if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->swap_watch.fd, &ev) < 0)
+                        //return -errno;
         }
 
         r = swap_load_proc_swaps(m, false);

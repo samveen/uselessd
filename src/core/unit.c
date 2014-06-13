@@ -22,7 +22,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/epoll.h>
+//#include <sys/epoll.h>
 #include <sys/timerfd.h>
 #include <sys/poll.h>
 #include <stdlib.h>
@@ -1598,21 +1598,21 @@ void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, bool reload_su
 }
 
 int unit_watch_fd(Unit *u, int fd, uint32_t events, Watch *w) {
-        struct epoll_event ev = {
+        /*struct epoll_event ev = {
                 .data.ptr = w,
                 .events = events,
-        };
+        };*/
 
         assert(u);
         assert(fd >= 0);
         assert(w);
         assert(w->type == WATCH_INVALID || (w->type == WATCH_FD && w->fd == fd && w->data.unit == u));
 
-        if (epoll_ctl(u->manager->epoll_fd,
+        /*if (epoll_ctl(u->manager->epoll_fd,
                       w->type == WATCH_INVALID ? EPOLL_CTL_ADD : EPOLL_CTL_MOD,
                       fd,
                       &ev) < 0)
-                return -errno;
+                return -errno;*/
 
         w->fd = fd;
         w->type = WATCH_FD;
@@ -1630,7 +1630,7 @@ void unit_unwatch_fd(Unit *u, Watch *w) {
 
         assert(w->type == WATCH_FD);
         assert(w->data.unit == u);
-        assert_se(epoll_ctl(u->manager->epoll_fd, EPOLL_CTL_DEL, w->fd, NULL) >= 0);
+        //assert_se(epoll_ctl(u->manager->epoll_fd, EPOLL_CTL_DEL, w->fd, NULL) >= 0);
 
         w->fd = -1;
         w->type = WATCH_INVALID;
@@ -1696,7 +1696,7 @@ int unit_watch_timer(Unit *u, clockid_t clock_id, bool relative, usec_t usec, Wa
         if (timerfd_settime(fd, flags, &its, NULL) < 0)
                 goto fail;
 
-        if (w->type == WATCH_INVALID) {
+       /* if (w->type == WATCH_INVALID) {
                 struct epoll_event ev = {
                         .data.ptr = w,
                         .events = EPOLLIN,
@@ -1704,7 +1704,7 @@ int unit_watch_timer(Unit *u, clockid_t clock_id, bool relative, usec_t usec, Wa
 
                 if (epoll_ctl(u->manager->epoll_fd, EPOLL_CTL_ADD, fd, &ev) < 0)
                         goto fail;
-        }
+        }*/
 
         w->type = WATCH_UNIT_TIMER;
         w->fd = fd;
@@ -1730,7 +1730,7 @@ void unit_unwatch_timer(Unit *u, Watch *w) {
         assert(w->data.unit == u);
         assert(w->fd >= 0);
 
-        assert_se(epoll_ctl(u->manager->epoll_fd, EPOLL_CTL_DEL, w->fd, NULL) >= 0);
+        //assert_se(epoll_ctl(u->manager->epoll_fd, EPOLL_CTL_DEL, w->fd, NULL) >= 0);
         close_nointr_nofail(w->fd);
 
         w->fd = -1;
