@@ -40,7 +40,6 @@
 #include "dbus-target.h"
 #include "dbus-device.h"
 #include "dbus-mount.h"
-#include "dbus-automount.h"
 #include "dbus-snapshot.h"
 #include "dbus-swap.h"
 #include "dbus-timer.h"
@@ -70,7 +69,6 @@ const char *const bus_interface_table[] = {
         "org.freedesktop.systemd1.Target",     bus_target_interface,
         "org.freedesktop.systemd1.Device",     bus_device_interface,
         "org.freedesktop.systemd1.Mount",      bus_mount_interface,
-        "org.freedesktop.systemd1.Automount",  bus_automount_interface,
         "org.freedesktop.systemd1.Snapshot",   bus_snapshot_interface,
         "org.freedesktop.systemd1.Swap",       bus_swap_interface,
         "org.freedesktop.systemd1.Timer",      bus_timer_interface,

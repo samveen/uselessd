@@ -276,7 +276,6 @@ typedef enum UnitSetPropertiesMode {
 #include "target.h"
 #include "device.h"
 #include "mount.h"
-#include "automount.h"
 #include "snapshot.h"
 #include "swap.h"
 #include "path.h"
@@ -459,7 +458,6 @@ DEFINE_CAST(SERVICE, Service);
 DEFINE_CAST(TARGET, Target);
 DEFINE_CAST(DEVICE, Device);
 DEFINE_CAST(MOUNT, Mount);
-DEFINE_CAST(AUTOMOUNT, Automount);
 DEFINE_CAST(SNAPSHOT, Snapshot);
 DEFINE_CAST(SWAP, Swap);
 DEFINE_CAST(PATH, Path);
