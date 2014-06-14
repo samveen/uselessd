@@ -209,7 +209,7 @@ static int bus_timeout_arm(Manager *m, Watch *w) {
         timer_t timerid;
         struct sigevent sev;
         sev.sigev_notify = SIGEV_SIGNAL;
-        sev.sigev_signo = SIG;
+        sev.sigev_signo = SIGRTMIN;
         sev.sigev_value.sival_ptr = &timerid;
 
         assert(m);

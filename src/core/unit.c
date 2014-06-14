@@ -22,6 +22,8 @@
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
+#include <signal.h>
+#include <time.h>
 //#include <sys/epoll.h>
 //#include <sys/timerfd.h>
 #include <sys/poll.h>
@@ -1662,7 +1664,7 @@ int unit_watch_timer(Unit *u, clockid_t clock_id, bool relative, usec_t usec, Wa
         timer_t timerid;
         struct sigevent sev;
         sev.sigev_notify = SIGEV_SIGNAL;
-        sev.sigev_signo = SIG;
+        sev.sigev_signo = SIGRTMIN;
         sev.sigev_value.sival_ptr = &timerid;
 
         assert(u);
@@ -1692,10 +1694,10 @@ int unit_watch_timer(Unit *u, clockid_t clock_id, bool relative, usec_t usec, Wa
                 its.it_value.tv_sec = 0;
                 its.it_value.tv_nsec = 1;
 
-                flags = TFD_TIMER_ABSTIME;
+                flags = TIMER_ABSTIME;
         } else {
                 timespec_store(&its.it_value, usec);
-                flags = relative ? 0 : TFD_TIMER_ABSTIME;
+                flags = relative ? 0 : TIMER_ABSTIME;
         }
 
         /* This will also flush the elapse counter */
