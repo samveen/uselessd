@@ -24,7 +24,7 @@
 #include <string.h>
 //#include <sys/epoll.h>
 #include <signal.h>
-#include <sys/signalfd.h>
+//#include <sys/signalfd.h>
 #include <sys/wait.h>
 #include <unistd.h>
 #include <sys/poll.h>
@@ -443,9 +443,9 @@ static int manager_setup_signals(Manager *m) {
         assert_se(sigprocmask(SIG_SETMASK, &mask, NULL) == 0);
 
         m->signal_watch.type = WATCH_SIGNAL;
-        m->signal_watch.fd = signalfd(-1, &mask, SFD_NONBLOCK|SFD_CLOEXEC);
+        /*m->signal_watch.fd = signalfd(-1, &mask, SFD_NONBLOCK|SFD_CLOEXEC);
         if (m->signal_watch.fd < 0)
-                return -errno;
+                return -errno;*/
 
        // if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->signal_watch.fd, &ev) < 0)
                 //return -errno;

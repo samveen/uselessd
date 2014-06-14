@@ -29,7 +29,7 @@
 #include <sys/inotify.h>
 #include <unistd.h>
 #include <getopt.h>
-#include <sys/signalfd.h>
+//#include <sys/signalfd.h>
 #include <fcntl.h>
 
 #include "util.h"
@@ -582,11 +582,11 @@ static int watch_passwords(void) {
         sigset_add_many(&mask, SIGINT, SIGTERM, -1);
         assert_se(sigprocmask(SIG_SETMASK, &mask, NULL) == 0);
 
-        if ((signal_fd = signalfd(-1, &mask, SFD_NONBLOCK|SFD_CLOEXEC)) < 0) {
+       /* if ((signal_fd = signalfd(-1, &mask, SFD_NONBLOCK|SFD_CLOEXEC)) < 0) {
                 log_error("signalfd(): %m");
                 r = -errno;
                 goto finish;
-        }
+        } */
 
         pollfd[FD_INOTIFY].fd = notify;
         pollfd[FD_INOTIFY].events = POLLIN;

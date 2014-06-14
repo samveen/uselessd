@@ -29,7 +29,6 @@
 #include <fcntl.h>
 #include <sys/un.h>
 #include <sys/stat.h>
-#include <sys/signalfd.h>
 #include <getopt.h>
 #include <stddef.h>
 
