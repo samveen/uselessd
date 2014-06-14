@@ -25,8 +25,9 @@ typedef struct ExecStatus ExecStatus;
 typedef struct ExecCommand ExecCommand;
 typedef struct ExecContext ExecContext;
 
-#include <linux/types.h>
 #include <sys/time.h>
+#include <sys/resource.h>
+#include <sys/types.h>
 #include <sys/resource.h>
 #include <sys/capability.h>
 #include <stdbool.h>
@@ -81,7 +82,7 @@ struct ExecContext {
         char **environment;
         char **environment_files;
 
-        struct rlimit *rlimit[RLIMIT_NLIMITS];
+        struct rlimit *rlimit[RLIMIT_CPU]; // used to be RLIMIT_NLIMITS
         char *working_directory, *root_directory;
 
         mode_t umask;
@@ -91,7 +92,7 @@ struct ExecContext {
         int cpu_sched_policy;
         int cpu_sched_priority;
 
-        cpu_set_t *cpuset;
+        cpuset_t *cpuset;
         unsigned cpuset_ncpus;
 
         ExecInput std_input;
@@ -125,7 +126,6 @@ struct ExecContext {
 
         uint64_t capability_bounding_set_drop;
 
-        cap_t capabilities;
         int secure_bits;
 
         int syslog_priority;
