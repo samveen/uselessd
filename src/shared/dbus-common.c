@@ -27,7 +27,9 @@
 #include <stdlib.h>
 #include <dbus/dbus.h>
 #include <string.h>
-#include <sys/epoll.h>
+#include <sys/ucred.h>
+#include <sys/priv.h>
+#include <sys/stat.h>
 
 #include "log.h"
 #include "dbus-common.h"
@@ -35,6 +37,30 @@
 #include "missing.h"
 #include "def.h"
 #include "strv.h"
+
+/* Directly taken from <sys/ucred.h>, as include
+ * directive does not always seem to properly work.
+ */
+struct ucred {
+	u_int	cr_ref;			/* reference count */
+#define	cr_startcopy cr_uid
+	uid_t	cr_uid;			/* effective user id */
+	uid_t	cr_ruid;		/* real user id */
+	uid_t	cr_svuid;		/* saved user id */
+	int	cr_ngroups;		/* number of groups */
+	gid_t	cr_rgid;		/* real group id */
+	gid_t	cr_svgid;		/* saved group id */
+	struct uidinfo	*cr_uidinfo;	/* per euid resource consumption */
+	struct uidinfo	*cr_ruidinfo;	/* per ruid resource consumption */
+	struct prison	*cr_prison;	/* jail(2) */
+	struct loginclass	*cr_loginclass; /* login class */
+	u_int		cr_flags;	/* credential flags */
+	void 		*cr_pspare2[2];	/* general use 2 */
+#define	cr_endcopy	cr_label
+	struct label	*cr_label;	/* MAC label */
+	gid_t	*cr_groups;		/* groups */
+	int	cr_agroups;		/* Available groups */
+};
 
 int bus_check_peercred(DBusConnection *c) {
         int fd;
@@ -46,17 +72,20 @@ int bus_check_peercred(DBusConnection *c) {
         assert_se(dbus_connection_get_unix_fd(c, &fd));
 
         l = sizeof(struct ucred);
-        if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &ucred, &l) < 0) {
-                log_error("SO_PEERCRED failed: %m");
+        /* Replace SO_PEERCREDS with SCM_CREDS. Subtle difference
+         * between the two is in the inability of the latter to declare
+         * itself as less privileged. */
+        if (getsockopt(fd, SOL_SOCKET, SCM_CREDS, &ucred, &l) < 0) {
+                log_error("SCM_CREDS failed: %m");
                 return -errno;
         }
 
         if (l != sizeof(struct ucred)) {
-                log_error("SO_PEERCRED returned wrong size.");
+                log_error("SCM_CREDS returned wrong size.");
                 return -E2BIG;
         }
 
-        if (ucred.uid != 0 && ucred.uid != geteuid())
+        if (priv_check_cred(ucred, PRIV_CRED_SETUID) != 0)
                 return -EPERM;
 
         return 1;
@@ -574,7 +603,7 @@ int bus_property_append_uint32(DBusMessageIter *i, const char *property, void *d
          * 32bit, and hence this function can be used for
          * pid_t/mode_t/uid_t/gid_t */
         assert_cc(sizeof(uint32_t) == sizeof(pid_t));
-        assert_cc(sizeof(uint32_t) == sizeof(mode_t));
+        //assert_cc(sizeof(uint32_t) == sizeof(mode_t));
         assert_cc(sizeof(uint32_t) == sizeof(unsigned));
         assert_cc(sizeof(uint32_t) == sizeof(uid_t));
         assert_cc(sizeof(uint32_t) == sizeof(gid_t));
@@ -677,7 +706,6 @@ const char *bus_errno_to_dbus(int error) {
                 return DBUS_ERROR_FILE_EXISTS;
 
         case -ETIMEDOUT:
-        case -ETIME:
                 return DBUS_ERROR_TIMEOUT;
 
         case -EIO:
@@ -814,41 +842,6 @@ oom:
                 dbus_message_unref(m);
 
         return NULL;
-}
-
-uint32_t bus_flags_to_events(DBusWatch *bus_watch) {
-        unsigned flags;
-        uint32_t events = 0;
-
-        assert(bus_watch);
-
-        /* no watch flags for disabled watches */
-        if (!dbus_watch_get_enabled(bus_watch))
-                return 0;
-
-        flags = dbus_watch_get_flags(bus_watch);
-
-        if (flags & DBUS_WATCH_READABLE)
-                events |= EPOLLIN;
-        if (flags & DBUS_WATCH_WRITABLE)
-                events |= EPOLLOUT;
-
-        return events | EPOLLHUP | EPOLLERR;
-}
-
-unsigned bus_events_to_flags(uint32_t events) {
-        unsigned flags = 0;
-
-        if (events & EPOLLIN)
-                flags |= DBUS_WATCH_READABLE;
-        if (events & EPOLLOUT)
-                flags |= DBUS_WATCH_WRITABLE;
-        if (events & EPOLLHUP)
-                flags |= DBUS_WATCH_HANGUP;
-        if (events & EPOLLERR)
-                flags |= DBUS_WATCH_ERROR;
-
-        return flags;
 }
 
 int bus_parse_strv(DBusMessage *m, char ***_l) {
