@@ -47,7 +47,6 @@
 #include "strv.h"
 #include "def.h"
 #include "virt.h"
-#include "watchdog.h"
 #include "path-util.h"
 #include "switch-root.h"
 #include "killall.h"
@@ -89,8 +88,6 @@ static bool arg_switched_root = false;
 static char ***arg_join_controllers = NULL;
 static ExecOutput arg_default_std_output = EXEC_OUTPUT_SYSLOG;
 static ExecOutput arg_default_std_error = EXEC_OUTPUT_INHERIT;
-static usec_t arg_runtime_watchdog = 0;
-static usec_t arg_shutdown_watchdog = 10 * USEC_PER_MINUTE;
 static char **arg_default_environment = NULL;
 static struct rlimit *arg_default_rlimit[RLIMIT_CPU] = {};
 static nsec_t arg_timer_slack_nsec = (nsec_t) -1;
@@ -635,8 +632,6 @@ static int parse_config_file(void) {
                 { "Manager", "DefaultStandardOutput", config_parse_output,       0, &arg_default_std_output  },
                 { "Manager", "DefaultStandardError",  config_parse_output,       0, &arg_default_std_error   },
                 { "Manager", "JoinControllers",       config_parse_join_controllers, 0, &arg_join_controllers },
-                { "Manager", "RuntimeWatchdogSec",    config_parse_sec,          0, &arg_runtime_watchdog    },
-                { "Manager", "ShutdownWatchdogSec",   config_parse_sec,          0, &arg_shutdown_watchdog   },
                 { "Manager", "TimerSlackNSec",        config_parse_nsec,         0, &arg_timer_slack_nsec    },
                 { "Manager", "DefaultEnvironment",    config_parse_environ,      0, &arg_default_environment },
                 { "Manager", "DefaultLimitCPU",       config_parse_limit,        0, &arg_default_rlimit[RLIMIT_CPU]},
@@ -1213,7 +1208,6 @@ int main(int argc, char *argv[]) {
         bool skip_setup = false;
         int j;
         bool loaded_policy = false;
-        bool arm_reboot_watchdog = false;
         bool queue_default_job = false;
         char *switch_root_dir = NULL, *switch_root_init = NULL;
         static struct rlimit saved_rlimit_nofile = { 0, 0 };
@@ -1481,9 +1475,6 @@ int main(int argc, char *argv[]) {
                 test_cgroups();
         }
 
-        if (arg_running_as == SYSTEMD_SYSTEM && arg_runtime_watchdog > 0)
-                watchdog_set_timeout(&arg_runtime_watchdog);
-
         if (arg_timer_slack_nsec != (nsec_t) -1)
                 if (prctl(PR_SET_TIMERSLACK, arg_timer_slack_nsec) < 0)
                         log_error("Failed to adjust timer slack: %m");
@@ -1509,8 +1500,6 @@ int main(int argc, char *argv[]) {
         m->confirm_spawn = arg_confirm_spawn;
         m->default_std_output = arg_default_std_output;
         m->default_std_error = arg_default_std_error;
-        m->runtime_watchdog = arg_runtime_watchdog;
-        m->shutdown_watchdog = arg_shutdown_watchdog;
         m->userspace_timestamp = userspace_timestamp;
         m->kernel_timestamp = kernel_timestamp;
         m->initrd_timestamp = initrd_timestamp;
@@ -1671,7 +1660,6 @@ int main(int argc, char *argv[]) {
                         };
 
                         assert_se(shutdown_verb = table[m->exit_code]);
-                        arm_reboot_watchdog = m->exit_code == MANAGER_REBOOT;
 
                         log_notice("Shutting down.");
                         goto finish;
@@ -1698,11 +1686,6 @@ finish:
         if (reexecute) {
                 const char **args;
                 unsigned i, args_size;
-
-                /* Close and disarm the watchdog, so that the new
-                 * instance can reinitialize it, but doesn't get
-                 * rebooted while we do that */
-                watchdog_close(true);
 
                 /* Reset the RLIMIT_NOFILE to the kernel default, so
                  * that the new systemd can pass the kernel default to
@@ -1815,24 +1798,7 @@ finish:
                 };
                 char **env_block;
 
-                if (arm_reboot_watchdog && arg_shutdown_watchdog > 0) {
-                        char e[32];
-
-                        /* If we reboot let's set the shutdown
-                         * watchdog and tell the shutdown binary to
-                         * repeatedly ping it */
-                        watchdog_set_timeout(&arg_shutdown_watchdog);
-                        watchdog_close(false);
-
-                        /* Tell the binary how often to ping */
-                        snprintf(e, sizeof(e), "WATCHDOG_USEC=%llu", (unsigned long long) arg_shutdown_watchdog);
-                        char_array_0(e);
-
-                        env_block = strv_append(environ, e);
-                } else {
-                        env_block = strv_copy(environ);
-                        watchdog_close(true);
-                }
+                env_block = strv_copy(environ);
 
                 /* Avoid the creation of new processes forked by the
                  * kernel; at this point, we will not listen to the

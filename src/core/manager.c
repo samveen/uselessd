@@ -66,7 +66,6 @@
 #include "bus-errors.h"
 #include "exit-status.h"
 #include "virt.h"
-#include "watchdog.h"
 #include "cgroup-util.h"
 #include "path-util.h"
 #include "audit-fd.h"
@@ -1803,9 +1802,6 @@ int manager_loop(Manager *m) {
                 int n;
                 int wait_msec = -1;
 
-                if (m->runtime_watchdog > 0 && m->running_as == SYSTEMD_SYSTEM)
-                        watchdog_ping();
-
                 if (!ratelimit_test(&rl)) {
                         /* Yay, something is going seriously wrong, pause a little */
                         log_warning("Looping too fast. Throttling execution a little.");
@@ -1836,14 +1832,6 @@ int manager_loop(Manager *m) {
 
                 if (swap_dispatch_reload(m) > 0)
                         continue;
-
-                /* Sleep for half the watchdog time */
-                if (m->runtime_watchdog > 0 && m->running_as == SYSTEMD_SYSTEM) {
-                        wait_msec = (int) (m->runtime_watchdog / 2 / USEC_PER_MSEC);
-                        if (wait_msec <= 0)
-                                wait_msec = 1;
-                } else
-                        wait_msec = -1;
 /*
                 n = epoll_wait(m->epoll_fd, &event, 1, wait_msec);
                 if (n < 0) {
@@ -1859,10 +1847,10 @@ int manager_loop(Manager *m) {
 
                 r = process_event(m, &event);
                 if (r < 0)
-                        return r;
+                        return r;*/
         }
-*/
-        return m->exit_code;
+
+      return m->exit_code;
 }
 
 int manager_load_unit_from_dbus_path(Manager *m, const char *s, DBusError *e, Unit **_u) {

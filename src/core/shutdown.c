@@ -44,7 +44,6 @@
 #include "util.h"
 #include "mkdir.h"
 #include "virt.h"
-#include "watchdog.h"
 #include "killall.h"
 
 #define FINALIZE_ATTEMPTS 50
@@ -135,7 +134,7 @@ int main(int argc, char *argv[]) {
         int cmd, r;
         unsigned retries;
         bool need_umount = true, need_swapoff = true, need_loop_detach = true, need_dm_detach = true;
-        bool in_container, use_watchdog = false;
+        bool in_container = false;
         char *arguments[3];
 
         /* suppress shutdown status output if 'quiet' is used  */
@@ -186,8 +185,6 @@ int main(int argc, char *argv[]) {
                 goto error;
         }
 
-        use_watchdog = !!getenv("WATCHDOG_USEC");
-
         /* lock us into memory */
         mlockall(MCL_CURRENT|MCL_FUTURE);
 
@@ -206,9 +203,6 @@ int main(int argc, char *argv[]) {
         /* Unmount all mountpoints, swaps, and loopback devices */
         for (retries = 0; retries < FINALIZE_ATTEMPTS; retries++) {
                 bool changed = false;
-
-                if (use_watchdog)
-                        watchdog_ping();
 
                 if (need_umount) {
                         log_info("Unmounting file systems.");

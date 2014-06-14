@@ -31,7 +31,6 @@
 #include "dbus-common.h"
 #include "install.h"
 #include "selinux-access.h"
-#include "watchdog.h"
 #include "hwclock.h"
 #include "path-util.h"
 #include "dbus-unit.h"
@@ -292,8 +291,6 @@
         "  <property name=\"UnitPath\" type=\"as\" access=\"read\"/>\n" \
         "  <property name=\"DefaultStandardOutput\" type=\"s\" access=\"read\"/>\n" \
         "  <property name=\"DefaultStandardError\" type=\"s\" access=\"read\"/>\n" \
-        "  <property name=\"RuntimeWatchdogUSec\" type=\"t\" access=\"readwrite\"/>\n" \
-        "  <property name=\"ShutdownWatchdogUSec\" type=\"t\" access=\"readwrite\"/>\n" \
         "  <property name=\"Virtualization\" type=\"s\" access=\"read\"/>\n"
 
 #define BUS_MANAGER_INTERFACE_END                                       \
@@ -545,7 +542,7 @@ static int bus_manager_send_unit_files_changed(Manager *m) {
 
         return r;
 }
-
+/* TODO: remove */
 static int bus_manager_set_runtime_watchdog_usec(DBusMessageIter *i, const char *property, void *data) {
         uint64_t *t = data;
 
@@ -554,7 +551,7 @@ static int bus_manager_set_runtime_watchdog_usec(DBusMessageIter *i, const char 
 
         dbus_message_iter_get_basic(i, t);
 
-        return watchdog_set_timeout(t);
+        return 0;
 }
 
 static const char systemd_property_string[] =
@@ -602,8 +599,6 @@ static const BusProperty bus_manager_properties[] = {
         { "UnitPath",                    bus_property_append_strv,       "as", offsetof(Manager, lookup_paths.unit_path),       true },
         { "DefaultStandardOutput",       bus_manager_append_exec_output, "s",  offsetof(Manager, default_std_output)            },
         { "DefaultStandardError",        bus_manager_append_exec_output, "s",  offsetof(Manager, default_std_error)             },
-        { "RuntimeWatchdogUSec",         bus_property_append_usec,       "t",  offsetof(Manager, runtime_watchdog),             false, bus_manager_set_runtime_watchdog_usec },
-        { "ShutdownWatchdogUSec",        bus_property_append_usec,       "t",  offsetof(Manager, shutdown_watchdog),            false, bus_property_set_usec },
         { "Virtualization",              bus_manager_append_virt,        "s",  0,                                               },
         { NULL, }
 };
