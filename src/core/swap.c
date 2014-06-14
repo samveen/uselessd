@@ -25,7 +25,7 @@
 #include <fcntl.h>
 //#include <sys/epoll.h>
 #include <sys/stat.h>
-#include <sys/swap.h>
+//#include <sys/swap.h>
 
 #include "unit.h"
 #include "swap.h"
