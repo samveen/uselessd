@@ -761,8 +761,6 @@ libsystemd_core_la_SOURCES = \
 	src/core/load-fragment.h \
 	src/core/service.c \
 	src/core/service.h \
-	src/core/automount.c \
-	src/core/automount.h \
 	src/core/mount.c \
 	src/core/mount.h \
 	src/core/swap.c \
@@ -807,8 +805,6 @@ libsystemd_core_la_SOURCES = \
 	src/core/dbus-target.h \
 	src/core/dbus-mount.c \
 	src/core/dbus-mount.h \
-	src/core/dbus-automount.c \
-	src/core/dbus-automount.h \
 	src/core/dbus-swap.c \
 	src/core/dbus-swap.h \
 	src/core/dbus-snapshot.c \
@@ -929,7 +925,6 @@ dbusinterface_DATA += \
 	org.freedesktop.systemd1.Target.xml \
 	org.freedesktop.systemd1.Device.xml \
 	org.freedesktop.systemd1.Mount.xml \
-	org.freedesktop.systemd1.Automount.xml \
 	org.freedesktop.systemd1.Snapshot.xml \
 	org.freedesktop.systemd1.Swap.xml \
 	org.freedesktop.systemd1.Path.xml
