@@ -226,7 +226,7 @@ struct Manager {
 
         ExecOutput default_std_output, default_std_error;
 
-        struct rlimit *rlimit[RLIMIT_NLIMITS];
+        struct rlimit *rlimit[RLIMIT_CPU]; //used to be RLIMIT_NLIMITS
 
         /* non-zero if we are reloading or reexecuting, */
         int n_reloading;
