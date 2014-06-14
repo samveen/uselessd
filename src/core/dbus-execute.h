@@ -49,12 +49,6 @@
         "  <property name=\"LimitAS\" type=\"t\" access=\"read\"/>\n"   \
         "  <property name=\"LimitNPROC\" type=\"t\" access=\"read\"/>\n" \
         "  <property name=\"LimitMEMLOCK\" type=\"t\" access=\"read\"/>\n" \
-        "  <property name=\"LimitLOCKS\" type=\"t\" access=\"read\"/>\n" \
-        "  <property name=\"LimitSIGPENDING\" type=\"t\" access=\"read\"/>\n" \
-        "  <property name=\"LimitMSGQUEUE\" type=\"t\" access=\"read\"/>\n" \
-        "  <property name=\"LimitNICE\" type=\"t\" access=\"read\"/>\n" \
-        "  <property name=\"LimitRTPRIO\" type=\"t\" access=\"read\"/>\n" \
-        "  <property name=\"LimitRTTIME\" type=\"t\" access=\"read\"/>\n" \
         "  <property name=\"WorkingDirectory\" type=\"s\" access=\"read\"/>\n" \
         "  <property name=\"RootDirectory\" type=\"s\" access=\"read\"/>\n" \
         "  <property name=\"OOMScoreAdjust\" type=\"i\" access=\"read\"/>\n" \
