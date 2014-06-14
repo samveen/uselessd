@@ -2722,7 +2722,7 @@ int unit_exec_context_defaults(Unit *u, ExecContext *c) {
         assert(c);
 
         /* This only copies in the ones that need memory */
-        for (i = 0; i < RLIMIT_NLIMITS; i++)
+        for (i = 0; i < 16; i++) // RLIMIT_NLIMITS
                 if (u->manager->rlimit[i] && !c->rlimit[i]) {
                         c->rlimit[i] = newdup(struct rlimit, u->manager->rlimit[i], 1);
                         if (!c->rlimit[i])

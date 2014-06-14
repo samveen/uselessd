@@ -1686,7 +1686,7 @@ finish:
         if (m)
                 manager_free(m);
 
-        for (j = 0; j < RLIMIT_NLIMITS; j++)
+        for (j = 0; j < 16; j++) // RLIMIT_NLIMITS
                 free(arg_default_rlimit[j]);
 
         free(arg_default_unit);
