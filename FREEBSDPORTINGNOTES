@@ -139,12 +139,23 @@ selinux-access.c edited so as to not make use of
 audit_loginuid_from_pid()
 rekmove unused <sys/prctl.h> header
 
-CURRENTLY: address <sys/epoll.h> usage in the following:
-	src/core/automount.c[x],dbus.c,device.c[x],job.c,manager.c,
-			mount.c[x],path.c[x],socket.c[x],swap.c,unit.c
+address <sys/epoll.h> usage in the following:
+	src/core/automount.c[x],dbus.c[x],device.c[x],job.c[x],manager.c[x],
+			mount.c[x],path.c[x],socket.c[x],swap.c[x],unit.c[x]
 
 			mount.c -> commented assert(EVENTS & EPOLLIN);
 			socket.c -> commented use of EPOLLIN to gauge readability
+			manager.c -> ton of commenting out, replace with select() or poll()
+			some time
+			swap.c -> same
+
+CURRENTLY: address <sys/timerfd.h> usage in:
+src/core/dbus.c[x],job.c,manager.c,unit.c[x]
+src/shutdownd/shutdownd.c
+currently attempting to use timer_settime()
+and timer_createtime() in their place, see if
+it works
+various errors in unit.c
 
 files modified:
 	src/shared/util.h
@@ -176,6 +187,18 @@ files modified:
 	[removed] src/shared/capability.c
 	[removed] src/shared/capability.h
 
+	src/core/unit.h
+	src/core/execute.h
+	src/core/automount.c
+	src/core/dbus.c
+	src/core/device.c
+	src/core/job.c
+	src/core/manager.c
+	src/core/mount.c
+	src/core/path.c
+	src/core/socket.c
+	src/core/swap.c
+	src/core/unit.c
 	src/core/execute.c
 	src/tmpfiles/tmpfiles.c
 	src/core/main.c
