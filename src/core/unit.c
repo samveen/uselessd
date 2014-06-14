@@ -23,7 +23,7 @@
 #include <errno.h>
 #include <string.h>
 //#include <sys/epoll.h>
-#include <sys/timerfd.h>
+//#include <sys/timerfd.h>
 #include <sys/poll.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -1659,6 +1659,12 @@ int unit_watch_timer(Unit *u, clockid_t clock_id, bool relative, usec_t usec, Wa
         int flags, fd;
         bool ours;
 
+        timer_t timerid;
+        struct sigevent sev;
+        sev.sigev_notify = SIGEV_SIGNAL;
+        sev.sigev_signo = SIG;
+        sev.sigev_value.sival_ptr = &timerid;
+
         assert(u);
         assert(w);
         assert(w->type == WATCH_INVALID || (w->type == WATCH_UNIT_TIMER && w->data.unit == u));
@@ -1674,7 +1680,7 @@ int unit_watch_timer(Unit *u, clockid_t clock_id, bool relative, usec_t usec, Wa
         } else if (w->type == WATCH_INVALID) {
 
                 ours = true;
-                fd = timerfd_create(clock_id, TFD_NONBLOCK|TFD_CLOEXEC);
+                fd = timer_create(clock_id, &sev, &timerid);
                 if (fd < 0)
                         return -errno;
         } else
@@ -1693,7 +1699,7 @@ int unit_watch_timer(Unit *u, clockid_t clock_id, bool relative, usec_t usec, Wa
         }
 
         /* This will also flush the elapse counter */
-        if (timerfd_settime(fd, flags, &its, NULL) < 0)
+        if (timer_settime(timerid, flags, &its, NULL) < 0)
                 goto fail;
 
        /* if (w->type == WATCH_INVALID) {

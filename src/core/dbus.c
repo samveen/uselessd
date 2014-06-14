@@ -20,7 +20,9 @@
 ***/
 
 //#include <sys/epoll.h>
-#include <sys/timerfd.h>
+//#include <sys/timerfd.h>
+#include <signal.h>
+#include <time.h>
 #include <errno.h>
 #include <unistd.h>
 #include <dbus/dbus.h>
@@ -204,6 +206,12 @@ static void bus_toggle_watch(DBusWatch *bus_watch, void *data) {
 static int bus_timeout_arm(Manager *m, Watch *w) {
         struct itimerspec its = {};
 
+        timer_t timerid;
+        struct sigevent sev;
+        sev.sigev_notify = SIGEV_SIGNAL;
+        sev.sigev_signo = SIG;
+        sev.sigev_value.sival_ptr = &timerid;
+
         assert(m);
         assert(w);
 
@@ -212,7 +220,7 @@ static int bus_timeout_arm(Manager *m, Watch *w) {
                 its.it_interval = its.it_value;
         }
 
-        if (timerfd_settime(w->fd, 0, &its, NULL) < 0)
+        if (timer_settime(timerid, 0, &its, NULL) < 0)
                 return -errno;
 
         return 0;
@@ -236,13 +244,19 @@ static dbus_bool_t bus_add_timeout(DBusTimeout *timeout, void *data) {
         Watch *w;
        // struct epoll_event ev;
 
+        timer_t timerid;
+        struct sigevent sev;
+        sev.sigev_notify = SIGEV_SIGNAL;
+        sev.sigev_signo = SIG;
+        sev.sigev_value.sival_ptr = &timerid;
+
         assert(timeout);
         assert(m);
 
         if (!(w = new0(Watch, 1)))
                 return FALSE;
 
-        if ((w->fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK|TFD_CLOEXEC)) < 0)
+        if ((w->fd = timer_create(CLOCK_MONOTONIC, &sev, &timerid)) < 0)
                 goto fail;
 
         w->type = WATCH_DBUS_TIMEOUT;
