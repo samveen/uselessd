@@ -30,13 +30,13 @@
 #include <sys/poll.h>
 #include <sys/reboot.h>
 #include <sys/ioctl.h>
-#include <linux/kd.h>
+//#include <linux/kd.h>
 #include <termios.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <sys/timerfd.h>
+//#include <sys/timerfd.h>
 
 #ifdef HAVE_AUDIT
 #include <libaudit.h>
@@ -153,7 +153,7 @@ static int manager_jobs_in_progress_mod_timer(Manager *m) {
         if (m->jobs_in_progress_watch.type != WATCH_JOBS_IN_PROGRESS)
                 return 0;
 
-        if (timerfd_settime(m->jobs_in_progress_watch.fd, 0, &its, NULL) < 0)
+        if (timer_settime(m->jobs_in_progress_watch.fd, 0, &its, NULL) < 0)
                 return -errno;
 
         return 0;
@@ -166,13 +166,19 @@ static int manager_watch_jobs_in_progress(Manager *m) {
         };*/
         int r;
 
+        timer_t timerid;
+        struct sigevent sev;
+        sev.sigev_notify = SIGEV_SIGNAL;
+        sev.sigev_signo = SIGRTMIN;
+        sev.sigev_value.sival_ptr = &timerid;
+
         if (m->jobs_in_progress_watch.type != WATCH_INVALID)
                 return 0;
 
         m->jobs_in_progress_watch.type = WATCH_JOBS_IN_PROGRESS;
-        m->jobs_in_progress_watch.fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK|TFD_CLOEXEC);
+        m->jobs_in_progress_watch.fd = timer_create(CLOCK_MONOTONIC, &sev, &timerid);
         if (m->jobs_in_progress_watch.fd < 0) {
-                log_error("Failed to create timerfd: %m");
+                log_error("Failed to create timer: %m");
                 r = -errno;
                 goto err;
         }
@@ -189,7 +195,7 @@ static int manager_watch_jobs_in_progress(Manager *m) {
                 goto err;
         } */
 
-        log_debug("Set up jobs progress timerfd.");
+        log_debug("Set up jobs progress timer.");
 
         return 0;
 
@@ -209,7 +215,7 @@ static void manager_unwatch_jobs_in_progress(Manager *m) {
         watch_init(&m->jobs_in_progress_watch);
         m->jobs_in_progress_iteration = 0;
 
-        log_debug("Closed jobs progress timerfd.");
+        log_debug("Closed jobs progress timer.");
 }
 
 #define CYLON_BUFFER_EXTRA (2*strlen(ANSI_RED_ON) + strlen(ANSI_HIGHLIGHT_RED_ON) + 2*strlen(ANSI_HIGHLIGHT_OFF))
@@ -292,7 +298,7 @@ static int manager_watch_idle_pipe(Manager *m) {
         m->idle_pipe_watch.type = WATCH_IDLE_PIPE;
         m->idle_pipe_watch.fd = m->idle_pipe[2];
         if (m->idle_pipe_watch.fd < 0) {
-                log_error("Failed to create timerfd: %m");
+                log_error("Failed to create timer: %m");
                 r = -errno;
                 goto err;
         }
@@ -339,18 +345,24 @@ static int manager_setup_time_change(Manager *m) {
 
         assert(m->time_change_watch.type == WATCH_INVALID);
 
-        /* Uses TFD_TIMER_CANCEL_ON_SET to get notifications whenever
+        timer_t timerid;
+        struct sigevent sev;
+        sev.sigev_notify = SIGEV_SIGNAL;
+        sev.sigev_signo = SIGRTMIN;
+        sev.sigev_value.sival_ptr = &timerid;
+
+        /* Uses TIMER_CANCEL_ON_SET to get notifications whenever
          * CLOCK_REALTIME makes a jump relative to CLOCK_MONOTONIC */
 
         m->time_change_watch.type = WATCH_TIME_CHANGE;
-        m->time_change_watch.fd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK|TFD_CLOEXEC);
+        m->time_change_watch.fd = timer_create(CLOCK_REALTIME, &sev, &timerid);
         if (m->time_change_watch.fd < 0) {
                 log_error("Failed to create timerfd: %m");
                 return -errno;
         }
 
-        if (timerfd_settime(m->time_change_watch.fd, TFD_TIMER_ABSTIME|TFD_TIMER_CANCEL_ON_SET, &its, NULL) < 0) {
-                log_debug("Failed to set up TFD_TIMER_CANCEL_ON_SET, ignoring: %m");
+        if (timerfd_settime(m->time_change_watch.fd, TIMER_ABSTIME|TIMER_CANCEL_ON_SET, &its, NULL) < 0) {
+                log_debug("Failed to set up TIMER_CANCEL_ON_SET, ignoring: %m");
                 close_nointr_nofail(m->time_change_watch.fd);
                 watch_init(&m->time_change_watch);
                 return 0;
@@ -361,7 +373,7 @@ static int manager_setup_time_change(Manager *m) {
                 return -errno;
         }*/
 
-        log_debug("Set up TFD_TIMER_CANCEL_ON_SET timerfd.");
+        log_debug("Set up TIMER_CANCEL_ON_SET timer.");
 
         return 0;
 }
@@ -384,8 +396,8 @@ static int enable_special_signals(Manager *m) {
                         log_warning("Failed to open /dev/tty0: %m");
         } else {
                 /* Enable that we get SIGWINCH on kbrequest */
-                if (ioctl(fd, KDSIGACCEPT, SIGWINCH) < 0)
-                        log_warning("Failed to enable kbrequest handling: %s", strerror(errno));
+                //if (ioctl(fd, KDSIGACCEPT, SIGWINCH) < 0)
+                       // log_warning("Failed to enable kbrequest handling: %s", strerror(errno));
 
                 close_nointr_nofail(fd);
         }
