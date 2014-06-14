@@ -37,7 +37,8 @@ whole bunch of undefined names in util.c ->
 Removed SIGPWR due to lack of it on non-Linux
 Added definitions for IPTOS_*
 Replaced cpu_set_t type with cpuset_t
-Removed RLIMIT_LOCKS, RLIMIT_SIGPENDING, RLIMIT_MSGQUEUE, RLIMIT_NICE and RLIMIT_RTPRIO
+Removed RLIMIT_LOCKS, RLIMIT_SIGPENDING, RLIMIT_MSGQUEUE, RLIMIT_NICE,
+RLIMIT_RTTIME and RLIMIT_RTPRIO (also in dbus-execute.[ch], main.c and system.conf)
 Removed SCHED_IDLE and SCHED_BATCH
 Define HOST_NAME_MAX as 255
 Remove Linux-specific <termios.h> extensions (IUTF8 and IUCLC)
@@ -118,6 +119,8 @@ replace SO_PEERCREDS with SCM_CREDS
 replace ucred->uid check with priv_check_cred()
 comment out problematic assertion
 
+_NSIG == SIGRTMIN
+
 dbus-loop.c: remove it, as it's unused
 
 <sys/prctl.h> in src/shared/capability.c
@@ -137,7 +140,7 @@ capability.[ch] removed
 
 selinux-access.c edited so as to not make use of
 audit_loginuid_from_pid()
-rekmove unused <sys/prctl.h> header
+remove unused <sys/prctl.h> header
 
 address <sys/epoll.h> usage in the following:
 	src/core/automount.c[x],dbus.c[x],device.c[x],job.c[x],manager.c[x],
@@ -149,13 +152,31 @@ address <sys/epoll.h> usage in the following:
 			some time
 			swap.c -> same
 
-CURRENTLY: address <sys/timerfd.h> usage in:
-src/core/dbus.c[x],job.c,manager.c,unit.c[x]
+<linux/oom.h> usage in:
+src/core/execute.c,load-fragment.c
+commented out in src/shared/missing.h
+done
+
+replaced all instances of EBADR to EBADF to denote
+that unit cannot be stopped, started or reloaded
+
+replace loops around RLIMIT_NLIMITS with int value of 16,
+as seen in <linux/oom.h>
+
+address <sys/timerfd.h> usage in:
+src/core/dbus.c[x],job.c[x],manager.c,unit.c[x]
 src/shutdownd/shutdownd.c
 currently attempting to use timer_settime()
 and timer_createtime() in their place, see if
 it works
 various errors in unit.c
+
+address <sys/signalfd.h> usage in:
+src/core/manager.c
+src/ask-password/ask-password.c [appears unused]
+src/reply-password/reply-password.c [x, appears unused]
+src/tty-ask-password-agent/tty-ask-password-agent.c (commented)
+src/shared/ask-password-api.c (commented)
 
 files modified:
 	src/shared/util.h
@@ -189,7 +210,11 @@ files modified:
 
 	src/core/unit.h
 	src/core/execute.h
+	src/core/manager.h
 	src/core/automount.c
+	src/core/dbus-execute.c
+	src/core/dbus-execute.h
+	src/core/system.conf
 	src/core/dbus.c
 	src/core/device.c
 	src/core/job.c
@@ -199,7 +224,9 @@ files modified:
 	src/core/socket.c
 	src/core/swap.c
 	src/core/unit.c
+	src/core/transaction.c
 	src/core/execute.c
+	src/core/load-fragment.c
 	src/tmpfiles/tmpfiles.c
 	src/core/main.c
 	src/core/selinux-access.c
