@@ -21,7 +21,7 @@
 
 #include <assert.h>
 #include <errno.h>
-#include <sys/timerfd.h>
+//#include <sys/timerfd.h>
 //#include <sys/epoll.h>
 
 #include "systemd/sd-id128.h"
@@ -867,20 +867,26 @@ int job_start_timer(Job *j) {
         }; */
         int fd, r;
 
+        timer_t timerid;
+        struct sigevent sev;
+        sev.sigev_notify = SIGEV_SIGNAL;
+        sev.sigev_signo = SIG;
+        sev.sigev_value.sival_ptr = &timerid;
+
         if (j->unit->job_timeout <= 0 ||
             j->timer_watch.type == WATCH_JOB_TIMER)
                 return 0;
 
         assert(j->timer_watch.type == WATCH_INVALID);
 
-        if ((fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK|TFD_CLOEXEC)) < 0) {
+        if ((fd = timer_create(CLOCK_MONOTONIC, &sev, &timerid)) < 0) {
                 r = -errno;
                 goto fail;
         }
 
         timespec_store(&its.it_value, j->unit->job_timeout);
 
-        if (timerfd_settime(fd, 0, &its, NULL) < 0) {
+        if (timer_settime(timerid, 0, &its, NULL) < 0) {
                 r = -errno;
                 goto fail;
         }
