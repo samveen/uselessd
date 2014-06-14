@@ -517,7 +517,7 @@ int job_run_and_invalidate(Job *j) {
                         r = unit_start(j->unit);
 
                         /* If this unit cannot be started, then simply wait */
-                        if (r == -EBADR)
+                        if (r == -EBADF)
                                 r = 0;
                         break;
 
@@ -537,7 +537,7 @@ int job_run_and_invalidate(Job *j) {
                         r = unit_stop(j->unit);
 
                         /* If this unit cannot stopped, then simply wait. */
-                        if (r == -EBADR)
+                        if (r == -EBADF)
                                 r = 0;
                         break;
 

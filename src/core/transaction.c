@@ -885,7 +885,7 @@ int transaction_add_job_and_dependencies(
 
         if (!unit_job_is_applicable(unit, type)) {
                 dbus_set_error(e, BUS_ERROR_JOB_TYPE_NOT_APPLICABLE, "Job type %s is not applicable for unit %s.", job_type_to_string(type), unit->id);
-                return -EBADR;
+                return -EBADF;
         }
 
         /* First add the job. */
@@ -931,7 +931,7 @@ int transaction_add_job_and_dependencies(
                         SET_FOREACH(dep, ret->unit->dependencies[UNIT_REQUIRES], i) {
                                 r = transaction_add_job_and_dependencies(tr, JOB_START, dep, ret, true, override, false, false, ignore_order, e);
                                 if (r < 0) {
-                                        if (r != -EBADR)
+                                        if (r != -EBADF)
                                                 goto fail;
 
                                         if (e)
@@ -942,7 +942,7 @@ int transaction_add_job_and_dependencies(
                         SET_FOREACH(dep, ret->unit->dependencies[UNIT_BINDS_TO], i) {
                                 r = transaction_add_job_and_dependencies(tr, JOB_START, dep, ret, true, override, false, false, ignore_order, e);
                                 if (r < 0) {
-                                        if (r != -EBADR)
+                                        if (r != -EBADF)
                                                 goto fail;
 
                                         if (e)
@@ -977,7 +977,7 @@ int transaction_add_job_and_dependencies(
                         SET_FOREACH(dep, ret->unit->dependencies[UNIT_REQUISITE], i) {
                                 r = transaction_add_job_and_dependencies(tr, JOB_VERIFY_ACTIVE, dep, ret, true, override, false, false, ignore_order, e);
                                 if (r < 0) {
-                                        if (r != -EBADR)
+                                        if (r != -EBADF)
                                                 goto fail;
 
                                         if (e)
@@ -1000,7 +1000,7 @@ int transaction_add_job_and_dependencies(
                         SET_FOREACH(dep, ret->unit->dependencies[UNIT_CONFLICTS], i) {
                                 r = transaction_add_job_and_dependencies(tr, JOB_STOP, dep, ret, true, override, true, false, ignore_order, e);
                                 if (r < 0) {
-                                        if (r != -EBADR)
+                                        if (r != -EBADF)
                                                 goto fail;
 
                                         if (e)
@@ -1027,7 +1027,7 @@ int transaction_add_job_and_dependencies(
                         SET_FOREACH(dep, ret->unit->dependencies[UNIT_REQUIRED_BY], i) {
                                 r = transaction_add_job_and_dependencies(tr, type, dep, ret, true, override, false, false, ignore_order, e);
                                 if (r < 0) {
-                                        if (r != -EBADR)
+                                        if (r != -EBADF)
                                                 goto fail;
 
                                         if (e)
@@ -1038,7 +1038,7 @@ int transaction_add_job_and_dependencies(
                         SET_FOREACH(dep, ret->unit->dependencies[UNIT_BOUND_BY], i) {
                                 r = transaction_add_job_and_dependencies(tr, type, dep, ret, true, override, false, false, ignore_order, e);
                                 if (r < 0) {
-                                        if (r != -EBADR)
+                                        if (r != -EBADF)
                                                 goto fail;
 
                                         if (e)
@@ -1049,7 +1049,7 @@ int transaction_add_job_and_dependencies(
                         SET_FOREACH(dep, ret->unit->dependencies[UNIT_CONSISTS_OF], i) {
                                 r = transaction_add_job_and_dependencies(tr, type, dep, ret, true, override, false, false, ignore_order, e);
                                 if (r < 0) {
-                                        if (r != -EBADR)
+                                        if (r != -EBADF)
                                                 goto fail;
 
                                         if (e)

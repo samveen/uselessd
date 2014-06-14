@@ -1102,7 +1102,7 @@ static void unit_status_log_starting_stopping_reloading(Unit *u, JobType t) {
 #pragma GCC diagnostic pop
 
 /* Errors:
- *         -EBADR:     This unit type does not support starting.
+ *         -EBADF:     This unit type does not support starting.
  *         -EALREADY:  Unit is already started.
  *         -EAGAIN:    An operation is already in progress. Retry later.
  *         -ECANCELED: Too many requests for now.
@@ -1147,7 +1147,7 @@ int unit_start(Unit *u) {
 
         /* If it is stopped, but we cannot start it, then fail */
         if (!UNIT_VTABLE(u)->start)
-                return -EBADR;
+                return -EBADF;
 
         /* We don't suppress calls to ->start() here when we are
          * already starting, to allow this request to be used as a
@@ -1174,7 +1174,7 @@ bool unit_can_isolate(Unit *u) {
 }
 
 /* Errors:
- *         -EBADR:    This unit type does not support stopping.
+ *         -EBADF:    This unit type does not support stopping.
  *         -EALREADY: Unit is already stopped.
  *         -EAGAIN:   An operation is already in progress. Retry later.
  */
@@ -1198,7 +1198,7 @@ int unit_stop(Unit *u) {
         unit_status_print_starting_stopping(u, JOB_STOP);
 
         if (!UNIT_VTABLE(u)->stop)
-                return -EBADR;
+                return -EBADF;
 
         unit_add_to_dbus_queue(u);
 
@@ -1206,7 +1206,7 @@ int unit_stop(Unit *u) {
 }
 
 /* Errors:
- *         -EBADR:    This unit type does not support reloading.
+ *         -EBADF:    This unit type does not support reloading.
  *         -ENOEXEC:  Unit is not started.
  *         -EAGAIN:   An operation is already in progress. Retry later.
  */
@@ -1220,7 +1220,7 @@ int unit_reload(Unit *u) {
                 return -EINVAL;
 
         if (!unit_can_reload(u))
-                return -EBADR;
+                return -EBADF;
 
         state = unit_active_state(u);
         if (state == UNIT_RELOADING)
