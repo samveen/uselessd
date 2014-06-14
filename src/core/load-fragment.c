@@ -27,9 +27,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sched.h>
-#include <sys/prctl.h>
+//#include <sys/prctl.h>
 #include <sys/mount.h>
-#include <linux/fs.h>
+//#include <linux/fs.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -52,6 +52,8 @@
 #include "syscall-list.h"
 #include "env-util.h"
 #include "cgroup.h"
+
+#define MS_SLAVE (1 << 19)
 
 #ifndef HAVE_SYSV_COMPAT
 int config_parse_warn_compat(const char *unit,
@@ -813,38 +815,6 @@ int config_parse_exec_cpu_affinity(const char *unit,
         return 0;
 }
 
-int config_parse_exec_capabilities(const char *unit,
-                                   const char *filename,
-                                   unsigned line,
-                                   const char *section,
-                                   const char *lvalue,
-                                   int ltype,
-                                   const char *rvalue,
-                                   void *data,
-                                   void *userdata) {
-
-        ExecContext *c = data;
-        cap_t cap;
-
-        assert(filename);
-        assert(lvalue);
-        assert(rvalue);
-        assert(data);
-
-        cap = cap_from_text(rvalue);
-        if (!cap) {
-                log_syntax(unit, LOG_ERR, filename, line, errno,
-                           "Failed to parse capabilities, ignoring: %s", rvalue);
-                return 0;
-        }
-
-        if (c->capabilities)
-                cap_free(c->capabilities);
-        c->capabilities = cap;
-
-        return 0;
-}
-
 int config_parse_exec_secure_bits(const char *unit,
                                   const char *filename,
                                   unsigned line,
@@ -925,7 +895,7 @@ int config_parse_bounding_set(const char *unit,
          * kernel wants it like this. But we actually expose it
          * non-inverted everywhere to have a fully normalized
          * interface. */
-
+/*
         FOREACH_WORD_QUOTED(w, l, rvalue, state) {
                 _cleanup_free_ char *t = NULL;
                 int r;
@@ -943,7 +913,7 @@ int config_parse_bounding_set(const char *unit,
                 }
 
                 sum |= ((uint64_t) 1ULL) << (uint64_t) cap;
-        }
+        }*/
 
         if (invert)
                 *capability_bounding_set_drop |= sum;
@@ -1913,14 +1883,14 @@ int config_parse_syscall_filter(const char *unit,
 
                 memset(c->syscall_filter, invert ? 0xFF : 0, n * sizeof(uint32_t));
 
-                /* Add these by default */
+                /* Add these by default
                 syscall_set(c->syscall_filter, __NR_execve);
                 syscall_set(c->syscall_filter, __NR_rt_sigreturn);
 #ifdef __NR_sigreturn
                 syscall_set(c->syscall_filter, __NR_sigreturn);
 #endif
                 syscall_set(c->syscall_filter, __NR_exit_group);
-                syscall_set(c->syscall_filter, __NR_exit);
+                syscall_set(c->syscall_filter, __NR_exit); */
         }
 
         FOREACH_WORD_QUOTED(w, l, rvalue, state) {
@@ -2663,7 +2633,6 @@ void unit_dump_config_items(FILE *f) {
                 { config_parse_input,                 "INPUT" },
                 { config_parse_facility,              "FACILITY" },
                 { config_parse_level,                 "LEVEL" },
-                { config_parse_exec_capabilities,     "CAPABILITIES" },
                 { config_parse_exec_secure_bits,      "SECUREBITS" },
                 { config_parse_bounding_set,          "BOUNDINGSET" },
                 { config_parse_limit,                 "LIMIT" },
