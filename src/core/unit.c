@@ -2543,7 +2543,7 @@ int unit_kill(Unit *u, KillWho w, int signo, DBusError *error) {
         assert(u);
         assert(w >= 0 && w < _KILL_WHO_MAX);
         assert(signo > 0);
-        assert(signo < _NSIG);
+        assert(signo < SIGRTMIN); // __NSIG == SIGRTMIN
 
         if (!UNIT_VTABLE(u)->kill)
                 return -ENOTSUP;
