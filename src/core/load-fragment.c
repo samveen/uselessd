@@ -20,7 +20,7 @@
   along with systemd; If not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#include <linux/oom.h>
+//#include <linux/oom.h>
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
@@ -405,12 +405,6 @@ int config_parse_exec_oom_score_adjust(const char* unit,
         if (r < 0) {
                 log_syntax(unit, LOG_ERR, filename, line, -r,
                            "Failed to parse the OOM score adjust value, ignoring: %s", rvalue);
-                return 0;
-        }
-
-        if (oa < OOM_SCORE_ADJ_MIN || oa > OOM_SCORE_ADJ_MAX) {
-                log_syntax(unit, LOG_ERR, filename, line, ERANGE,
-                           "OOM score adjust value out of range, ignoring: %s", rvalue);
                 return 0;
         }
 
