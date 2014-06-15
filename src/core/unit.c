@@ -34,7 +34,6 @@
 #include "systemd/sd-id128.h"
 #include "systemd/sd-messages.h"
 #include "set.h"
-#include "unit.h"
 #include "macro.h"
 #include "strv.h"
 #include "path-util.h"
@@ -60,7 +59,6 @@ const UnitVTable * const unit_vtable[_UNIT_TYPE_MAX] = {
         [UNIT_MOUNT] = &mount_vtable,
         [UNIT_SNAPSHOT] = &snapshot_vtable,
         [UNIT_SWAP] = &swap_vtable,
-        [UNIT_PATH] = &path_vtable,
         [UNIT_SLICE] = &slice_vtable,
         [UNIT_SCOPE] = &scope_vtable
 };

@@ -1227,71 +1227,6 @@ int config_parse_trigger_unit(
         return 0;
 }
 
-int config_parse_path_spec(const char *unit,
-                           const char *filename,
-                           unsigned line,
-                           const char *section,
-                           const char *lvalue,
-                           int ltype,
-                           const char *rvalue,
-                           void *data,
-                           void *userdata) {
-
-        Path *p = data;
-        PathSpec *s;
-        PathType b;
-        _cleanup_free_ char *k = NULL;
-        int r;
-
-        assert(filename);
-        assert(lvalue);
-        assert(rvalue);
-        assert(data);
-
-        if (isempty(rvalue)) {
-                /* Empty assignment clears list */
-                path_free_specs(p);
-                return 0;
-        }
-
-        b = path_type_from_string(lvalue);
-        if (b < 0) {
-                log_syntax(unit, LOG_ERR, filename, line, EINVAL,
-                           "Failed to parse path type, ignoring: %s", lvalue);
-                return 0;
-        }
-
-        r = unit_full_printf(UNIT(p), rvalue, &k);
-        if (r < 0) {
-                k = strdup(rvalue);
-                if (!k)
-                        return log_oom();
-                else
-                        log_syntax(unit, LOG_ERR, filename, line, -r,
-                                   "Failed to resolve unit specifiers on %s. Ignoring.",
-                                   rvalue);
-        }
-
-        if (!path_is_absolute(k)) {
-                log_syntax(unit, LOG_ERR, filename, line, EINVAL,
-                           "Path is not absolute, ignoring: %s", k);
-                return 0;
-        }
-
-        s = new0(PathSpec, 1);
-        if (!s)
-                return log_oom();
-
-        s->path = path_kill_slashes(k);
-        k = NULL;
-        s->type = b;
-        s->inotify_fd = -1;
-
-        LIST_PREPEND(PathSpec, spec, p->specs, s);
-
-        return 0;
-}
-
 int config_parse_socket_service(const char *unit,
                                 const char *filename,
                                 unsigned line,
@@ -2658,7 +2593,6 @@ void unit_dump_config_items(FILE *f) {
                 { config_parse_unit_string_printf,    "STRING" },
                 { config_parse_trigger_unit,          "UNIT" },
                 { config_parse_timer,                 "TIMER" },
-                { config_parse_path_spec,             "PATH" },
                 { config_parse_notify_access,         "ACCESS" },
                 { config_parse_ip_tos,                "TOS" },
                 { config_parse_unit_condition_path,   "CONDITION" },

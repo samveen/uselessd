@@ -168,18 +168,6 @@ static void service_unwatch_main_pid(Service *s) {
         s->main_pid = 0;
 }
 
-static void service_unwatch_pid_file(Service *s) {
-        if (!s->pid_file_pathspec)
-                return;
-
-        log_debug_unit(UNIT(s)->id, "Stopping watch for %s's PID file %s",
-                       UNIT(s)->id, s->pid_file_pathspec->path);
-        path_spec_unwatch(s->pid_file_pathspec, UNIT(s));
-        path_spec_done(s->pid_file_pathspec);
-        free(s->pid_file_pathspec);
-        s->pid_file_pathspec = NULL;
-}
-
 static int service_set_main_pid(Service *s, pid_t pid) {
         pid_t ppid;
 
@@ -310,7 +298,6 @@ static void service_done(Unit *u) {
          * our resources */
         service_unwatch_main_pid(s);
         service_unwatch_control_pid(s);
-        service_unwatch_pid_file(s);
 
         if (s->bus_name)  {
                 unit_unwatch_bus_name(u, s->bus_name);
@@ -1502,8 +1489,6 @@ static void service_set_state(Service *s, ServiceState state) {
 
         old_state = s->state;
         s->state = state;
-
-        service_unwatch_pid_file(s);
 
         if (state != SERVICE_START_PRE &&
             state != SERVICE_START &&
@@ -2847,89 +2832,8 @@ static int service_retry_pid_file(Service *s) {
         if (r < 0)
                 return r;
 
-        service_unwatch_pid_file(s);
-
         service_enter_running(s, SERVICE_SUCCESS);
         return 0;
-}
-
-static int service_watch_pid_file(Service *s) {
-        int r;
-
-        log_debug_unit(UNIT(s)->id,
-                       "Setting watch for %s's PID file %s",
-                       UNIT(s)->id, s->pid_file_pathspec->path);
-        r = path_spec_watch(s->pid_file_pathspec, UNIT(s));
-        if (r < 0)
-                goto fail;
-
-        /* the pidfile might have appeared just before we set the watch */
-        log_debug_unit(UNIT(s)->id,
-                       "Trying to read %s's PID file %s in case it changed",
-                       UNIT(s)->id, s->pid_file_pathspec->path);
-        service_retry_pid_file(s);
-
-        return 0;
-fail:
-        log_error_unit(UNIT(s)->id,
-                       "Failed to set a watch for %s's PID file %s: %s",
-                       UNIT(s)->id, s->pid_file_pathspec->path, strerror(-r));
-        service_unwatch_pid_file(s);
-        return r;
-}
-
-static int service_demand_pid_file(Service *s) {
-        PathSpec *ps;
-
-        assert(s->pid_file);
-        assert(!s->pid_file_pathspec);
-
-        ps = new0(PathSpec, 1);
-        if (!ps)
-                return -ENOMEM;
-
-        ps->path = strdup(s->pid_file);
-        if (!ps->path) {
-                free(ps);
-                return -ENOMEM;
-        }
-
-        path_kill_slashes(ps->path);
-
-        /* PATH_CHANGED would not be enough. There are daemons (sendmail) that
-         * keep their PID file open all the time. */
-        ps->type = PATH_MODIFIED;
-        ps->inotify_fd = -1;
-
-        s->pid_file_pathspec = ps;
-
-        return service_watch_pid_file(s);
-}
-
-static void service_fd_event(Unit *u, int fd, uint32_t events, Watch *w) {
-        Service *s = SERVICE(u);
-
-        assert(s);
-        assert(fd >= 0);
-        assert(s->state == SERVICE_START || s->state == SERVICE_START_POST);
-        assert(s->pid_file_pathspec);
-        assert(path_spec_owns_inotify_fd(s->pid_file_pathspec, fd));
-
-        log_debug_unit(u->id, "inotify event for %s", u->id);
-
-        if (path_spec_fd_event(s->pid_file_pathspec, events) < 0)
-                goto fail;
-
-        if (service_retry_pid_file(s) == 0)
-                return;
-
-        if (service_watch_pid_file(s) < 0)
-                goto fail;
-
-        return;
-fail:
-        service_unwatch_pid_file(s);
-        service_enter_signal(s, SERVICE_STOP_SIGTERM, SERVICE_FAILURE_RESOURCES);
 }
 
 static void service_sigchld_event(Unit *u, pid_t pid, int code, int status) {
@@ -3122,23 +3026,11 @@ static void service_sigchld_event(Unit *u, pid_t pid, int code, int status) {
                                         bool has_start_post;
                                         int r;
 
-                                        /* Let's try to load the pid file here if we can.
-                                         * The PID file might actually be created by a START_POST
-                                         * script. In that case don't worry if the loading fails. */
-
-                                        has_start_post = !!s->exec_command[SERVICE_EXEC_START_POST];
-                                        r = service_load_pid_file(s, !has_start_post);
-                                        if (!has_start_post && r < 0) {
-                                                r = service_demand_pid_file(s);
-                                                if (r < 0 || !cgroup_good(s))
-                                                        service_enter_signal(s, SERVICE_FINAL_SIGTERM, SERVICE_FAILURE_RESOURCES);
-                                                break;
-                                        }
-                                } else
                                         service_search_main_pid(s);
 
-                                service_enter_start_post(s);
-                                break;
+                                        service_enter_start_post(s);
+                                        break;
+						       }
 
                         case SERVICE_START_POST:
                                 if (f != SERVICE_SUCCESS) {
@@ -3147,20 +3039,12 @@ static void service_sigchld_event(Unit *u, pid_t pid, int code, int status) {
                                 }
 
                                 if (s->pid_file) {
-                                        int r;
 
-                                        r = service_load_pid_file(s, true);
-                                        if (r < 0) {
-                                                r = service_demand_pid_file(s);
-                                                if (r < 0 || !cgroup_good(s))
-                                                        service_enter_stop(s, SERVICE_FAILURE_RESOURCES);
-                                                break;
-                                        }
-                                } else
                                         service_search_main_pid(s);
 
-                                service_enter_running(s, SERVICE_SUCCESS);
-                                break;
+                                        service_enter_running(s, SERVICE_SUCCESS);
+                                        break;
+                                }
 
                         case SERVICE_RELOAD:
                                 if (f == SERVICE_SUCCESS) {
@@ -3318,19 +3202,9 @@ static void service_notify_cgroup_empty_event(Unit *u) {
                  * except when we don't know pid which to expect the
                  * SIGCHLD for. */
 
+/* We'll be ridding of cgroups, anyway. */
         case SERVICE_START:
         case SERVICE_START_POST:
-                /* If we were hoping for the daemon to write its PID file,
-                 * we can give up now. */
-                if (s->pid_file_pathspec) {
-                        log_warning_unit(u->id,
-                                         "%s never wrote its PID file. Failing.", UNIT(s)->id);
-                        service_unwatch_pid_file(s);
-                        if (s->state == SERVICE_START)
-                                service_enter_signal(s, SERVICE_FINAL_SIGTERM, SERVICE_FAILURE_RESOURCES);
-                        else
-                                service_enter_stop(s, SERVICE_FAILURE_RESOURCES);
-                }
                 break;
 
         case SERVICE_RUNNING:
@@ -3340,7 +3214,6 @@ static void service_notify_cgroup_empty_event(Unit *u) {
 
         case SERVICE_STOP_SIGTERM:
         case SERVICE_STOP_SIGKILL:
-
                 if (main_pid_good(s) <= 0 && !control_pid_good(s))
                         service_enter_stop_post(s, SERVICE_SUCCESS);
 
@@ -3865,7 +3738,6 @@ const UnitVTable service_vtable = {
 
         .sigchld_event = service_sigchld_event,
         .timer_event = service_timer_event,
-        .fd_event = service_fd_event,
 
         .reset_failed = service_reset_failed,
 
