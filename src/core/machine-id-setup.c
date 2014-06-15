@@ -25,7 +25,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include <sys/param.h>
 #include <sys/mount.h>
+#include <sys/uio.h>
+#include <sys/types.h>
 
 #include <systemd/sd-id128.h>
 
@@ -36,6 +39,9 @@
 #include "log.h"
 #include "virt.h"
 #include "fileio.h"
+
+void build_iovec_pair(struct iovec **iov, int *iovlen,
+const char *name, void *val, size_t len);
 
 static int shorten_uuid(char destination[34], const char source[36]) {
         unsigned i, j;
@@ -219,8 +225,24 @@ int machine_id_setup(void) {
                 return r;
         }
 
+		/* Using nmount(2) to simulate Linux mount(2) semantics of
+		 * source and target mount point.
+		 * Experimental and hacky. */
+        int *iov = NULL;
+        int iovlen = 0;
+        char fs_type_name[] = "freebsdufs";
+        char fs_type_value[] = "ufs";
+        char fs_path_name[] = "machine-id";
+        char fs_path_value[] = "/etc/machine-id";
+        char from_name[] = "machine-id-orig";
+        char from_value[] = "/run/machine-id";
+
+        build_iovec_pair(&iov, &iovlen, fs_type_name, fs_type_value, (size_t) - 1);
+        build_iovec_pair(&iov, &iovlen, fs_path_name, fs_path_value, (size_t) - 1);
+        build_iovec_pair(&iov, &iovlen, from_name, from_value, (size_t) - 1);
+
         /* And now, let's mount it over */
-        r = mount("/run/machine-id", "/etc/machine-id", NULL, MS_BIND, NULL);
+        r = nmount(iov, iovlen, 0);
         if (r < 0) {
                 log_error("Failed to mount /etc/machine-id: %m");
                 unlink_noerrno("/run/machine-id");
@@ -230,7 +252,7 @@ int machine_id_setup(void) {
         log_info("Installed transient /etc/machine-id file.");
 
         /* Mark the mount read-only */
-        if (mount(NULL, "/etc/machine-id", NULL, MS_BIND|MS_RDONLY|MS_REMOUNT, NULL) < 0)
+        if (mount(NULL, "/etc/machine-id", MNT_RDONLY, NULL) < 0)
                 log_warning("Failed to make transient /etc/machine-id read-only: %m");
 
         return 0;
