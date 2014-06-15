@@ -69,34 +69,34 @@ typedef struct MountPoint {
 #define N_EARLY_MOUNT 5
 
 static const MountPoint mount_table[] = {
-        { "proc",       "/proc",                     "proc",       NULL, MS_NOSUID|MS_NOEXEC|MS_NODEV,
+        { "proc",       "/proc",                     "proc",       NULL, MNT_NOSUID|MNT_NOEXEC,
           NULL,       MNT_FATAL|MNT_IN_CONTAINER },
-        { "sysfs",      "/sys",                      "sysfs",      NULL, MS_NOSUID|MS_NOEXEC|MS_NODEV,
+        { "sysfs",      "/sys",                      "sysfs",      NULL, MNT_NOSUID|MNT_NOEXEC,
           NULL,       MNT_FATAL|MNT_IN_CONTAINER },
-        { "devtmpfs",   "/dev",                      "devtmpfs",   "mode=755", MS_NOSUID|MS_STRICTATIME,
+        { "devtmpfs",   "/dev",                      "devtmpfs",   "mode=755", MNT_NOSUID,
           NULL,       MNT_FATAL|MNT_IN_CONTAINER },
-        { "securityfs", "/sys/kernel/security",      "securityfs", NULL, MS_NOSUID|MS_NOEXEC|MS_NODEV,
+        { "securityfs", "/sys/kernel/security",      "securityfs", NULL, MNT_NOSUID|MNT_NOEXEC,
           NULL,       MNT_NONE },
-        { "smackfs",    "/sys/fs/smackfs",           "smackfs",    "smackfsdef=*", MS_NOSUID|MS_NOEXEC|MS_NODEV|MS_STRICTATIME,
+        { "smackfs",    "/sys/fs/smackfs",           "smackfs",    "smackfsdef=*", MNT_NOSUID|MNT_NOEXEC,
           NULL,       MNT_NONE },
-        { "tmpfs",      "/dev/shm",                  "tmpfs",      "mode=1777", MS_NOSUID|MS_NODEV|MS_STRICTATIME,
+        { "tmpfs",      "/dev/shm",                  "tmpfs",      "mode=1777", MNT_NOSUID,
           NULL,       MNT_FATAL|MNT_IN_CONTAINER },
-        { "devpts",     "/dev/pts",                  "devpts",     "mode=620,gid=" STRINGIFY(TTY_GID), MS_NOSUID|MS_NOEXEC,
+        { "devpts",     "/dev/pts",                  "devpts",     "mode=620,gid=" STRINGIFY(TTY_GID), MNT_NOSUID|MNT_NOEXEC,
           NULL,       MNT_IN_CONTAINER },
-        { "tmpfs",      "/run",                      "tmpfs",      "mode=755", MS_NOSUID|MS_NODEV|MS_STRICTATIME,
+        { "tmpfs",      "/run",                      "tmpfs",      "mode=755", MNT_NOSUID,
           NULL,       MNT_FATAL|MNT_IN_CONTAINER },
-        { "tmpfs",      "/sys/fs/cgroup",            "tmpfs",      "mode=755", MS_NOSUID|MS_NOEXEC|MS_NODEV|MS_STRICTATIME,
+        { "tmpfs",      "/sys/fs/cgroup",            "tmpfs",      "mode=755", MNT_NOSUID|MNT_NOEXEC,
           NULL,       MNT_IN_CONTAINER },
 #ifdef HAVE_XATTR
-        { "cgroup",     "/sys/fs/cgroup/systemd",    "cgroup",     "none,name=systemd,xattr", MS_NOSUID|MS_NOEXEC|MS_NODEV,
+        { "cgroup",     "/sys/fs/cgroup/systemd",    "cgroup",     "none,name=systemd,xattr", MNT_NOSUID|MNT_NOEXEC,
           NULL,       MNT_IN_CONTAINER },
 #endif
-        { "cgroup",     "/sys/fs/cgroup/systemd",    "cgroup",     "none,name=systemd", MS_NOSUID|MS_NOEXEC|MS_NODEV,
+        { "cgroup",     "/sys/fs/cgroup/systemd",    "cgroup",     "none,name=systemd", MNT_NOSUID|MNT_NOEXEC,
           NULL,       MNT_IN_CONTAINER },
-        { "pstore",     "/sys/fs/pstore",            "pstore",     NULL, MS_NOSUID|MS_NOEXEC|MS_NODEV,
+        { "pstore",     "/sys/fs/pstore",            "pstore",     NULL, MNT_NOSUID|MNT_NOEXEC,
           NULL,       MNT_NONE },
 #ifdef ENABLE_EFI
-        { "efivarfs",   "/sys/firmware/efi/efivars", "efivarfs",   NULL, MS_NOSUID|MS_NOEXEC|MS_NODEV,
+        { "efivarfs",   "/sys/firmware/efi/efivars", "efivarfs",   NULL, MNT_NOSUID|MNT_NOEXEC,
           is_efi_boot, MNT_NONE },
 #endif
 };
@@ -177,8 +177,7 @@ static int mount_one(const MountPoint *p, bool relabel) {
         if (mount(p->what,
                   p->where,
                   p->type,
-                  p->flags,
-                  p->options) < 0) {
+                  p->flags) < 0) {
                 log_full((p->mode & MNT_FATAL) ? LOG_ERR : LOG_DEBUG, "Failed to mount %s: %s", p->where, strerror(errno));
                 return (p->mode & MNT_FATAL) ? -errno : 0;
         }
@@ -259,7 +258,7 @@ int mount_cgroup_controllers(char ***join_controllers) {
                 MountPoint p = {
                         .what = "cgroup",
                         .type = "cgroup",
-                        .flags = MS_NOSUID|MS_NOEXEC|MS_NODEV,
+                        .flags = MNT_NOSUID|MNT_NOEXEC,
                         .mode = MNT_IN_CONTAINER,
                 };
                 char ***k = NULL;
@@ -384,7 +383,7 @@ int mount_setup(bool loaded_policy) {
          * specific setups need other settings they can reset the
          * propagation mode to private if needed. */
         if (detect_container(NULL) <= 0)
-                if (mount(NULL, "/", NULL, MS_REC|MS_SHARED, NULL) < 0)
+                if (mount(NULL, "/", NULL, NULL) < 0)
                         log_warning("Failed to set up the root directory for shared mount propagation: %m");
 
         /* Create a few directories we always want around, Note that
