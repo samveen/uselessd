@@ -21,7 +21,7 @@
 
 #include <errno.h>
 #include <dbus/dbus.h>
-#include <sys/prctl.h>
+//#include <sys/prctl.h>
 
 #include "dbus-execute.h"
 #include "missing.h"
@@ -209,8 +209,8 @@ static int bus_execute_append_timer_slack_nsec(DBusMessageIter *i, const char *p
 
         if (c->timer_slack_nsec != (nsec_t) -1)
                 u = (uint64_t) c->timer_slack_nsec;
-        else
-                u = (uint64_t) prctl(PR_GET_TIMERSLACK);
+        //else
+                //u = (uint64_t) prctl(PR_GET_TIMERSLACK);
 
         if (!dbus_message_iter_append_basic(i, DBUS_TYPE_UINT64, &u))
                 return -ENOMEM;
@@ -233,35 +233,6 @@ static int bus_execute_append_capability_bs(DBusMessageIter *i, const char *prop
         inverted = ~normal;
 
         return bus_property_append_uint64(i, property, &inverted);
-}
-
-static int bus_execute_append_capabilities(DBusMessageIter *i, const char *property, void *data) {
-        ExecContext *c = data;
-        char *t = NULL;
-        const char *s;
-        dbus_bool_t b;
-
-        assert(i);
-        assert(property);
-        assert(c);
-
-        if (c->capabilities)
-                s = t = cap_to_text(c->capabilities, NULL);
-        else
-                s = "";
-
-        if (!s)
-                return -ENOMEM;
-
-        b = dbus_message_iter_append_basic(i, DBUS_TYPE_STRING, &s);
-
-        if (t)
-                cap_free(t);
-
-        if (!b)
-                return -ENOMEM;
-
-        return 0;
 }
 
 static int bus_execute_append_rlimits(DBusMessageIter *i, const char *property, void *data) {
@@ -407,7 +378,6 @@ const BusProperty bus_exec_context_properties[] = {
         { "SyslogPriority",           bus_property_append_int,               "i", offsetof(ExecContext, syslog_priority)              },
         { "SyslogIdentifier",         bus_property_append_string,            "s", offsetof(ExecContext, syslog_identifier),      true },
         { "SyslogLevelPrefix",        bus_property_append_bool,              "b", offsetof(ExecContext, syslog_level_prefix)          },
-        { "Capabilities",             bus_execute_append_capabilities,       "s", 0 },
         { "SecureBits",               bus_property_append_int,               "i", offsetof(ExecContext, secure_bits)                  },
         { "CapabilityBoundingSet",    bus_execute_append_capability_bs,      "t", offsetof(ExecContext, capability_bounding_set_drop) },
         { "User",                     bus_property_append_string,            "s", offsetof(ExecContext, user),                   true },
