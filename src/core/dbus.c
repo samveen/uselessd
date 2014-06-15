@@ -43,7 +43,6 @@
 #include "dbus-snapshot.h"
 #include "dbus-swap.h"
 #include "dbus-timer.h"
-#include "dbus-path.h"
 #include "bus-errors.h"
 #include "special.h"
 #include "dbus-common.h"
@@ -72,7 +71,6 @@ const char *const bus_interface_table[] = {
         "org.freedesktop.systemd1.Snapshot",   bus_snapshot_interface,
         "org.freedesktop.systemd1.Swap",       bus_swap_interface,
         "org.freedesktop.systemd1.Timer",      bus_timer_interface,
-        "org.freedesktop.systemd1.Path",       bus_path_interface,
         NULL
 };
 
@@ -124,10 +122,10 @@ static dbus_bool_t bus_add_watch(DBusWatch *bus_watch, void *data) {
         w->fd = dbus_watch_get_unix_fd(bus_watch);
         w->type = WATCH_DBUS_WATCH;
         w->data.bus_watch = bus_watch;
-
-       // zero(ev);
+/*
+        zero(ev);
         ev.events = bus_flags_to_events(bus_watch);
-        ev.data.ptr = w;
+        ev.data.ptr = w; */
 /*
         if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, w->fd, &ev) < 0) {
 
@@ -195,8 +193,8 @@ static void bus_toggle_watch(DBusWatch *bus_watch, void *data) {
         assert(w->type == WATCH_DBUS_WATCH);
 
         //zero(ev);
-        ev.events = bus_flags_to_events(bus_watch);
-        ev.data.ptr = w;
+        //ev.events = bus_flags_to_events(bus_watch);
+        //ev.data.ptr = w;
 
        // assert_se(epoll_ctl(m->epoll_fd, EPOLL_CTL_MOD, w->fd, &ev) == 0);
 }
@@ -245,7 +243,7 @@ static dbus_bool_t bus_add_timeout(DBusTimeout *timeout, void *data) {
         timer_t timerid;
         struct sigevent sev;
         sev.sigev_notify = SIGEV_SIGNAL;
-        sev.sigev_signo = SIG;
+        sev.sigev_signo = SIGRTMIN;
         sev.sigev_value.sival_ptr = &timerid;
 
         assert(timeout);
@@ -265,7 +263,7 @@ static dbus_bool_t bus_add_timeout(DBusTimeout *timeout, void *data) {
 
         //zero(ev);
        // ev.events = EPOLLIN;
-        ev.data.ptr = w;
+        //ev.data.ptr = w;
 
         //if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, w->fd, &ev) < 0)
                 //goto fail;
