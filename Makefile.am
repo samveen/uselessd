@@ -775,8 +775,6 @@ libsystemd_core_la_SOURCES = \
 	src/core/socket.h \
 	src/core/timer.c \
 	src/core/timer.h \
-	src/core/path.c \
-	src/core/path.h \
 	src/core/slice.c \
 	src/core/slice.h \
 	src/core/scope.c \
@@ -811,8 +809,6 @@ libsystemd_core_la_SOURCES = \
 	src/core/dbus-snapshot.h \
 	src/core/dbus-device.c \
 	src/core/dbus-device.h \
-	src/core/dbus-path.c \
-	src/core/dbus-path.h \
 	src/core/dbus-slice.c \
 	src/core/dbus-slice.h \
 	src/core/dbus-scope.c \
@@ -926,8 +922,7 @@ dbusinterface_DATA += \
 	org.freedesktop.systemd1.Device.xml \
 	org.freedesktop.systemd1.Mount.xml \
 	org.freedesktop.systemd1.Snapshot.xml \
-	org.freedesktop.systemd1.Swap.xml \
-	org.freedesktop.systemd1.Path.xml
+	org.freedesktop.systemd1.Swap.xml
 
 polkitpolicy_in_in_files += \
 	src/core/org.freedesktop.systemd1.policy.in.in
