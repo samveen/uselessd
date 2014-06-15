@@ -28,17 +28,17 @@
 #include <signal.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include <sys/prctl.h>
-#include <linux/sched.h>
+//#include <sys/prctl.h>
+//#include <linux/sched.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <grp.h>
 #include <pwd.h>
 #include <sys/mount.h>
-#include <linux/fs.h>
+//#include <linux/fs.h>
 //#include <linux/oom.h>
 #include <sys/poll.h>
-#include <linux/seccomp-bpf.h>
+//#include <linux/seccomp-bpf.h>
 #include <glob.h>
 #include <libgen.h>
 
@@ -651,65 +651,6 @@ static int enforce_groups(const ExecContext *context, const char *username, gid_
         return 0;
 }
 
-static int enforce_user(const ExecContext *context, uid_t uid) {
-        int r;
-        assert(context);
-
-        /* Sets (but doesn't lookup) the uid and make sure we keep the
-         * capabilities while doing so. */
-
-        if (context->capabilities) {
-                cap_t d;
-                static const cap_value_t bits[] = {
-                        CAP_SETUID,   /* Necessary so that we can run setresuid() below */
-                        CAP_SETPCAP   /* Necessary so that we can set PR_SET_SECUREBITS later on */
-                };
-
-                /* First step: If we need to keep capabilities but
-                 * drop privileges we need to make sure we keep our
-                 * caps, while we drop privileges. */
-                if (uid != 0) {
-                        int sb = context->secure_bits | 1<<SECURE_KEEP_CAPS;
-
-                        if (prctl(PR_GET_SECUREBITS) != sb)
-                                if (prctl(PR_SET_SECUREBITS, sb) < 0)
-                                        return -errno;
-                }
-
-                /* Second step: set the capabilities. This will reduce
-                 * the capabilities to the minimum we need. */
-
-                if (!(d = cap_dup(context->capabilities)))
-                        return -errno;
-
-                if (cap_set_flag(d, CAP_EFFECTIVE, ELEMENTSOF(bits), bits, CAP_SET) < 0 ||
-                    cap_set_flag(d, CAP_PERMITTED, ELEMENTSOF(bits), bits, CAP_SET) < 0) {
-                        r = -errno;
-                        cap_free(d);
-                        return r;
-                }
-
-                if (cap_set_proc(d) < 0) {
-                        r = -errno;
-                        cap_free(d);
-                        return r;
-                }
-
-                cap_free(d);
-        }
-
-        /* Third step: actually set the uids */
-        if (setresuid(uid, uid, uid) < 0)
-                return -errno;
-
-        /* At this point we should have all necessary capabilities but
-           are otherwise a normal user. However, the caps might got
-           corrupted due to the setresuid() so we need clean them up
-           later. This is done outside of this call. */
-
-        return 0;
-}
-
 #ifdef HAVE_PAM
 
 static int null_conv(
@@ -824,8 +765,8 @@ static int setup_pam(
                  * will not allow unprivileged parents kill their privileged
                  * children this way. We rely on the control groups kill logic
                  * to do the rest for us. */
-                if (prctl(PR_SET_PDEATHSIG, SIGTERM) < 0)
-                        goto child_finish;
+                /*if (prctl(PR_SET_PDEATHSIG, SIGTERM) < 0)
+                        goto child_finish; */
 
                 /* Check if our parent process might already have
                  * died? */
@@ -929,58 +870,6 @@ static void rename_process_from_path(const char *path) {
         process_name[1+l+1] = 0;
 
         rename_process(process_name);
-}
-
-static int apply_seccomp(uint32_t *syscall_filter) {
-        static const struct sock_filter header[] = {
-                VALIDATE_ARCHITECTURE,
-                EXAMINE_SYSCALL
-        };
-        static const struct sock_filter footer[] = {
-                _KILL_PROCESS
-        };
-
-        int i;
-        unsigned n;
-        struct sock_filter *f;
-        struct sock_fprog prog = {};
-
-        assert(syscall_filter);
-
-        /* First: count the syscalls to check for */
-        for (i = 0, n = 0; i < syscall_max(); i++)
-                if (syscall_filter[i >> 4] & (1 << (i & 31)))
-                        n++;
-
-        /* Second: build the filter program from a header the syscall
-         * matches and the footer */
-        f = alloca(sizeof(struct sock_filter) * (ELEMENTSOF(header) + 2*n + ELEMENTSOF(footer)));
-        memcpy(f, header, sizeof(header));
-
-        for (i = 0, n = 0; i < syscall_max(); i++)
-                if (syscall_filter[i >> 4] & (1 << (i & 31))) {
-                        struct sock_filter item[] = {
-                                BPF_JUMP(BPF_JMP+BPF_JEQ+BPF_K, INDEX_TO_SYSCALL(i), 0, 1),
-                                BPF_STMT(BPF_RET+BPF_K, SECCOMP_RET_ALLOW)
-                        };
-
-                        assert_cc(ELEMENTSOF(item) == 2);
-
-                        f[ELEMENTSOF(header) + 2*n]  = item[0];
-                        f[ELEMENTSOF(header) + 2*n+1] = item[1];
-
-                        n++;
-                }
-
-        memcpy(f + (ELEMENTSOF(header) + 2*n), footer, sizeof(footer));
-
-        /* Third: install the filter */
-        prog.len = ELEMENTSOF(header) + ELEMENTSOF(footer) + 2*n;
-        prog.filter = f;
-        if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &prog) < 0)
-                return -errno;
-
-        return 0;
 }
 
 static void do_idle_pipe_dance(int idle_pipe[4]) {
@@ -1220,8 +1109,9 @@ int exec_spawn(ExecCommand *command,
                         r = sched_setscheduler(0,
                                                context->cpu_sched_policy |
                                                (context->cpu_sched_reset_on_fork ?
-                                                SCHED_RESET_ON_FORK : 0),
-                                               &param);
+                                                SCHED_RR : 0),
+                                               &param); // was SCHED_RESET_ON_FORK,
+                                               // won't be executed anyway
                         if (r < 0) {
                                 err = -errno;
                                 r = EXIT_SETSCHEDULER;
@@ -1236,22 +1126,22 @@ int exec_spawn(ExecCommand *command,
                                 goto fail_child;
                         }
 
-                if (context->ioprio_set)
+                if (context->ioprio_set) {
                         if (ioprio_set(IOPRIO_WHO_PROCESS, 0, context->ioprio) < 0) {
                                 err = -errno;
                                 r = EXIT_IOPRIO;
                                 goto fail_child;
                         }
 
-                if (context->timer_slack_nsec != (nsec_t) -1)
+              /*  if (context->timer_slack_nsec != (nsec_t) -1)
                         if (prctl(PR_SET_TIMERSLACK, context->timer_slack_nsec) < 0) {
                                 err = -errno;
                                 r = EXIT_TIMERSLACK;
-                                goto fail_child;
+                                goto fail_child; */
                         }
 
                 if (context->utmp_id)
-                        utmp_put_init_process(context->utmp_id, getpid(), getsid(0), context->tty_path);
+                        utmp_put_init_process(context->utmp_id, getpid(), context->tty_path);
 
                 if (context->user) {
                         username = context->user;
@@ -1307,11 +1197,11 @@ int exec_spawn(ExecCommand *command,
                 }
 #endif
                 if (context->private_network) {
-                        if (unshare(CLONE_NEWNET) < 0) {
+                        /*if (unshare(CLONE_NEWNET) < 0) {
                                 err = -errno;
                                 r = EXIT_NETWORK;
                                 goto fail_child;
-                        }
+                        }*/
 
                         loopback_setup();
                 }
@@ -1390,47 +1280,39 @@ int exec_spawn(ExecCommand *command,
                                 }
                         }
 
-                        if (context->user) {
+                       /* if (context->user) {
                                 err = enforce_user(context, uid);
                                 if (err < 0) {
                                         r = EXIT_USER;
                                         goto fail_child;
                                 }
-                        }
+                        } */
 
                         /* PR_GET_SECUREBITS is not privileged, while
                          * PR_SET_SECUREBITS is. So to suppress
                          * potential EPERMs we'll try not to call
                          * PR_SET_SECUREBITS unless necessary. */
-                        if (prctl(PR_GET_SECUREBITS) != context->secure_bits)
+                       /* if (prctl(PR_GET_SECUREBITS) != context->secure_bits)
                                 if (prctl(PR_SET_SECUREBITS, context->secure_bits) < 0) {
                                         err = -errno;
                                         r = EXIT_SECUREBITS;
                                         goto fail_child;
-                                }
+                                } */
 
-                        if (context->capabilities)
+                        /*if (context->capabilities)
                                 if (cap_set_proc(context->capabilities) < 0) {
                                         err = -errno;
                                         r = EXIT_CAPABILITIES;
                                         goto fail_child;
-                                }
+                                } */
 
-                        if (context->no_new_privileges)
+                       /* if (context->no_new_privileges)
                                 if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) < 0) {
                                         err = -errno;
                                         r = EXIT_NO_NEW_PRIVILEGES;
                                         goto fail_child;
-                                }
-
-                        if (context->syscall_filter) {
-                                err = apply_seccomp(context->syscall_filter);
-                                if (err < 0) {
-                                        r = EXIT_SECCOMP;
-                                        goto fail_child;
-                                }
+                                } */
                         }
-                }
 
                 our_env = new0(char*, 7);
                 if (!our_env) {
@@ -1529,12 +1411,8 @@ int exec_spawn(ExecCommand *command,
                 _exit(r);
         }
 
-        log_struct_unit(LOG_DEBUG,
-                        unit_id,
-                        "MESSAGE=Forked %s as %lu",
-                        command->path, (unsigned long) pid,
-                        NULL);
-
+       // log_struct_unit(LOG_DEBUG, unit_id, "MESSAGE=Forked %s as %lu", command->path, (unsigned long) pid, NULL);
+// doesn't seem to play well
         /* We add the new process to the cgroup both in the child (so
          * that we can be sure that no user code is ever executed
          * outside of the cgroup) and in the parent (so that we can be
@@ -1635,11 +1513,6 @@ void exec_context_done(ExecContext *c, bool reloading_or_reexecuting) {
 
         free(c->pam_name);
         c->pam_name = NULL;
-
-        if (c->capabilities) {
-                cap_free(c->capabilities);
-                c->capabilities = NULL;
-        }
 
         strv_free(c->read_only_dirs);
         c->read_only_dirs = NULL;
@@ -2010,7 +1883,7 @@ void exec_status_exit(ExecStatus *s, ExecContext *context, pid_t pid, int code, 
 
         if (context) {
                 if (context->utmp_id)
-                        utmp_put_dead_process(context->utmp_id, pid, code, status);
+                        utmp_put_dead_process(context->utmp_id, pid);
 
                 exec_context_tty_reset(context);
         }
