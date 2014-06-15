@@ -157,6 +157,8 @@ src/core/execute.c,load-fragment.c
 commented out in src/shared/missing.h
 done
 
+<linux/kd.h> usage in manager.c, util.c
+
 replaced all instances of EBADR to EBADF to denote
 that unit cannot be stopped, started or reloaded
 
@@ -164,7 +166,7 @@ replace loops around RLIMIT_NLIMITS with int value of 16,
 as seen in <linux/oom.h>
 
 address <sys/timerfd.h> usage in:
-src/core/dbus.c[x],job.c[x],manager.c,unit.c[x]
+src/core/dbus.c[x],job.c[x],manager.c[x],unit.c[x]
 src/shutdownd/shutdownd.c
 currently attempting to use timer_settime()
 and timer_createtime() in their place, see if
@@ -177,6 +179,81 @@ src/ask-password/ask-password.c [appears unused]
 src/reply-password/reply-password.c [x, appears unused]
 src/tty-ask-password-agent/tty-ask-password-agent.c (commented)
 src/shared/ask-password-api.c (commented)
+
+<linux/seccomp-bpf.h> usage in execute.c
+
+watchdog.h remnants:dbus-manager.c,manager.c,shutdown.c,
+main.c,test-watchdog.c
+
+manager.c -> SCM_CREDENTIALS to SCM_CREDS
+comment out SO_PASSCRED usage
+comment out specific RB_DISABLE_CAD (reboot disable
+ctrl-alt-del, Linux-only)
+add <sys/ucred.h> and paste in struct
+rid of ucred->pid, unavailable here
+remove manager_process_signal_fd(),
+due to critical dependency on <sys/signalfd.h>
+comment out some incomplete type pointer derefs,
+likely due to lack of signalfd
+TODO: clean this the fuck up
+
+load-fragment.c: comment out unused prctl header
+comment out <linux/fs.h>
+remove config_parse_exec_capabilities, in header too
+comment out capability_bounding_set
+comment out some low-level __NR_* syscalls
+# define MS_SLAVE (1 << 19) from <linux/fs.h>
+
+automount.c: <linux/auto_fs4.h> and
+<linux/auto_dev-ioctl.h>
+remove entirely, as it uses autofs
+plus dbus-automount.[ch]
+
+mount.c: <mntent.h>
+added compatibility layer
+
+swap.c: <sys/swap.h>
+commented out, appears unused
+
+socket.c: various undeclared
+socket attributes
+remove AF_NETLINK conditionals
+remove various missing socket options:
+SO_PEERCRED/PASSCRED/PASSSEC/PRIORITY,
+RCVBUFFORCE, SENDBUFFORCE, MARK, SOL_TCP
+remove asprintf() check on AF_UNIX case,
+which looks for ucred members not present on FreeBSD
+
+path.c: <sys/inotify.h>
+As path units are fundamentally dependent on inotify(),
+we must remove them
+
+execute.c: <sys/prctl.h>
+remove apply_seccomp(), as it uses the Linux-specific
+seccomp-bpf process isolation system
+remove getsid() arguments in utmp_put_init_process()
+and utmp_put_dead_proces()
+remove Linux-specific SCHED_* flag and some <linux/fs.h>
+defs
+
+dbus.c: comment unused ev pointers, which were scrubbed
+during epoll() removal
+fix example SIG definition to SIGRTMIN in timer
+remove bus unit path interface
+
+dbus-execute.c: comment out PR_GET_TIMERSLACK usage
+remove bus_execute_append_capabilities()
+
+machine-id-setup.c: replace missing MS_* symbols
+with equivalent MNT_* ones
+added nmount(2) call to simulate Linux mount(2) semantics
+
+mount-setup.c: consider removing entirely, though
+just work around for now
+
+loopback-setup.c: uses Linux semantics, consider removing
+loopback_setup() function called in main.c and execute.c
+do so
 
 files modified:
 	src/shared/util.h
@@ -201,6 +278,7 @@ files modified:
 	src/shared/ask-password-api.c
 	src/shared/sparse-endian.h
 	src/shared/dbus-common.c
+	src/shared/unit-name.c
 	[removed] src/shared/dbus-loop.c
 	[removed] src/shared/dbus-loop.h
 	src/shared/audit.c
@@ -214,6 +292,8 @@ files modified:
 	src/core/automount.c
 	src/core/dbus-execute.c
 	src/core/dbus-execute.h
+	src/core/dbus-manager.c
+	src/core/namespace.c
 	src/core/system.conf
 	src/core/dbus.c
 	src/core/device.c
@@ -222,14 +302,26 @@ files modified:
 	src/core/mount.c
 	src/core/path.c
 	src/core/socket.c
+	src/core/service.h
 	src/core/swap.c
 	src/core/unit.c
+	src/core/machine-id-setup.c
+	src/core/mount-setup.c
+	src/core/socket.c
 	src/core/transaction.c
 	src/core/execute.c
 	src/core/load-fragment.c
 	src/tmpfiles/tmpfiles.c
 	src/core/main.c
 	src/core/selinux-access.c
+	[removed] src/core/automount.c
+	[removed] src/core/automount.h
+	[removed] src/core/dbus-automount.c
+	[removed] src/core/dbus-automount.h
+	[removed] src/core/path.c
+	[removed] src/core/path.h
+	[removed] src/core/dbus-path.c
+	[removed] src/core/dbus-path.h
 
 ----------
 
