@@ -20,7 +20,9 @@
 ***/
 
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/ucred.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -49,6 +51,27 @@
 #include "label.h"
 #include "exit-status.h"
 #include "def.h"
+
+struct ucred {
+	u_int	cr_ref;			/* reference count */
+#define	cr_startcopy cr_uid
+	uid_t	cr_uid;			/* effective user id */
+	uid_t	cr_ruid;		/* real user id */
+	uid_t	cr_svuid;		/* saved user id */
+	int	cr_ngroups;		/* number of groups */
+	gid_t	cr_rgid;		/* real group id */
+	gid_t	cr_svgid;		/* saved group id */
+	struct uidinfo	*cr_uidinfo;	/* per euid resource consumption */
+	struct uidinfo	*cr_ruidinfo;	/* per ruid resource consumption */
+	struct prison	*cr_prison;	/* jail(2) */
+	struct loginclass	*cr_loginclass; /* login class */
+	u_int		cr_flags;	/* credential flags */
+	void 		*cr_pspare2[2];	/* general use 2 */
+#define	cr_endcopy	cr_label
+	struct label	*cr_label;	/* MAC label */
+	gid_t	*cr_groups;		/* groups */
+	int	cr_agroups;		/* Available groups */
+};
 
 static const UnitActiveState state_translation_table[_SOCKET_STATE_MAX] = {
         [SOCKET_DEAD] = UNIT_INACTIVE,
@@ -386,9 +409,6 @@ static int socket_load(Unit *u) {
 
 _const_ static const char* listen_lookup(int family, int type) {
 
-        if (family == AF_NETLINK)
-                return "ListenNetlink";
-
         if (type == SOCK_STREAM)
                 return "ListenStream";
         else if (type == SOCK_DGRAM)
@@ -424,10 +444,7 @@ static void socket_dump(Unit *u, FILE *f, const char *prefix) {
                 "%sKeepAlive: %s\n"
                 "%sFreeBind: %s\n"
                 "%sTransparent: %s\n"
-                "%sBroadcast: %s\n"
-                "%sPassCredentials: %s\n"
-                "%sPassSecurity: %s\n"
-                "%sTCPCongestion: %s\n",
+                "%sBroadcast: %s\n",
                 prefix, socket_state_to_string(s->state),
                 prefix, socket_result_to_string(s->result),
                 prefix, socket_address_bind_ipv6_only_to_string(s->bind_ipv6_only),
@@ -437,10 +454,7 @@ static void socket_dump(Unit *u, FILE *f, const char *prefix) {
                 prefix, yes_no(s->keep_alive),
                 prefix, yes_no(s->free_bind),
                 prefix, yes_no(s->transparent),
-                prefix, yes_no(s->broadcast),
-                prefix, yes_no(s->pass_cred),
-                prefix, yes_no(s->pass_sec),
-                prefix, strna(s->tcp_congestion));
+                prefix, yes_no(s->broadcast));
 
         if (s->control_pid > 0)
                 fprintf(f,
@@ -460,11 +474,6 @@ static void socket_dump(Unit *u, FILE *f, const char *prefix) {
                         prefix, s->n_accepted,
                         prefix, s->n_connections,
                         prefix, s->max_connections);
-
-        if (s->priority >= 0)
-                fprintf(f,
-                        "%sPriority: %i\n",
-                        prefix, s->priority);
 
         if (s->receive_buffer > 0)
                 fprintf(f,
@@ -490,11 +499,6 @@ static void socket_dump(Unit *u, FILE *f, const char *prefix) {
                 fprintf(f,
                         "%sPipeSize: %zu\n",
                         prefix, s->pipe_size);
-
-        if (s->mark >= 0)
-                fprintf(f,
-                        "%sMark: %i\n",
-                        prefix, s->mark);
 
         if (s->mq_maxmsg > 0)
                 fprintf(f,
@@ -644,15 +648,6 @@ static int instance_from_socket(int fd, unsigned nr, char **instance) {
                 struct ucred ucred;
 
                 l = sizeof(ucred);
-                if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &ucred, &l) < 0)
-                        return -errno;
-
-                if (asprintf(&r,
-                             "%u-%lu-%lu",
-                             nr,
-                             (unsigned long) ucred.pid,
-                             (unsigned long) ucred.uid) < 0)
-                        return -ENOMEM;
 
                 break;
         }
@@ -705,42 +700,17 @@ static void socket_apply_socket_options(Socket *s, int fd) {
                         log_warning_unit(UNIT(s)->id, "SO_BROADCAST failed: %m");
         }
 
-        if (s->pass_cred) {
-                int one = 1;
-                if (setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &one, sizeof(one)) < 0)
-                        log_warning_unit(UNIT(s)->id, "SO_PASSCRED failed: %m");
-        }
-
-        if (s->pass_sec) {
-                int one = 1;
-                if (setsockopt(fd, SOL_SOCKET, SO_PASSSEC, &one, sizeof(one)) < 0)
-                        log_warning_unit(UNIT(s)->id, "SO_PASSSEC failed: %m");
-        }
-
-        if (s->priority >= 0)
-                if (setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &s->priority, sizeof(s->priority)) < 0)
-                        log_warning_unit(UNIT(s)->id, "SO_PRIORITY failed: %m");
-
         if (s->receive_buffer > 0) {
                 int value = (int) s->receive_buffer;
-
-                /* We first try with SO_RCVBUFFORCE, in case we have the perms for that */
-
-                if (setsockopt(fd, SOL_SOCKET, SO_RCVBUFFORCE, &value, sizeof(value)) < 0)
-                        if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &value, sizeof(value)) < 0)
-                                log_warning_unit(UNIT(s)->id, "SO_RCVBUF failed: %m");
+                if (setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &value, sizeof(value)) < 0)
+                        log_warning_unit(UNIT(s)->id, "SO_RCVBUF failed: %m");
         }
 
         if (s->send_buffer > 0) {
                 int value = (int) s->send_buffer;
-                if (setsockopt(fd, SOL_SOCKET, SO_SNDBUFFORCE, &value, sizeof(value)) < 0)
-                        if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &value, sizeof(value)) < 0)
-                                log_warning_unit(UNIT(s)->id, "SO_SNDBUF failed: %m");
+                if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &value, sizeof(value)) < 0)
+                        log_warning_unit(UNIT(s)->id, "SO_SNDBUF failed: %m");
         }
-
-        if (s->mark >= 0)
-                if (setsockopt(fd, SOL_SOCKET, SO_MARK, &s->mark, sizeof(s->mark)) < 0)
-                        log_warning_unit(UNIT(s)->id, "SO_MARK failed: %m");
 
         if (s->ip_tos >= 0)
                 if (setsockopt(fd, IPPROTO_IP, IP_TOS, &s->ip_tos, sizeof(s->ip_tos)) < 0)
@@ -762,10 +732,6 @@ static void socket_apply_socket_options(Socket *s, int fd) {
                         log_warning_unit(UNIT(s)->id,
                                          "IP_TTL/IPV6_UNICAST_HOPS failed: %m");
         }
-
-        if (s->tcp_congestion)
-                if (setsockopt(fd, SOL_TCP, TCP_CONGESTION, s->tcp_congestion, strlen(s->tcp_congestion)+1) < 0)
-                        log_warning_unit(UNIT(s)->id, "TCP_CONGESTION failed: %m");
 
         if (s->reuseport) {
                 int b = s->reuseport;
@@ -1715,10 +1681,7 @@ static int socket_serialize(Unit *u, FILE *f, FDSet *fds) {
                         if (r < 0)
                                 return r;
 
-                        if (socket_address_family(&p->address) == AF_NETLINK)
-                                unit_serialize_item_format(u, f, "netlink", "%i %s", copy, t);
-                        else
-                                unit_serialize_item_format(u, f, "socket", "%i %i %s", copy, p->address.type, t);
+                        unit_serialize_item_format(u, f, "socket", "%i %i %s", copy, p->address.type, t);
                         free(t);
                 } else if (p->type == SOCKET_SPECIAL)
                         unit_serialize_item_format(u, f, "special", "%i %s", copy, p->path);
@@ -1965,8 +1928,6 @@ const char* socket_port_type_to_string(SocketPort *p) {
                                 case SOCK_DGRAM: return "Datagram";
                                 case SOCK_SEQPACKET: return "SequentialPacket";
                                 case SOCK_RAW:
-                                        if (socket_address_family(&p->address) == AF_NETLINK)
-                                                return "Netlink";
                                 default: return "Invalid";
                         }
                 case SOCKET_SPECIAL: return "Special";
