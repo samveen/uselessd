@@ -24,7 +24,6 @@
 typedef struct Service Service;
 
 #include "unit.h"
-#include "path.h"
 #include "ratelimit.h"
 #include "service.h"
 #include "kill.h"
@@ -194,7 +193,6 @@ struct Service {
         UnitRef accept_socket;
 
         Watch timer_watch;
-        PathSpec *pid_file_pathspec;
 
         NotifyAccess notify_access;
 };
