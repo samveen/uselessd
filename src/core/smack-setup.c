@@ -26,7 +26,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/vfs.h>
+//#include <sys/vfs.h> we're disabling this, anyway: this is just so it gets to the #ifdef
 #include <fcntl.h>
 #include <sys/types.h>
 #include <dirent.h>
