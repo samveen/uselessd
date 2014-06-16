@@ -255,6 +255,18 @@ loopback-setup.c: uses Linux semantics, consider removing
 loopback_setup() function called in main.c and execute.c
 do so
 
+condition.c: remove test_capability()
+
+namespace.c: <linux/fs.h>, should be removed entirely
+done
+
+switch-root.c: mount() semantics
+remove entirely, linux syscall
+also addressed in manager.c,dbus-manager.c,main.c
+done
+
+syscall-list.c: remove
+
 files modified:
 	src/shared/util.h
 	src/shared/util.c
@@ -307,6 +319,7 @@ files modified:
 	src/core/unit.c
 	src/core/machine-id-setup.c
 	src/core/mount-setup.c
+	src/core/condition.c
 	src/core/socket.c
 	src/core/transaction.c
 	src/core/execute.c
@@ -322,6 +335,14 @@ files modified:
 	[removed] src/core/path.h
 	[removed] src/core/dbus-path.c
 	[removed] src/core/dbus-path.h
+	[removed] src/core/loopback-setup.c
+	[removed] src/core/loopback-setup.h
+	[removed] src/test/test-loopback.c
+	[removed] src/core/namespace.c
+	[removed] src/core/namespace.h
+	[removed] src/test/test-ns.c
+	[removed] src/core/switch-root.c
+	[removed] src/core/switch-root.h
 
 ----------
 
