@@ -183,38 +183,6 @@ static bool test_security(const char *parameter) {
         return false;
 }
 
-static bool test_capability(const char *parameter) {
-        cap_value_t value;
-        FILE *f;
-        char line[LINE_MAX];
-        unsigned long long capabilities = (unsigned long long) -1;
-
-        /* If it's an invalid capability, we don't have it */
-
-        if (cap_from_name(parameter, &value) < 0)
-                return false;
-
-        /* If it's a valid capability we default to assume
-         * that we have it */
-
-        f = fopen("/proc/self/status", "re");
-        if (!f)
-                return true;
-
-        while (fgets(line, sizeof(line), f)) {
-                truncate_nl(line);
-
-                if (startswith(line, "CapBnd:")) {
-                        (void) sscanf(line+7, "%llx", &capabilities);
-                        break;
-                }
-        }
-
-        fclose(f);
-
-        return !!(capabilities & (1ULL << value));
-}
-
 static bool test_host(const char *parameter) {
         sd_id128_t x, y;
         char *h;
@@ -318,7 +286,7 @@ static bool condition_test(Condition *c) {
                 return test_security(c->parameter) == !c->negate;
 
         case CONDITION_CAPABILITY:
-                return test_capability(c->parameter) == !c->negate;
+                break;
 
         case CONDITION_HOST:
                 return test_host(c->parameter) == !c->negate;
@@ -407,7 +375,6 @@ static const char* const condition_type_table[_CONDITION_TYPE_MAX] = {
         [CONDITION_KERNEL_COMMAND_LINE] = "ConditionKernelCommandLine",
         [CONDITION_VIRTUALIZATION] = "ConditionVirtualization",
         [CONDITION_SECURITY] = "ConditionSecurity",
-        [CONDITION_CAPABILITY] = "ConditionCapability",
         [CONDITION_HOST] = "ConditionHost",
         [CONDITION_AC_POWER] = "ConditionACPower",
         [CONDITION_NULL] = "ConditionNull"
