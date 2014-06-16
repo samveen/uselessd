@@ -839,16 +839,12 @@ libsystemd_core_la_SOURCES = \
 	src/core/mount-setup.h \
 	src/core/condition.c \
 	src/core/condition.h \
-	src/core/namespace.c \
-	src/core/namespace.h \
 	src/core/securebits.h \
 	src/core/initreq.h \
 	src/core/special.h \
 	src/core/bus-errors.h \
 	src/core/build.h \
 	src/core/sysfs-show.h \
-	src/core/switch-root.h \
-	src/core/switch-root.c \
 	src/core/killall.h \
 	src/core/killall.c \
 	src/core/syscall-list.c \
@@ -947,7 +943,6 @@ CLEANFILES += \
 # ------------------------------------------------------------------------------
 manual_tests += \
 	test-engine \
-	test-ns \
 	test-hostname \
 	test-daemon \
 	test-cgroup \
@@ -1019,12 +1014,6 @@ test_job_type_CFLAGS = \
 test_job_type_LDADD = \
 	libsystemd-core.la \
 	libsystemd-daemon.la
-
-test_ns_SOURCES = \
-	src/test/test-ns.c
-
-test_ns_LDADD = \
-	libsystemd-core.la
 
 test_ns_CFLAGS = \
 	$(AM_CFLAGS) \

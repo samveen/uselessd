@@ -792,8 +792,8 @@ void manager_free(Manager *m) {
 
         close_idle_pipe(m);
 
-        free(m->switch_root);
-        free(m->switch_root_init);
+        //free(m->switch_root);
+      //  free(m->switch_root_init);
 
         for (i = 0; i < 16; i++) // RLIMIT_NLIMITS
                 free(m->rlimit[i]);

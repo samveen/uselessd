@@ -48,7 +48,6 @@
 #include "def.h"
 #include "virt.h"
 #include "path-util.h"
-#include "switch-root.h"
 #include "killall.h"
 #include "env-util.h"
 #include "hwclock.h"
@@ -1208,7 +1207,7 @@ int main(int argc, char *argv[]) {
         int j;
         bool loaded_policy = false;
         bool queue_default_job = false;
-        char *switch_root_dir = NULL, *switch_root_init = NULL;
+        //char *switch_root_dir = NULL, *switch_root_init = NULL;
         static struct rlimit saved_rlimit_nofile = { 0, 0 };
 
 #ifdef HAVE_SYSV_COMPAT
@@ -1633,7 +1632,7 @@ int main(int argc, char *argv[]) {
                         goto finish;
 
                 case MANAGER_SWITCH_ROOT:
-                        /* Steal the switch root parameters */
+                        /* Steal the switch root parameters
                         switch_root_dir = m->switch_root;
                         switch_root_init = m->switch_root_init;
                         m->switch_root = m->switch_root_init = NULL;
@@ -1644,7 +1643,8 @@ int main(int argc, char *argv[]) {
 
                         reexecute = true;
                         log_notice("Switching root.");
-                        goto finish;
+                        goto finish; */
+                        break;
 
                 case MANAGER_REBOOT:
                 case MANAGER_POWEROFF:
@@ -1691,29 +1691,29 @@ finish:
                 if (saved_rlimit_nofile.rlim_cur > 0)
                         setrlimit(RLIMIT_NOFILE, &saved_rlimit_nofile);
 
-                if (switch_root_dir) {
+               /* if (switch_root_dir) {
                         /* Kill all remaining processes from the
                          * initrd, but don't wait for them, so that we
                          * can handle the SIGCHLD for them after
-                         * deserializing. */
+                         * deserializing.
                         broadcast_signal(SIGTERM, false);
 
-                        /* And switch root */
+                        /* And switch root
                         r = switch_root(switch_root_dir);
                         if (r < 0)
                                 log_error("Failed to switch root, ignoring: %s", strerror(-r));
-                }
+                } */
 
                 args_size = MAX(6, argc+1);
                 args = newa(const char*, args_size);
 
-                if (!switch_root_init) {
+               /* if (!switch_root_init) {
                         char sfd[16];
 
                         /* First try to spawn ourselves with the right
                          * path, and with full serialization. We do
                          * this only if the user didn't specify an
-                         * explicit init to spawn. */
+                         * explicit init to spawn.
 
                         assert(serialization);
                         assert(fds);
@@ -1730,13 +1730,13 @@ finish:
                         args[i++] = sfd;
                         args[i++] = NULL;
 
-                        /* do not pass along the environment we inherit from the kernel or initrd */
+                        /* do not pass along the environment we inherit from the kernel or initrd
                         if (switch_root_dir)
                                 clearenv();
 
                         assert(i <= args_size);
                         execv(args[0], (char* const*) args);
-                }
+                } */
 
                 /* Try the fallback, if there is any, without any
                  * serialization. We pass the original argv[] and
@@ -1762,11 +1762,11 @@ finish:
                 args[i++] = NULL;
                 assert(i <= args_size);
 
-                if (switch_root_init) {
+               /* if (switch_root_init) {
                         args[0] = switch_root_init;
                         execv(args[0], (char* const*) args);
                         log_warning("Failed to execute configured init, trying fallback: %m");
-                }
+                } */
 
                 args[0] = "/sbin/init";
                 execv(args[0], (char* const*) args);

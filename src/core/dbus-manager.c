@@ -137,10 +137,6 @@
         "  <method name=\"PowerOff\"/>\n"                               \
         "  <method name=\"Halt\"/>\n"                                   \
         "  <method name=\"KExec\"/>\n"                                  \
-        "  <method name=\"SwitchRoot\">\n"                              \
-        "   <arg name=\"new_root\" type=\"s\" direction=\"in\"/>\n"     \
-        "   <arg name=\"init\" type=\"s\" direction=\"in\"/>\n"         \
-        "  </method>\n"                                                 \
         "  <method name=\"SetEnvironment\">\n"                          \
         "   <arg name=\"names\" type=\"as\" direction=\"in\"/>\n"       \
         "  </method>\n"                                                 \
@@ -1318,7 +1314,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
 
                 m->exit_code = MANAGER_KEXEC;
 
-        } else if (dbus_message_is_method_call(message, "org.freedesktop.systemd1.Manager", "SwitchRoot")) {
+        } /*else if (dbus_message_is_method_call(message, "org.freedesktop.systemd1.Manager", "SwitchRoot")) {
                 const char *switch_root, *switch_root_init;
                 char *u, *v;
                 bool good;
@@ -1344,7 +1340,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                         return bus_send_error_reply(connection, message, &error, -ENOTSUP);
                 }
 
-                /* Safety check */
+                Safety check
                 if (isempty(switch_root_init)) {
                         good = path_is_os_tree(switch_root);
                         if (!good)
@@ -1387,8 +1383,8 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                         goto oom;
 
                 m->exit_code = MANAGER_SWITCH_ROOT;
-
-        } else if (dbus_message_is_method_call(message, "org.freedesktop.systemd1.Manager", "SetEnvironment")) {
+*/
+         else if (dbus_message_is_method_call(message, "org.freedesktop.systemd1.Manager", "SetEnvironment")) {
                 _cleanup_strv_free_ char **l = NULL;
                 char **e = NULL;
 

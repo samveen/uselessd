@@ -54,7 +54,6 @@
 #include "sd-messages.h"
 #include "ioprio.h"
 #include "securebits.h"
-#include "namespace.h"
 #include "exit-status.h"
 #include "missing.h"
 #include "utmp-wtmp.h"
@@ -964,11 +963,11 @@ int exec_spawn(ExecCommand *command,
                         NULL);
         free(line);
 
-        if (context->private_tmp && !context->tmp_dir && !context->var_tmp_dir) {
+        /*if (context->private_tmp && !context->tmp_dir && !context->var_tmp_dir) {
                 r = setup_tmpdirs(&context->tmp_dir, &context->var_tmp_dir);
                 if (r < 0)
                         return r;
-        }
+        } */
 
         pid = fork();
         if (pid < 0)
@@ -1204,7 +1203,7 @@ int exec_spawn(ExecCommand *command,
 
                 }
 
-                if (strv_length(context->read_write_dirs) > 0 ||
+               /* if (strv_length(context->read_write_dirs) > 0 ||
                     strv_length(context->read_only_dirs) > 0 ||
                     strv_length(context->inaccessible_dirs) > 0 ||
                     context->mount_flags != 0 ||
@@ -1220,7 +1219,7 @@ int exec_spawn(ExecCommand *command,
                                 r = EXIT_NAMESPACE;
                                 goto fail_child;
                         }
-                }
+                } */
 
                 if (apply_chroot) {
                         if (context->root_directory)
