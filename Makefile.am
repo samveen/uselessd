@@ -837,8 +837,6 @@ libsystemd_core_la_SOURCES = \
 	src/core/machine-id-setup.h \
 	src/core/mount-setup.c \
 	src/core/mount-setup.h \
-	src/core/loopback-setup.h \
-	src/core/loopback-setup.c \
 	src/core/condition.c \
 	src/core/condition.h \
 	src/core/namespace.c \
@@ -950,7 +948,6 @@ CLEANFILES += \
 manual_tests += \
 	test-engine \
 	test-ns \
-	test-loopback \
 	test-hostname \
 	test-daemon \
 	test-cgroup \
@@ -1032,13 +1029,6 @@ test_ns_LDADD = \
 test_ns_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(DBUS_CFLAGS)
-
-test_loopback_SOURCES = \
-	src/test/test-loopback.c
-
-test_loopback_LDADD = \
-	libsystemd-shared.la \
-	libsystemd-core.la
 
 test_hostname_SOURCES = \
 	src/test/test-hostname.c
