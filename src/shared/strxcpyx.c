@@ -29,6 +29,14 @@
 #include <string.h>
 #include "strxcpyx.h"
 
+// Taken from gnulib, under the terms of the GPLv2.
+/* Copy N bytes of SRC to DEST, return pointer to bytes after the
+   last written byte.  */
+void *mempcpy (void *dest, const void *src, size_t n)
+{
+        return (char *) memcpy (dest, src, n) + n;
+}
+
 size_t strpcpy(char **dest, size_t size, const char *src)
 {
         size_t len;

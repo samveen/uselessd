@@ -27,6 +27,7 @@
 #include "util.h"
 #include "unit-name.h"
 #include "def.h"
+#include "strxcpyx.h"
 
 #define VALID_CHARS                             \
         DIGITS LETTERS                          \
