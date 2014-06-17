@@ -246,7 +246,8 @@ static char* mount_test_option(const char *haystack, const char *needle) {
         if (!haystack)
                 return NULL;
 
-        return hasmntopt(&me, needle);
+        //return hasmntopt(&me, needle);
+        return 0; // NOP
 }
 
 static bool mount_is_network(MountParameters *p) {
@@ -644,12 +645,12 @@ static int mount_notify_automount(Mount *m, int status) {
 
         assert(m);
 
-        SET_FOREACH(p, UNIT(m)->dependencies[UNIT_TRIGGERED_BY], i)
+        /*SET_FOREACH(p, UNIT(m)->dependencies[UNIT_TRIGGERED_BY], i)
                 if (p->type == UNIT_AUTOMOUNT) {
                          r = automount_send_ready(AUTOMOUNT(p), status);
                          if (r < 0)
                                  return r;
-                }
+                } */
 
         return 0;
 }
