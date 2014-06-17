@@ -701,7 +701,9 @@ Unit* manager_get_unit_by_cgroup(Manager *m, const char *cgroup) {
         if (u)
                 return u;
 
-        p = strdupa(cgroup);
+        p = strdup(cgroup);
+        if (!p)
+                return -ENOMEM;
         for (;;) {
                 char *e;
 

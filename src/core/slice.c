@@ -82,7 +82,9 @@ static int slice_add_parent_slice(Slice *s) {
         if (unit_has_name(UNIT(s), SPECIAL_ROOT_SLICE))
                 return 0;
 
-        a = strdupa(UNIT(s)->id);
+        a = strdup(UNIT(s)->id);
+        if (!a)
+                return -ENOMEM;
         dash = strrchr(a, '-');
         if (dash)
                 strcpy(dash, ".slice");
@@ -122,7 +124,9 @@ static int slice_verify(Slice *s) {
         if (UNIT_DEREF(UNIT(s)->slice)) {
                 char *a, *dash;
 
-                a = strdupa(UNIT(s)->id);
+                a = strdup(UNIT(s)->id);
+                if (!a)
+                        return -ENOMEM;
                 dash = strrchr(a, '-');
                 if (dash)
                         strcpy(dash, ".slice");
