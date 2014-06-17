@@ -17,7 +17,6 @@
   along with systemd; If not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#include "automount.h"
 #include "cgroup.h"
 #include "condition.h"
 #include "device.h"
@@ -29,7 +28,6 @@
 #include "log.h"
 #include "mount.h"
 #include "path-lookup.h"
-#include "path.h"
 #include "scope.h"
 #include "service.h"
 #include "slice.h"
@@ -46,8 +44,6 @@
 #include "test-tables.h"
 
 int main(int argc, char **argv) {
-        test_table(automount_result, AUTOMOUNT_RESULT);
-        test_table(automount_state, AUTOMOUNT_STATE);
         test_table(cgroup_device_policy, CGROUP_DEVICE_POLICY);
         test_table(condition_type, CONDITION_TYPE);
         test_table(device_state, DEVICE_STATE);
@@ -64,9 +60,6 @@ int main(int argc, char **argv) {
         test_table(mount_result, MOUNT_RESULT);
         test_table(mount_state, MOUNT_STATE);
         test_table(notify_access, NOTIFY_ACCESS);
-        test_table(path_result, PATH_RESULT);
-        test_table(path_state, PATH_STATE);
-        test_table(path_type, PATH_TYPE);
         test_table(scope_result, SCOPE_RESULT);
         test_table(scope_state, SCOPE_STATE);
         test_table(service_exec_command, SERVICE_EXEC_COMMAND);
