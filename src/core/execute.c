@@ -59,7 +59,6 @@
 #include "utmp-wtmp.h"
 #include "def.h"
 #include "path-util.h"
-#include "syscall-list.h"
 #include "env-util.h"
 #include "fileio.h"
 #include "unit.h"
@@ -1525,9 +1524,6 @@ void exec_context_done(ExecContext *c, bool reloading_or_reexecuting) {
 
         free(c->utmp_id);
         c->utmp_id = NULL;
-
-        free(c->syscall_filter);
-        c->syscall_filter = NULL;
 
         if (!reloading_or_reexecuting)
                 exec_context_tmp_dirs_done(c);

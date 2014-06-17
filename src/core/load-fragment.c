@@ -49,7 +49,6 @@
 #include "dbus-common.h"
 #include "utf8.h"
 #include "path-util.h"
-#include "syscall-list.h"
 #include "env-util.h"
 #include "cgroup.h"
 
@@ -1764,96 +1763,6 @@ int config_parse_documentation(const char *unit,
         return r;
 }
 
-static void syscall_set(uint32_t *p, int nr) {
-        nr = SYSCALL_TO_INDEX(nr);
-        p[nr >> 4] |= 1 << (nr & 31);
-}
-
-static void syscall_unset(uint32_t *p, int nr) {
-        nr = SYSCALL_TO_INDEX(nr);
-        p[nr >> 4] &= ~(1 << (nr & 31));
-}
-
-int config_parse_syscall_filter(const char *unit,
-                                const char *filename,
-                                unsigned line,
-                                const char *section,
-                                const char *lvalue,
-                                int ltype,
-                                const char *rvalue,
-                                void *data,
-                                void *userdata) {
-
-        ExecContext *c = data;
-        Unit *u = userdata;
-        bool invert = false;
-        char *w;
-        size_t l;
-        char *state;
-
-        assert(filename);
-        assert(lvalue);
-        assert(rvalue);
-        assert(u);
-
-        if (isempty(rvalue)) {
-                /* Empty assignment resets the list */
-                free(c->syscall_filter);
-                c->syscall_filter = NULL;
-                return 0;
-        }
-
-        if (rvalue[0] == '~') {
-                invert = true;
-                rvalue++;
-        }
-
-        if (!c->syscall_filter) {
-                size_t n;
-
-                n = (syscall_max() + 31) >> 4;
-                c->syscall_filter = new(uint32_t, n);
-                if (!c->syscall_filter)
-                        return log_oom();
-
-                memset(c->syscall_filter, invert ? 0xFF : 0, n * sizeof(uint32_t));
-
-                /* Add these by default
-                syscall_set(c->syscall_filter, __NR_execve);
-                syscall_set(c->syscall_filter, __NR_rt_sigreturn);
-#ifdef __NR_sigreturn
-                syscall_set(c->syscall_filter, __NR_sigreturn);
-#endif
-                syscall_set(c->syscall_filter, __NR_exit_group);
-                syscall_set(c->syscall_filter, __NR_exit); */
-        }
-
-        FOREACH_WORD_QUOTED(w, l, rvalue, state) {
-                int id;
-                _cleanup_free_ char *t = NULL;
-
-                t = strndup(w, l);
-                if (!t)
-                        return log_oom();
-
-                id = syscall_from_name(t);
-                if (id < 0)  {
-                        log_syntax(unit, LOG_ERR, filename, line, EINVAL,
-                                   "Failed to parse syscall, ignoring: %s", t);
-                        continue;
-                }
-
-                if (invert)
-                        syscall_unset(c->syscall_filter, id);
-                else
-                        syscall_set(c->syscall_filter, id);
-        }
-
-        c->no_new_privileges = true;
-
-        return 0;
-}
-
 int config_parse_unit_slice(
                 const char *unit,
                 const char *filename,
@@ -2606,7 +2515,6 @@ void unit_dump_config_items(FILE *f) {
                 { config_parse_service_sockets,       "SOCKETS" },
                 { config_parse_fsck_passno,           "PASSNO" },
                 { config_parse_environ,               "ENVIRON" },
-                { config_parse_syscall_filter,        "SYSCALL" },
                 { config_parse_cpu_shares,            "SHARES" },
                 { config_parse_memory_limit,          "LIMIT" },
                 { config_parse_device_allow,          "DEVICE" },
