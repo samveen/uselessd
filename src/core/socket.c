@@ -1835,25 +1835,6 @@ static int socket_deserialize_item(Unit *u, const char *key, const char *value, 
                         }
                 }
 
-        } else if (streq(key, "netlink")) {
-                int fd, skip = 0;
-                SocketPort *p;
-
-                if (sscanf(value, "%i %n", &fd, &skip) < 1 || fd < 0 || !fdset_contains(fds, fd))
-                        log_debug_unit(u->id,
-                                       "Failed to parse socket value %s", value);
-                else {
-
-                        LIST_FOREACH(port, p, s->ports)
-                                if (socket_address_is_netlink(&p->address, value+skip))
-                                        break;
-
-                        if (p) {
-                                if (p->fd >= 0)
-                                        close_nointr_nofail(p->fd);
-                                p->fd = fdset_remove(fds, fd);
-                        }
-                }
         } else if (streq(key, "tmp-dir")) {
                 char *t;
 
