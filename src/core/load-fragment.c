@@ -757,63 +757,6 @@ int config_parse_exec_cpu_sched_prio(const char *unit,
         return 0;
 }
 
-int config_parse_exec_cpu_affinity(const char *unit,
-                                   const char *filename,
-                                   unsigned line,
-                                   const char *section,
-                                   const char *lvalue,
-                                   int ltype,
-                                   const char *rvalue,
-                                   void *data,
-                                   void *userdata) {
-
-        ExecContext *c = data;
-        char *w;
-        size_t l;
-        char *state;
-
-        assert(filename);
-        assert(lvalue);
-        assert(rvalue);
-        assert(data);
-
-        if (isempty(rvalue)) {
-                /* An empty assignment resets the CPU list */
-                if (c->cpuset)
-                        CPU_FREE(c->cpuset);
-                c->cpuset = NULL;
-                return 0;
-        }
-
-        FOREACH_WORD_QUOTED(w, l, rvalue, state) {
-                _cleanup_free_ char *t = NULL;
-                int r;
-                unsigned cpu;
-
-                t = strndup(w, l);
-                if (!t)
-                        return log_oom();
-
-                r = safe_atou(t, &cpu);
-
-                if (!c->cpuset) {
-                        c->cpuset = cpu_set_malloc(&c->cpuset_ncpus);
-                        if (!c->cpuset)
-                                return log_oom();
-                }
-
-                if (r < 0 || cpu >= c->cpuset_ncpus) {
-                        log_syntax(unit, LOG_ERR, filename, line, ERANGE,
-                                   "Failed to parse CPU affinity '%s', ignoring: %s", t, rvalue);
-                        return 0;
-                }
-
-                CPU_SET_S(cpu, CPU_ALLOC_SIZE(c->cpuset_ncpus), c->cpuset);
-        }
-
-        return 0;
-}
-
 int config_parse_exec_secure_bits(const char *unit,
                                   const char *filename,
                                   unsigned line,
@@ -2464,7 +2407,6 @@ void unit_dump_config_items(FILE *f) {
                 { config_parse_exec_io_priority,      "IOPRIORITY" },
                 { config_parse_exec_cpu_sched_policy, "CPUSCHEDPOLICY" },
                 { config_parse_exec_cpu_sched_prio,   "CPUSCHEDPRIO" },
-                { config_parse_exec_cpu_affinity,     "CPUAFFINITY" },
                 { config_parse_mode,                  "MODE" },
                 { config_parse_unit_env_file,         "FILE" },
                 { config_parse_output,                "OUTPUT" },
