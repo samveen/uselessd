@@ -311,13 +311,13 @@ static int setup_input(const ExecContext *context, int socket_fd, bool apply_tty
         case EXEC_INPUT_TTY_FAIL: {
                 int fd, r;
 
-                if ((fd = acquire_terminal(
+                /*if ((fd = acquire_terminal(
                                      tty_path(context),
                                      i == EXEC_INPUT_TTY_FAIL,
                                      i == EXEC_INPUT_TTY_FORCE,
                                      false,
                                      (usec_t) -1)) < 0)
-                        return fd;
+                        return fd; */
 
                 if (fd != STDIN_FILENO) {
                         r = dup2(fd, STDIN_FILENO) < 0 ? -errno : STDIN_FILENO;
@@ -457,7 +457,7 @@ static int setup_confirm_stdio(int *_saved_stdin,
                 goto fail;
         }
 
-        fd = acquire_terminal(
+       /* fd = acquire_terminal(
                         "/dev/console",
                         false,
                         false,
@@ -466,7 +466,7 @@ static int setup_confirm_stdio(int *_saved_stdin,
         if (fd < 0) {
                 r = fd;
                 goto fail;
-        }
+        } */
 
         r = chown_terminal(fd, getuid());
         if (r < 0)
@@ -1116,26 +1116,27 @@ int exec_spawn(ExecCommand *command,
                         }
                 }
 
-                if (context->cpuset)
+                /*if (context->cpuset) {
                         if (sched_setaffinity(0, CPU_ALLOC_SIZE(context->cpuset_ncpus), context->cpuset) < 0) {
                                 err = -errno;
                                 r = EXIT_CPUAFFINITY;
                                 goto fail_child;
                         }
+               } */
 
-                if (context->ioprio_set) {
+                /*if (context->ioprio_set) {
                         if (ioprio_set(IOPRIO_WHO_PROCESS, 0, context->ioprio) < 0) {
                                 err = -errno;
                                 r = EXIT_IOPRIO;
                                 goto fail_child;
                         }
 
-              /*  if (context->timer_slack_nsec != (nsec_t) -1)
+                if (context->timer_slack_nsec != (nsec_t) -1)
                         if (prctl(PR_SET_TIMERSLACK, context->timer_slack_nsec) < 0) {
                                 err = -errno;
                                 r = EXIT_TIMERSLACK;
                                 goto fail_child; */
-                        }
+                        //}
 
                 if (context->utmp_id)
                         utmp_put_init_process(context->utmp_id, getpid(), context->tty_path);
@@ -1519,9 +1520,6 @@ void exec_context_done(ExecContext *c, bool reloading_or_reexecuting) {
         strv_free(c->inaccessible_dirs);
         c->inaccessible_dirs = NULL;
 
-        if (c->cpuset)
-                CPU_FREE(c->cpuset);
-
         free(c->utmp_id);
         c->utmp_id = NULL;
 
@@ -1762,13 +1760,13 @@ void exec_context_dump(ExecContext *c, FILE* f, const char *prefix) {
                 free(policy_str);
         }
 
-        if (c->cpuset) {
+        /*if (c->cpuset) {
                 fprintf(f, "%sCPUAffinity:", prefix);
                 for (i = 0; i < c->cpuset_ncpus; i++)
                         if (CPU_ISSET_S(i, CPU_ALLOC_SIZE(c->cpuset_ncpus), c->cpuset))
                                 fprintf(f, " %i", i);
                 fputs("\n", f);
-        }
+        } */
 
         if (c->timer_slack_nsec != (nsec_t) -1)
                 fprintf(f, "%sTimerSlackNSec: %lu\n", prefix, (unsigned long)c->timer_slack_nsec);
