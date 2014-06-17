@@ -626,7 +626,6 @@ static int parse_config_file(void) {
                 { "Manager", "CrashShell",            config_parse_bool,         0, &arg_crash_shell         },
                 { "Manager", "ShowStatus",            config_parse_bool,         0, &arg_show_status         },
                 { "Manager", "CrashChVT",             config_parse_int,          0, &arg_crash_chvt          },
-                { "Manager", "CPUAffinity",           config_parse_cpu_affinity2, 0, NULL                    },
                 { "Manager", "DefaultStandardOutput", config_parse_output,       0, &arg_default_std_output  },
                 { "Manager", "DefaultStandardError",  config_parse_output,       0, &arg_default_std_error   },
                 { "Manager", "JoinControllers",       config_parse_join_controllers, 0, &arg_join_controllers },
