@@ -36,6 +36,7 @@ typedef struct ExecContext ExecContext;
 
 #include "list.h"
 #include "util.h"
+#include "cgroup-util.h"
 
 typedef struct Unit Unit;
 
