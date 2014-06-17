@@ -22,6 +22,8 @@
 ***/
 
 #include "list.h"
+#include <sys/types.h>
+#include <stdbool.h>
 
 typedef struct CGroupContext CGroupContext;
 typedef struct CGroupDeviceAllow CGroupDeviceAllow;
