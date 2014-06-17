@@ -128,6 +128,8 @@ char *path_make_absolute(const char *p, const char *prefix) {
 
 char *path_make_absolute_cwd(const char *p) {
         _cleanup_free_ char *cwd = NULL;
+        char *buf;
+        buf = malloc(sizeof(char) * 1024);
 
         assert(p);
 
@@ -137,7 +139,7 @@ char *path_make_absolute_cwd(const char *p) {
         if (path_is_absolute(p))
                 return strdup(p);
 
-        cwd = get_current_dir_name();
+        cwd = getcwd(buf, 1024);
         if (!cwd)
                 return NULL;
 
