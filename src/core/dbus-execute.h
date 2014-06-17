@@ -56,7 +56,6 @@
         "  <property name=\"IOScheduling\" type=\"i\" access=\"read\"/>\n" \
         "  <property name=\"CPUSchedulingPolicy\" type=\"i\" access=\"read\"/>\n" \
         "  <property name=\"CPUSchedulingPriority\" type=\"i\" access=\"read\"/>\n" \
-        "  <property name=\"CPUAffinity\" type=\"ay\" access=\"read\"/>\n" \
         "  <property name=\"TimerSlackNSec\" type=\"t\" access=\"read\"/>\n" \
         "  <property name=\"CPUSchedulingResetOnFork\" type=\"b\" access=\"read\"/>\n" \
         "  <property name=\"NonBlocking\" type=\"b\" access=\"read\"/>\n" \

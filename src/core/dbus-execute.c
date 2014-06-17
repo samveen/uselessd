@@ -119,8 +119,6 @@ static int bus_execute_append_ioprio(DBusMessageIter *i, const char *property, v
 
         if (c->ioprio_set)
                 n = c->ioprio;
-        else
-                n = ioprio_get(IOPRIO_WHO_PROCESS, 0);
 
         if (!dbus_message_iter_append_basic(i, DBUS_TYPE_INT32, &n))
                 return -ENOMEM;
@@ -167,32 +165,6 @@ static int bus_execute_append_cpu_sched_priority(DBusMessageIter *i, const char 
         }
 
         if (!dbus_message_iter_append_basic(i, DBUS_TYPE_INT32, &n))
-                return -ENOMEM;
-
-        return 0;
-}
-
-static int bus_execute_append_affinity(DBusMessageIter *i, const char *property, void *data) {
-        ExecContext *c = data;
-        dbus_bool_t b;
-        DBusMessageIter sub;
-
-        assert(i);
-        assert(property);
-        assert(c);
-
-        if (!dbus_message_iter_open_container(i, DBUS_TYPE_ARRAY, "y", &sub))
-                return -ENOMEM;
-
-        if (c->cpuset)
-                b = dbus_message_iter_append_fixed_array(&sub, DBUS_TYPE_BYTE, &c->cpuset, CPU_ALLOC_SIZE(c->cpuset_ncpus));
-        else
-                b = dbus_message_iter_append_fixed_array(&sub, DBUS_TYPE_BYTE, &c->cpuset, 0);
-
-        if (!b)
-                return -ENOMEM;
-
-        if (!dbus_message_iter_close_container(i, &sub))
                 return -ENOMEM;
 
         return 0;
@@ -337,7 +309,6 @@ const BusProperty bus_exec_context_properties[] = {
         { "IOScheduling",             bus_execute_append_ioprio,             "i", 0 },
         { "CPUSchedulingPolicy",      bus_execute_append_cpu_sched_policy,   "i", 0 },
         { "CPUSchedulingPriority",    bus_execute_append_cpu_sched_priority, "i", 0 },
-        { "CPUAffinity",              bus_execute_append_affinity,          "ay", 0 },
         { "TimerSlackNSec",           bus_execute_append_timer_slack_nsec,   "t", 0 },
         { "CPUSchedulingResetOnFork", bus_property_append_bool,              "b", offsetof(ExecContext, cpu_sched_reset_on_fork)      },
         { "NonBlocking",              bus_property_append_bool,              "b", offsetof(ExecContext, non_blocking)                 },
