@@ -58,7 +58,7 @@ static int help(void) {
                "     --no-tty        Ask question via agent even on TTY\n"
                "     --accept-cached Accept cached passwords\n"
                "     --multiple      List multiple passwords if available\n",
-               program_invocation_short_name);
+               getprogname());
 
         return 0;
 }

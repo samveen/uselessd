@@ -49,7 +49,7 @@ static int help(void) {
                "     --pid[=PID]        Set main pid of daemon\n"
                "     --status=TEXT      Set status text\n"
                "     --booted           Returns 0 if the system was booted up with systemd, non-zero otherwise\n",
-               program_invocation_short_name);
+               getprogname());
 
         return 0;
 }

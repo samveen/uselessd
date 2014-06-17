@@ -206,7 +206,7 @@ static int help(void) {
                "Applies kernel sysctl settings.\n\n"
                "  -h --help             Show this help\n"
                "     --prefix=PATH      Only apply rules that apply to paths with the specified prefix\n",
-               program_invocation_short_name);
+               getprogname());
 
         return 0;
 }

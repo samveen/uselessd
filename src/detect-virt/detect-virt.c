@@ -45,7 +45,7 @@ static int help(void) {
                "  -c --container        Only detect whether we are run in a container\n"
                "  -v --vm               Only detect whether we are run in a VM\n"
                "  -q --quiet            Don't output anything, just set return value\n",
-               program_invocation_short_name);
+               getprogname());
 
         return 0;
 }

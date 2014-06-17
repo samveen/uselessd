@@ -1291,7 +1291,7 @@ static void analyze_help(void) {
                "  dot                 Output dependency graph in dot(1) format\n"
                "  set-log-level LEVEL Set logging threshold for systemd\n"
                "  dump                Output state serialization of service manager\n",
-               program_invocation_short_name);
+               getprogname());
 
         /* When updating this list, including descriptions, apply
          * changes to shell-completion/bash/systemd and

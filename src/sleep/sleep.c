@@ -140,7 +140,7 @@ static int help(void) {
                "  suspend              Suspend the system\n"
                "  hibernate            Hibernate the system\n"
                "  hybrid-sleep         Both hibernate and suspend the system\n"
-               , program_invocation_short_name
+               , getprogname()
                );
 
         return 0;

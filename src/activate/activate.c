@@ -319,7 +319,7 @@ static int help(void) {
                "  --version            Print version string and exit\n"
                "\n"
                "Note: file descriptors from sd_listen_fds() will be passed through.\n"
-               , program_invocation_short_name
+               , getprogname()
                );
 
         return 0;

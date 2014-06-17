@@ -440,7 +440,7 @@ static void help(void) {
                "     --no-pager       Do not pipe output into a pager\n"
                "     --diff[=1|0]     Show a diff when overridden files differ\n"
                "  -t --type=LIST...   Only display a selected set of override types\n",
-               program_invocation_short_name);
+               getprogname());
 }
 
 static int parse_flags(const char *flag_str, int flags) {
