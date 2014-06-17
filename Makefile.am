@@ -945,7 +945,6 @@ manual_tests += \
 	test-daemon \
 	test-cgroup \
 	test-install \
-	test-watchdog \
 	test-log
 
 tests += \
@@ -1230,12 +1229,6 @@ test_install_LDADD = \
 	libsystemd-label.la \
 	libsystemd-shared.la \
 	libsystemd-id128-internal.la
-
-test_watchdog_SOURCES = \
-	src/test/test-watchdog.c
-
-test_watchdog_LDADD = \
-	libsystemd-shared.la
 
 test_sched_prio_SOURCES = \
 	src/test/test-sched-prio.c
