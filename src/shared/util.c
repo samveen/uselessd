@@ -5047,14 +5047,6 @@ void warn_melody(void) {
 int make_console_stdio(void) {
         int fd, r;
 
-        /* Make /dev/console the controlling terminal and stdin/stdout/stderr */
-
-        fd = acquire_terminal("/dev/console", false, true, true, (usec_t) -1);
-        if (fd < 0) {
-                log_error("Failed to acquire terminal: %s", strerror(-fd));
-                return fd;
-        }
-
         r = make_stdio(fd);
         if (r < 0) {
                 log_error("Failed to duplicate terminal fd: %s", strerror(-r));
