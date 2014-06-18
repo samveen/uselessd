@@ -228,7 +228,7 @@ int machine_id_setup(void) {
 		/* Using nmount(2) to simulate Linux mount(2) semantics of
 		 * source and target mount point.
 		 * Experimental and hacky. */
-        int *iov = NULL;
+       /* int *iov = NULL;
         int iovlen = 0;
         char fs_type_name[] = "freebsdufs";
         char fs_type_value[] = "ufs";
@@ -242,7 +242,7 @@ int machine_id_setup(void) {
         build_iovec_pair(&iov, &iovlen, from_name, from_value, (size_t) - 1);
 
         /* And now, let's mount it over */
-        r = nmount(iov, iovlen, 0);
+       /* r = nmount(iov, iovlen, 0);
         if (r < 0) {
                 log_error("Failed to mount /etc/machine-id: %m");
                 unlink_noerrno("/run/machine-id");
@@ -252,8 +252,8 @@ int machine_id_setup(void) {
         log_info("Installed transient /etc/machine-id file.");
 
         /* Mark the mount read-only */
-        if (mount(NULL, "/etc/machine-id", MNT_RDONLY, NULL) < 0)
+        /*if (mount(NULL, "/etc/machine-id", MNT_RDONLY, NULL) < 0)
                 log_warning("Failed to make transient /etc/machine-id read-only: %m");
 
-        return 0;
+        return 0; */
 }
