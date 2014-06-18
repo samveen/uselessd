@@ -31,7 +31,7 @@
 #include <signal.h>
 #include <sys/wait.h>
 #include <fcntl.h>
-#include <sys/prctl.h>
+//#include <sys/prctl.h>
 #include <sys/mount.h>
 
 #include "manager.h"
@@ -443,62 +443,6 @@ DEFINE_SETTER(config_parse_level2, log_set_max_level_from_string, "log level")
 DEFINE_SETTER(config_parse_target, log_set_target_from_string, "target")
 DEFINE_SETTER(config_parse_color, log_show_color_from_string, "color" )
 DEFINE_SETTER(config_parse_location, log_show_location_from_string, "location")
-
-
-static int config_parse_cpu_affinity2(const char *unit,
-                                      const char *filename,
-                                      unsigned line,
-                                      const char *section,
-                                      const char *lvalue,
-                                      int ltype,
-                                      const char *rvalue,
-                                      void *data,
-                                      void *userdata) {
-
-        char *w;
-        size_t l;
-        char *state;
-        cpu_set_t *c = NULL;
-        unsigned ncpus = 0;
-
-        assert(filename);
-        assert(lvalue);
-        assert(rvalue);
-
-        FOREACH_WORD_QUOTED(w, l, rvalue, state) {
-                char *t;
-                int r;
-                unsigned cpu;
-
-                if (!(t = strndup(w, l)))
-                        return log_oom();
-
-                r = safe_atou(t, &cpu);
-                free(t);
-
-                if (!c)
-                        if (!(c = cpu_set_malloc(&ncpus)))
-                                return log_oom();
-
-                if (r < 0 || cpu >= ncpus) {
-                        log_syntax(unit, LOG_ERR, filename, line, -r,
-                                   "Failed to parse CPU affinity '%s'", rvalue);
-                        CPU_FREE(c);
-                        return -EBADMSG;
-                }
-
-                CPU_SET_S(cpu, CPU_ALLOC_SIZE(ncpus), c);
-        }
-
-        if (c) {
-                if (sched_setaffinity(0, CPU_ALLOC_SIZE(ncpus), c) < 0)
-                        log_warning_unit(unit, "Failed to set CPU affinity: %m");
-
-                CPU_FREE(c);
-        }
-
-        return 0;
-}
 
 static void strv_free_free(char ***l) {
         char ***i;
@@ -1010,7 +954,7 @@ static int help(void) {
                "     --log-location[=0|1]        Include code location in log messages\n"
                "     --default-standard-output=  Set default standard output for services\n"
                "     --default-standard-error=   Set default standard error output for services\n",
-               program_invocation_short_name);
+               getprogname());
 
         return 0;
 }
@@ -1210,7 +1154,7 @@ int main(int argc, char *argv[]) {
         static struct rlimit saved_rlimit_nofile = { 0, 0 };
 
 #ifdef HAVE_SYSV_COMPAT
-        if (getpid() != 1 && strstr(program_invocation_short_name, "init")) {
+        if (getpid() != 1 && strstr(getprogname(), "init")) {
                 /* This is compatibility support for SysV, where
                  * calling init as a user is identical to telinit. */
 
@@ -1239,8 +1183,8 @@ int main(int argc, char *argv[]) {
            called 'init'. After a subsequent reexecution we are then
            called 'systemd'. That is confusing, hence let's call us
            systemd right-away. */
-        program_invocation_short_name = systemd;
-        prctl(PR_SET_NAME, systemd);
+       // program_invocation_short_name = systemd;
+        //prctl(PR_SET_NAME, systemd);
 
         saved_argv = argv;
         saved_argc = argc;
@@ -1471,18 +1415,18 @@ int main(int argc, char *argv[]) {
                 test_cgroups();
         }
 
-        if (arg_timer_slack_nsec != (nsec_t) -1)
+      /*  if (arg_timer_slack_nsec != (nsec_t) -1)
                 if (prctl(PR_SET_TIMERSLACK, arg_timer_slack_nsec) < 0)
-                        log_error("Failed to adjust timer slack: %m");
+                        log_error("Failed to adjust timer slack: %m"); */
 
-        if (arg_running_as == SYSTEMD_USER) {
-                /* Become reaper of our children */
+       /* if (arg_running_as == SYSTEMD_USER) {
+                 Become reaper of our children
                 if (prctl(PR_SET_CHILD_SUBREAPER, 1) < 0) {
                         log_warning("Failed to make us a subreaper: %m");
                         if (errno == EINVAL)
                                 log_info("Perhaps the kernel version is too old (< 3.4?)");
                 }
-        }
+        } */
 
         if (arg_running_as == SYSTEMD_SYSTEM)
                 bump_rlimit_nofile(&saved_rlimit_nofile);
@@ -1794,8 +1738,6 @@ finish:
                         NULL
                 };
                 char **env_block;
-
-                env_block = strv_copy(environ);
 
                 /* Avoid the creation of new processes forked by the
                  * kernel; at this point, we will not listen to the
