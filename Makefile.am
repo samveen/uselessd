@@ -271,7 +271,6 @@ rootlibexec_PROGRAMS = \
 
 systemgenerator_PROGRAMS = \
 	systemd-getty-generator \
-	systemd-fstab-generator \
 	systemd-system-update-generator
 
 systemd_analyze_SOURCES = \
@@ -1471,15 +1470,6 @@ systemd_getty_generator_SOURCES = \
 	src/getty-generator/getty-generator.c
 
 systemd_getty_generator_LDADD = \
-	libsystemd-label.la \
-	libsystemd-shared.la
-
-# ------------------------------------------------------------------------------
-systemd_fstab_generator_SOURCES = \
-	src/fstab-generator/fstab-generator.c \
-	src/core/mount-setup.c
-
-systemd_fstab_generator_LDADD = \
 	libsystemd-label.la \
 	libsystemd-shared.la
 
