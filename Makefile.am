@@ -1687,18 +1687,6 @@ EXTRA_DIST += \
 	src/libsystemd-id128/libsystemd-id128.sym
 
 # ------------------------------------------------------------------------------
-
-rootlibexec_PROGRAMS += \
-	systemd-activate
-
-systemd_activate_SOURCES = \
-	src/activate/activate.c
-
-systemd_activate_LDADD = \
-	libsystemd-shared.la \
-	libsystemd-daemon.la
-
-# ------------------------------------------------------------------------------
 if ENABLE_QUOTACHECK
 rootlibexec_PROGRAMS += \
 	systemd-quotacheck
