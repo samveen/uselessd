@@ -33,7 +33,6 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <stddef.h>
-#include <sys/prctl.h>
 #include <dbus/dbus.h>
 
 #include <systemd/sd-daemon.h>
@@ -1587,12 +1586,13 @@ static int wait_for_jobs(DBusConnection *bus, Set *s) {
                                 log_error("Job for %s failed. See 'systemctl status %s' and 'journalctl -xn' for details.", strna(d.name), strna(d.name));
                 }
 
-                if (streq_ptr(d.result, "timeout"))
-                        r = -ETIME;
-                else if (streq_ptr(d.result, "canceled"))
+                if (streq_ptr(d.result, "timeout")) {
+                        //r = -ETIME;
+                } else if (streq_ptr(d.result, "canceled")) {
                         r = -ECANCELED;
-                else if (!streq_ptr(d.result, "done") && !streq_ptr(d.result, "skipped"))
+                } else if (!streq_ptr(d.result, "done") && !streq_ptr(d.result, "skipped")) {
                         r = -EIO;
+                }
 
                 free(d.result);
                 d.result = NULL;
@@ -4615,7 +4615,7 @@ static int systemctl_help(void) {
                "  suspend                         Suspend the system\n"
                "  hibernate                       Hibernate the system\n"
                "  hybrid-sleep                    Hibernate and suspend the system\n",
-               program_invocation_short_name);
+               getprogname());
 
         return 0;
 }
@@ -4632,7 +4632,7 @@ static int halt_help(void) {
                "  -w --wtmp-only Don't halt/power-off/reboot, just write wtmp record\n"
                "  -d --no-wtmp   Don't write wtmp record\n"
                "     --no-wall   Don't send wall message before halt/power-off/reboot\n",
-               program_invocation_short_name,
+               getprogname(),
                arg_action == ACTION_REBOOT   ? "Reboot" :
                arg_action == ACTION_POWEROFF ? "Power off" :
                                                "Halt");
@@ -4652,7 +4652,7 @@ static int shutdown_help(void) {
                "  -k             Don't halt/power-off/reboot, just send warnings\n"
                "     --no-wall   Don't send wall message before halt/power-off/reboot\n"
                "  -c             Cancel a pending shutdown\n",
-               program_invocation_short_name);
+               getprogname());
 
         return 0;
 }
@@ -4670,7 +4670,7 @@ static int telinit_help(void) {
                "  1, s, S        Enter rescue mode\n"
                "  q, Q           Reload init daemon configuration\n"
                "  u, U           Reexecute init daemon\n",
-               program_invocation_short_name);
+               getprogname());
 
         return 0;
 }
@@ -4680,7 +4680,7 @@ static int runlevel_help(void) {
         printf("%s [OPTIONS...]\n\n"
                "Prints the previous and current runlevel of the init system.\n\n"
                "     --help      Show this help\n",
-               program_invocation_short_name);
+               getprogname());
 
         return 0;
 }
@@ -5401,24 +5401,24 @@ static int parse_argv(int argc, char *argv[]) {
         assert(argc >= 0);
         assert(argv);
 
-        if (program_invocation_short_name) {
+        if (getprogname()) {
 
-                if (strstr(program_invocation_short_name, "halt")) {
+                if (strstr(getprogname(), "halt")) {
                         arg_action = ACTION_HALT;
                         return halt_parse_argv(argc, argv);
-                } else if (strstr(program_invocation_short_name, "poweroff")) {
+                } else if (strstr(getprogname(), "poweroff")) {
                         arg_action = ACTION_POWEROFF;
                         return halt_parse_argv(argc, argv);
-                } else if (strstr(program_invocation_short_name, "reboot")) {
+                } else if (strstr(getprogname(), "reboot")) {
                         if (kexec_loaded())
                                 arg_action = ACTION_KEXEC;
                         else
                                 arg_action = ACTION_REBOOT;
                         return halt_parse_argv(argc, argv);
-                } else if (strstr(program_invocation_short_name, "shutdown")) {
+                } else if (strstr(getprogname(), "shutdown")) {
                         arg_action = ACTION_POWEROFF;
                         return shutdown_parse_argv(argc, argv);
-                } else if (strstr(program_invocation_short_name, "init")) {
+                } else if (strstr(getprogname(), "init")) {
 
                         if (sd_booted() > 0) {
                                 arg_action = ACTION_INVALID;
@@ -5435,7 +5435,7 @@ static int parse_argv(int argc, char *argv[]) {
                                 return -EIO;
                         }
 
-                } else if (strstr(program_invocation_short_name, "runlevel")) {
+                } else if (strstr(getprogname(), "runlevel")) {
                         arg_action = ACTION_RUNLEVEL;
                         return runlevel_parse_argv(argc, argv);
                 }
@@ -5751,23 +5751,23 @@ static _noreturn_ void halt_now(enum action a) {
 
        /* Make sure C-A-D is handled by the kernel from this
          * point on... */
-        reboot(RB_ENABLE_CAD);
+        //reboot(RB_ENABLE_CAD);
 
         switch (a) {
 
         case ACTION_HALT:
                 log_info("Halting.");
-                reboot(RB_HALT_SYSTEM);
+                //reboot(RB_HALT_SYSTEM);
                 break;
 
         case ACTION_POWEROFF:
                 log_info("Powering off.");
-                reboot(RB_POWER_OFF);
+                //reboot(RB_POWER_OFF);
                 break;
 
         case ACTION_REBOOT:
                 log_info("Rebooting.");
-                reboot(RB_AUTOBOOT);
+               // reboot(RB_AUTOBOOT);
                 break;
 
         default:
