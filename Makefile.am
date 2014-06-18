@@ -259,7 +259,6 @@ bin_PROGRAMS = \
 rootlibexec_PROGRAMS = \
 	systemd \
 	systemd-cgroups-agent \
-	systemd-initctl \
 	systemd-update-utmp \
 	systemd-shutdownd \
 	systemd-shutdown \
@@ -341,7 +340,6 @@ dist_systemunit_DATA = \
 	units/slices.target \
 	units/system.slice \
 	units/x-.slice \
-	units/systemd-initctl.socket \
 	units/systemd-shutdownd.socket \
 	units/syslog.socket \
 	units/dev-hugepages.mount \
@@ -364,7 +362,6 @@ nodist_systemunit_DATA = \
 	units/serial-getty@.service \
 	units/console-shell.service \
 	units/console-getty.service \
-	units/systemd-initctl.service \
 	units/systemd-shutdownd.service \
 	units/systemd-remount-fs.service \
 	units/systemd-update-utmp.service \
@@ -402,7 +399,6 @@ EXTRA_DIST += \
 	units/console-shell.service.m4.in \
 	units/console-getty.service.m4.in \
 	units/rescue.service.m4.in \
-	units/systemd-initctl.service.in \
 	units/systemd-shutdownd.service.in \
 	units/systemd-remount-fs.service.in \
 	units/systemd-update-utmp.service.in \
@@ -1281,19 +1277,6 @@ lcov-run lcov-report:
 endif
 
 # ------------------------------------------------------------------------------
-systemd_initctl_SOURCES = \
-	src/initctl/initctl.c
-
-systemd_initctl_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(DBUS_CFLAGS)
-
-systemd_initctl_LDADD = \
-	libsystemd-shared.la \
-	libsystemd-daemon.la \
-	libsystemd-dbus.la
-
-# ------------------------------------------------------------------------------
 systemd_update_utmp_SOURCES = \
 	src/update-utmp/update-utmp.c
 
@@ -1321,8 +1304,6 @@ pkginclude_HEADERS += \
 
 # ------------------------------------------------------------------------------
 systemd_shutdown_SOURCES = \
-	src/core/umount.c \
-	src/core/umount.h \
 	src/core/shutdown.c \
 	src/core/mount-setup.c \
 	src/core/mount-setup.h \
@@ -1946,7 +1927,6 @@ EXTRA_DIST += \
 	docs/var-log/README.in
 
 SOCKETS_TARGET_WANTS += \
-	systemd-initctl.socket \
 	systemd-shutdownd.socket
 
 if HAVE_SYSV_COMPAT
