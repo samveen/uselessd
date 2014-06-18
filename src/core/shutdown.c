@@ -22,7 +22,6 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/reboot.h>
-#include <linux/reboot.h>
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -40,7 +39,6 @@
 #include "missing.h"
 #include "log.h"
 #include "fileio.h"
-#include "umount.h"
 #include "util.h"
 #include "mkdir.h"
 #include "virt.h"
@@ -58,42 +56,6 @@ static int prepare_new_root(void) {
 
         const char *dir;
 
-        if (mount("/run/initramfs", "/run/initramfs", NULL, MS_BIND, NULL) < 0) {
-                log_error("Failed to mount bind /run/initramfs on /run/initramfs: %m");
-                return -errno;
-        }
-
-        if (mount(NULL, "/run/initramfs", NULL, MS_PRIVATE, NULL) < 0) {
-                log_error("Failed to make /run/initramfs private mount: %m");
-                return -errno;
-        }
-
-        NULSTR_FOREACH(dir, dirs)
-                if (mkdir_p_label(dir, 0755) < 0 && errno != EEXIST) {
-                        log_error("Failed to mkdir %s: %m", dir);
-                        return -errno;
-                }
-
-        if (mount("/sys", "/run/initramfs/sys", NULL, MS_BIND, NULL) < 0) {
-                log_error("Failed to mount bind /sys on /run/initramfs/sys: %m");
-                return -errno;
-        }
-
-        if (mount("/proc", "/run/initramfs/proc", NULL, MS_BIND, NULL) < 0) {
-                log_error("Failed to mount bind /proc on /run/initramfs/proc: %m");
-                return -errno;
-        }
-
-        if (mount("/dev", "/run/initramfs/dev", NULL, MS_BIND, NULL) < 0) {
-                log_error("Failed to mount bind /dev on /run/initramfs/dev: %m");
-                return -errno;
-        }
-
-        if (mount("/run", "/run/initramfs/run", NULL, MS_BIND, NULL) < 0) {
-                log_error("Failed to mount bind /run on /run/initramfs/run: %m");
-                return -errno;
-        }
-
         return 0;
 }
 
@@ -110,14 +72,14 @@ static int pivot_to_new_root(void) {
          * work-around.
          *
          * https://bugzilla.redhat.com/show_bug.cgi?id=847418 */
-        if (mount(NULL, "/", NULL, MS_REC|MS_PRIVATE, NULL) < 0)
-                log_warning("Failed to make \"/\" private mount: %m");
+        //if (mount(NULL, "/", NULL, MS_REC|MS_PRIVATE, NULL) < 0)
+                //log_warning("Failed to make \"/\" private mount: %m");
 
-        if (pivot_root(".", "oldroot") < 0) {
+        /*if (pivot_root(".", "oldroot") < 0) {
                 log_error("pivot failed: %m");
-                /* only chroot if pivot root succeeded */
+                /only chroot if pivot root succeeded
                 return -errno;
-        }
+        } */
 
         chroot(".");
 
@@ -171,15 +133,9 @@ int main(int argc, char *argv[]) {
 
         in_container = detect_container(NULL) > 0;
 
-        if (streq(argv[1], "reboot"))
+        if (streq(argv[1], "reboot")) {
                 cmd = RB_AUTOBOOT;
-        else if (streq(argv[1], "poweroff"))
-                cmd = RB_POWER_OFF;
-        else if (streq(argv[1], "halt"))
-                cmd = RB_HALT_SYSTEM;
-        else if (streq(argv[1], "kexec"))
-                cmd = LINUX_REBOOT_CMD_KEXEC;
-        else {
+       } else {
                 log_error("Unknown action '%s'.", argv[1]);
                 r = -EINVAL;
                 goto error;
@@ -194,63 +150,9 @@ int main(int argc, char *argv[]) {
         log_info("Sending SIGKILL to remaining processes...");
         broadcast_signal(SIGKILL, true);
 
-        if (in_container) {
-                need_swapoff = false;
-                need_dm_detach = false;
-                need_loop_detach = false;
-        }
-
         /* Unmount all mountpoints, swaps, and loopback devices */
         for (retries = 0; retries < FINALIZE_ATTEMPTS; retries++) {
                 bool changed = false;
-
-                if (need_umount) {
-                        log_info("Unmounting file systems.");
-                        r = umount_all(&changed);
-                        if (r == 0) {
-                                need_umount = false;
-                                log_info("All filesystems unmounted.");
-                        } else if (r > 0)
-                                log_info("Not all file systems unmounted, %d left.", r);
-                        else
-                                log_error("Failed to unmount file systems: %s", strerror(-r));
-                }
-
-                if (need_swapoff) {
-                        log_info("Deactivating swaps.");
-                        r = swapoff_all(&changed);
-                        if (r == 0) {
-                                need_swapoff = false;
-                                log_info("All swaps deactivated.");
-                        } else if (r > 0)
-                                log_info("Not all swaps deactivated, %d left.", r);
-                        else
-                                log_error("Failed to deactivate swaps: %s", strerror(-r));
-                }
-
-                if (need_loop_detach) {
-                        log_info("Detaching loop devices.");
-                        r = loopback_detach_all(&changed);
-                        if (r == 0) {
-                                need_loop_detach = false;
-                                log_info("All loop devices detached.");
-                        } else if (r > 0)
-                                log_info("Not all loop devices detached, %d left.", r);
-                        else
-                                log_error("Failed to detach loop devices: %s", strerror(-r));
-                }
-
-                if (need_dm_detach) {
-                        log_info("Detaching DM devices.");
-                        r = dm_detach_all(&changed);
-                        if (r == 0) {
-                                need_dm_detach = false;
-                                log_info("All DM devices detached.");
-                        } else if (r > 0)
-                                log_info("Not all DM devices detached, %d left.", r);
-                        else
-                                log_error("Failed to detach DM devices: %s", strerror(-r));
-                }
 
                 if (!need_umount && !need_swapoff && !need_loop_detach && !need_dm_detach) {
                         if (retries > 0)
@@ -298,28 +200,6 @@ int main(int argc, char *argv[]) {
          * needlessly slow down containers. */
         if (!in_container)
                 sync();
-
-        if (cmd == LINUX_REBOOT_CMD_KEXEC) {
-
-                if (!in_container) {
-                        /* We cheat and exec kexec to avoid doing all its work */
-                        pid_t pid = fork();
-
-                        if (pid < 0)
-                                log_error("Could not fork: %m. Falling back to normal reboot.");
-                        else if (pid > 0) {
-                                wait_for_terminate_and_warn("kexec", pid);
-                                log_warning("kexec failed. Falling back to normal reboot.");
-                        } else {
-                                /* Child */
-                                const char *args[3] = { KEXEC, "-e", NULL };
-                                execv(args[0], (char * const *) args);
-                                return EXIT_FAILURE;
-                        }
-                }
-
-                cmd = RB_AUTOBOOT;
-        }
 
         reboot(cmd);
 
