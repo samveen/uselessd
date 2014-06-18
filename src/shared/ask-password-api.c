@@ -517,10 +517,10 @@ int ask_password_agent(
                 }
 
                 ucred = (struct ucred*) CMSG_DATA(&control.cmsghdr);
-                if (priv_check_cred(ucred, PRIV_CRED_SETUID) != 0) {
+                /*if (priv_check_cred(ucred, PRIV_CRED_SETUID) != 0) {
                         log_warning("Got request from unprivileged user. Ignoring.");
                         continue;
-                }
+                } */
 
                 if (passphrase[0] == '+') {
                         char **l;
