@@ -22,8 +22,9 @@
 #include <sys/socket.h>
 #include <sys/poll.h>
 #include <sys/types.h>
-#include <sys/timerfd.h>
+//#include <sys/timerfd.h>
 #include <assert.h>
+#include <sys/ucred.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
@@ -39,6 +40,30 @@
 #include "utmp-wtmp.h"
 #include "mkdir.h"
 #include "fileio.h"
+
+/* Directly taken from <sys/ucred.h>, as include
+ * directive does not always seem to properly work.
+ */
+struct ucred {
+	u_int	cr_ref;			/* reference count */
+#define	cr_startcopy cr_uid
+	uid_t	cr_uid;			/* effective user id */
+	uid_t	cr_ruid;		/* real user id */
+	uid_t	cr_svuid;		/* saved user id */
+	int	cr_ngroups;		/* number of groups */
+	gid_t	cr_rgid;		/* real group id */
+	gid_t	cr_svgid;		/* saved group id */
+	struct uidinfo	*cr_uidinfo;	/* per euid resource consumption */
+	struct uidinfo	*cr_ruidinfo;	/* per ruid resource consumption */
+	struct prison	*cr_prison;	/* jail(2) */
+	struct loginclass	*cr_loginclass; /* login class */
+	u_int		cr_flags;	/* credential flags */
+	void 		*cr_pspare2[2];	/* general use 2 */
+#define	cr_endcopy	cr_label
+	struct label	*cr_label;	/* MAC label */
+	gid_t	*cr_groups;		/* groups */
+	int	cr_agroups;		/* Available groups */
+};
 
 union shutdown_buffer {
         struct sd_shutdown_command command;
@@ -85,14 +110,14 @@ static int read_packet(int fd, union shutdown_buffer *_b) {
 
         if (msghdr.msg_controllen < CMSG_LEN(sizeof(struct ucred)) ||
             control.cmsghdr.cmsg_level != SOL_SOCKET ||
-            control.cmsghdr.cmsg_type != SCM_CREDENTIALS ||
+            control.cmsghdr.cmsg_type != SCM_CREDS ||
             control.cmsghdr.cmsg_len != CMSG_LEN(sizeof(struct ucred))) {
                 log_warning("Received message without credentials. Ignoring.");
                 return 0;
         }
 
         ucred = (struct ucred*) CMSG_DATA(&control.cmsghdr);
-        if (ucred->uid != 0) {
+        if (ucred->cr_uid != 0) {
                 log_warning("Got request from unprivileged user. Ignoring.");
                 return 0;
         }
@@ -306,11 +331,11 @@ int main(int argc, char *argv[]) {
 
         for (i = FD_WALL_TIMER; i < _FD_MAX; i++) {
                 pollfd[i].events = POLLIN;
-                pollfd[i].fd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK|TFD_CLOEXEC);
+               /* pollfd[i].fd = timerfd_create(CLOCK_REALTIME, TFD_NONBLOCK|TFD_CLOEXEC);
                 if (pollfd[i].fd < 0) {
                         log_error("timerfd_create(): %m");
                         goto finish;
-                }
+                } */
         }
 
         log_debug("systemd-shutdownd running as pid %lu", (unsigned long) getpid());
@@ -365,26 +390,26 @@ int main(int argc, char *argv[]) {
                                             n + 15*USEC_PER_MINUTE >= b.command.usec)
                                                 warn_wall(n, &b.command);
                                 }
-                                if (timerfd_settime(pollfd[FD_WALL_TIMER].fd, TFD_TIMER_ABSTIME, &its, NULL) < 0) {
+                                /*if (timerfd_settime(pollfd[FD_WALL_TIMER].fd, TFD_TIMER_ABSTIME, &its, NULL) < 0) {
                                         log_error("timerfd_settime(): %m");
                                         goto finish;
-                                }
+                                } */
 
                                 /* Disallow logins 5 minutes prior to shutdown */
                                 zero(its);
                                 timespec_store(&its.it_value, when_nologin(b.command.usec));
-                                if (timerfd_settime(pollfd[FD_NOLOGIN_TIMER].fd, TFD_TIMER_ABSTIME, &its, NULL) < 0) {
+                                /*if (timerfd_settime(pollfd[FD_NOLOGIN_TIMER].fd, TFD_TIMER_ABSTIME, &its, NULL) < 0) {
                                         log_error("timerfd_settime(): %m");
                                         goto finish;
-                                }
+                                } */
 
                                 /* Shutdown after the specified time is reached */
                                 zero(its);
                                 timespec_store(&its.it_value, b.command.usec);
-                                if (timerfd_settime(pollfd[FD_SHUTDOWN_TIMER].fd, TFD_TIMER_ABSTIME, &its, NULL) < 0) {
+                                /*if (timerfd_settime(pollfd[FD_SHUTDOWN_TIMER].fd, TFD_TIMER_ABSTIME, &its, NULL) < 0) {
                                         log_error("timerfd_settime(): %m");
                                         goto finish;
-                                }
+                                } */
 
                                 update_schedule_file(&b.command);
 
@@ -405,10 +430,10 @@ int main(int argc, char *argv[]) {
 
                         /* Restart timer */
                         timespec_store(&its.it_value, when_wall(n, b.command.usec));
-                        if (timerfd_settime(pollfd[FD_WALL_TIMER].fd, TFD_TIMER_ABSTIME, &its, NULL) < 0) {
+                        /*if (timerfd_settime(pollfd[FD_WALL_TIMER].fd, TFD_TIMER_ABSTIME, &its, NULL) < 0) {
                                 log_error("timerfd_settime(): %m");
                                 goto finish;
-                        }
+                        } */
                 }
 
                 if (pollfd[FD_NOLOGIN_TIMER].revents) {
