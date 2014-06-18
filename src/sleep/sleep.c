@@ -183,7 +183,7 @@ static int parse_argv(int argc, char *argv[]) {
 
         if (argc - optind != 1) {
                 log_error("Usage: %s COMMAND",
-                          program_invocation_short_name);
+                          getprogname());
                 return -EINVAL;
         }
 

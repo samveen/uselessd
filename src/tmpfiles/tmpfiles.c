@@ -36,6 +36,7 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/param.h>
+#include <sys/time.h>
 #include <glob.h>
 #include <fnmatch.h>
 #include <sys/capability.h>
@@ -322,7 +323,7 @@ static int dir_cleanup(
                                 _cleanup_closedir_ DIR *sub_dir;
                                 int q;
 
-                                sub_dir = xopendirat(dirfd(d), dent->d_name, O_NOFOLLOW|O_NOATIME);
+                                sub_dir = xopendirat(dirfd(d), dent->d_name, O_NOFOLLOW);
                                 if (sub_dir == NULL) {
                                         if (errno != ENOENT) {
                                                 log_error("opendir(%s/%s) failed: %m", p, dent->d_name);
@@ -422,7 +423,7 @@ finish:
                 times[0] = ds->st_atim;
                 times[1] = ds->st_mtim;
 
-                if (futimens(dirfd(d), times) < 0)
+                if (futimes(dirfd(d), times) < 0)
                         log_error("utimensat(%s): %m", p);
         }
 
@@ -1257,7 +1258,7 @@ static int help(void) {
                "     --remove               Remove marked files/directories\n"
                "     --prefix=PATH          Only apply rules that apply to paths with the specified prefix\n"
                "     --exclude-prefix=PATH  Ignore rules that apply to paths with the specified prefix\n",
-               program_invocation_short_name);
+               getprogname());
 
         return 0;
 }

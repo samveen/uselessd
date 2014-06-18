@@ -25,7 +25,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-#include <mntent.h>
 
 #include "log.h"
 #include "util.h"
@@ -33,6 +32,29 @@
 #include "set.h"
 #include "mount-setup.h"
 #include "exit-status.h"
+
+/* Compatibility layer taken from here:
+ * https://raw.githubusercontent.com/freebsd/
+ * freebsd-ports/master/devel/fam/files/mntent.h
+ */
+#define MOUNTED "dummy"
+
+#define MNTTYPE_NFS "nfs"
+
+struct mntent {
+	char *mnt_fsname;
+	char *mnt_dir;
+	char *mnt_type;
+	char *mnt_opts;
+	int mnt_freq;
+	int mnt_passno;
+};
+
+#define setmntent(x,y) ((FILE *)0x1)
+struct mntent *getmntent __P ((FILE *fp));
+char *hasmntopt __P ((const struct mntent *mnt, const char *option));
+#define endmntent(x) ((int)1)
+/* ... */
 
 /* Goes through /etc/fstab and remounts all API file systems, applying
  * options that are in /etc/fstab that systemd might not have
@@ -74,12 +96,12 @@ int main(int argc, char *argv[]) {
 
         ret = EXIT_SUCCESS;
 
-        while ((me = getmntent(f))) {
+       /* while ((me = getmntent(f))) {
                 pid_t pid;
                 int k;
                 char *s;
 
-                /* Remount the root fs, /usr and all API VFS */
+                 Remount the root fs, /usr and all API VFS
                 if (!mount_point_is_api(me->mnt_dir) &&
                     !path_equal(me->mnt_dir, "/") &&
                     !path_equal(me->mnt_dir, "/usr"))
@@ -96,7 +118,7 @@ int main(int argc, char *argv[]) {
 
                 if (pid == 0) {
                         const char *arguments[5];
-                        /* Child */
+                         Child
 
                         arguments[0] = "/bin/mount";
                         arguments[1] = me->mnt_dir;
@@ -110,7 +132,7 @@ int main(int argc, char *argv[]) {
                         _exit(EXIT_FAILURE);
                 }
 
-                /* Parent */
+                 Parent
 
                 s = strdup(me->mnt_dir);
                 if (!s) {
@@ -126,7 +148,7 @@ int main(int argc, char *argv[]) {
                         ret = EXIT_FAILURE;
                         continue;
                 }
-        }
+        } */
 
         while (!hashmap_isempty(pids)) {
                 siginfo_t si = {};

@@ -293,10 +293,6 @@ int main(int argc, char *argv[]) {
                 /* check if we are already writable */
                 times[0] = st.st_atim;
                 times[1] = st.st_mtim;
-                if (utimensat(AT_FDCWD, "/", times, 0) == 0) {
-                        log_info("Root directory is writable, skipping check.");
-                        return 0;
-                }
 
                 root_directory = true;
         }

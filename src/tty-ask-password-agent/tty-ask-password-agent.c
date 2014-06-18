@@ -26,7 +26,8 @@
 #include <sys/un.h>
 #include <stddef.h>
 #include <sys/poll.h>
-#include <sys/inotify.h>
+#include <sys/endian.h>
+//#include <sys/inotify.h>
 #include <unistd.h>
 #include <getopt.h>
 //#include <sys/signalfd.h>
@@ -75,15 +76,15 @@ static int ask_password_plymouth(
         assert(_passphrases);
 
         if (flag_file) {
-                if ((notify = inotify_init1(IN_CLOEXEC|IN_NONBLOCK)) < 0) {
+               /* if ((notify = inotify_init1(IN_CLOEXEC|IN_NONBLOCK)) < 0) {
                         r = -errno;
                         goto finish;
                 }
 
-                if (inotify_add_watch(notify, flag_file, IN_ATTRIB /* for the link count */) < 0) {
+                if (inotify_add_watch(notify, flag_file, IN_ATTRIB  for the link count ) < 0) {
                         r = -errno;
                         goto finish;
-                }
+                } */
         }
 
         if ((fd = socket(AF_UNIX, SOCK_STREAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0)) < 0) {
@@ -117,8 +118,8 @@ static int ask_password_plymouth(
 
         pollfd[POLL_SOCKET].fd = fd;
         pollfd[POLL_SOCKET].events = POLLIN;
-        pollfd[POLL_INOTIFY].fd = notify;
-        pollfd[POLL_INOTIFY].events = POLLIN;
+        //pollfd[POLL_INOTIFY].fd = notify;
+        //pollfd[POLL_INOTIFY].events = POLLIN;
 
         for (;;) {
                 int sleep_for = -1, j;
@@ -129,7 +130,7 @@ static int ask_password_plymouth(
                         y = now(CLOCK_MONOTONIC);
 
                         if (y > until) {
-                                r = -ETIME;
+                                //r = -ETIME;
                                 goto finish;
                         }
 
@@ -150,12 +151,12 @@ static int ask_password_plymouth(
                         r = -errno;
                         goto finish;
                 } else if (j == 0) {
-                        r = -ETIME;
+                        //r = -ETIME;
                         goto finish;
                 }
 
-                if (notify > 0 && pollfd[POLL_INOTIFY].revents != 0)
-                        flush_fd(notify);
+               /* if (notify > 0 && pollfd[POLL_INOTIFY].revents != 0)
+                        flush_fd(notify); */
 
                 if (pollfd[POLL_SOCKET].revents == 0)
                         continue;
@@ -365,11 +366,12 @@ static int parse_password(const char *filename, char **wall) {
                         int tty_fd = -1;
                         char *password;
 
-                        if (arg_console)
-                                if ((tty_fd = acquire_terminal("/dev/console", false, false, false, (usec_t) -1)) < 0) {
+                        if (arg_console) {
+                                /*if ((tty_fd = acquire_terminal("/dev/console", false, false, false, (usec_t) -1)) < 0) {
                                         r = tty_fd;
                                         goto finish;
-                                }
+                                } */
+                        }
 
                         r = ask_password_tty(message, not_after, filename, &password);
 
@@ -391,7 +393,7 @@ static int parse_password(const char *filename, char **wall) {
                         }
                 }
 
-                if (r == -ETIME || r == -ENOENT) {
+                if (r == -ENOENT) {
                         /* If the query went away, that's OK */
                         r = 0;
                         goto finish;
@@ -568,7 +570,7 @@ static int watch_passwords(void) {
 
         mkdir_p_label("/run/systemd/ask-password", 0755);
 
-        if ((notify = inotify_init1(IN_CLOEXEC)) < 0) {
+        /*if ((notify = inotify_init1(IN_CLOEXEC)) < 0) {
                 r = -errno;
                 goto finish;
         }
@@ -576,7 +578,7 @@ static int watch_passwords(void) {
         if (inotify_add_watch(notify, "/run/systemd/ask-password", IN_CLOSE_WRITE|IN_MOVED_TO) < 0) {
                 r = -errno;
                 goto finish;
-        }
+        } */
 
         assert_se(sigemptyset(&mask) == 0);
         sigset_add_many(&mask, SIGINT, SIGTERM, -1);
@@ -588,8 +590,8 @@ static int watch_passwords(void) {
                 goto finish;
         } */
 
-        pollfd[FD_INOTIFY].fd = notify;
-        pollfd[FD_INOTIFY].events = POLLIN;
+        //pollfd[FD_INOTIFY].fd = notify;
+        //pollfd[FD_INOTIFY].events = POLLIN;
         pollfd[FD_SIGNAL].fd = signal_fd;
         pollfd[FD_SIGNAL].events = POLLIN;
 
@@ -606,8 +608,8 @@ static int watch_passwords(void) {
                         goto finish;
                 }
 
-                if (pollfd[FD_INOTIFY].revents != 0)
-                        flush_fd(notify);
+               // if (pollfd[FD_INOTIFY].revents != 0)
+                      //  flush_fd(notify);
 
                 if (pollfd[FD_SIGNAL].revents != 0)
                         break;
@@ -640,7 +642,7 @@ static int help(void) {
                "     --wall     Continuously forward password requests to wall\n"
                "     --plymouth Ask question with Plymouth instead of on TTY\n"
                "     --console  Ask question on /dev/console instead of current TTY\n",
-               program_invocation_short_name);
+               getprogname());
 
         return 0;
 }
