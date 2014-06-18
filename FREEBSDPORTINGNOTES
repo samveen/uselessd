@@ -123,6 +123,8 @@ _NSIG == SIGRTMIN
 
 dbus-loop.c: remove it, as it's unused
 
+--------------------------------------------------------------
+
 <sys/prctl.h> in src/shared/capability.c
 Where capability.h is used: src/core/execute.c,
 src/core/main.c, src/shared/audit.[ch], src/tmpfiles/tmpfiles.c
@@ -266,6 +268,80 @@ also addressed in manager.c,dbus-manager.c,main.c
 done
 
 syscall-list.c: remove
+load-fragment.[ch]: config_parse_syscall_filter(),
+syscall_set() and syscall_unset()
+execute.c: free(syscall_filter)
+dbus-execute.c: bus_execute_append_syscall_filter() removed
+
+pager.c: splice() syscall
+
+-----------------------------------------------------------
+
+out of core
+
+detect-virt.c,delta.c,sleep.c,notify.c,machine-id-setup-main.c,
+activate.c,systemd-analyze.c,ask-password.c,sysctl.c ->
+program_invocation_short_name(), replace with getprogname()
+
+Various missing symbols in linking phase.
+mempcpy(): added gnulib definition in strxcpyx.[ch], included
+latter header in unit-name.c
+strdupa(): replaced with strdup() and checks in cgroup.c and slice.c
+util.c: remove use of acquire_terminal()
+load-fragment.c: remove use of load_fragment_gperf_lookup(),
+config_parse_exec_cpu_affinity() and CPUAffinity= op
+path-util.c: replace get_current_dir_name() with getcwd()
+load-dropin.c: comment out load_fragment_gperf_lookup() iteration
+socket.c: remove socket_address_is_netlink() check in function
+socket_address_deserialize_item()
+execute.c: comment out ioprio_set() block, CPU_ALLOC_SIZE
+and CPUAffinity= option, CPU_FREE
+dbus-execute.[ch]: remove else block for ioprio_get() in
+bus_execute_append_ioprio(), remove use of CPU_ALLOC_SIZE macro,
+bus_execute_cpu_affinity() removal and CPUAffinity= op
+mount.c: remove AUTOMOUNT/automount_set_ready() iterator, turn
+function into a NOP, turn mount_test_option() into a NOP due
+to hasmntopt() usage
+system.conf: CPUAffinity= option
+main.c: CPUAffinity= op
+
+test-watchdog.c: remove
+test-tables.c: remove automount and path-related tables
+cgroup.h: add <stdbool.h> and <sys/types.h>
+execute.h: add cgroup-util.h
+
+systemctl: remove prctl header
+getprogname()
+comment out RB_* macros in halt_now(),
+replace later (shutdownd, as well)
+comment out ETIME
+
+dbus-common.c,
+ask-password-api.c: comment out priv_check_cred() usage
+tty-ask-password-agent.c: inotify(7), ETIME, getprogname(),
+acquire_terminal()
+machine-id-setup.c: comment out nmount() usage entirely,
+we likely won't use it anyway, as we won't support stage 1
+init soon
+tmpfiles.c: O_NOATIME and getprogname(), include <sys/time.h>
+for futimens(), replace it with futimes()
+main.c: prctl() usage, remove config_parse_cpu_affinity2() and
+CPU_* macros, getprogname(), remove environ ref
+load-fragment.c: comment out iterator that uses load_fragment_gperf_nulstr
+
+initctl: remove it
+shutdownd.c: comment out timerfd, rewrite completely later
+add ucred, uid to cr_uid
+src/core/shutdown.c: remove <umount.h>, heavily Linux-specific logic, initramfs procedures,
+<linux/reboot.h>, pivot_root()
+umount.[ch]: remove entirely
+
+remount-fs.c: mntent logic, comment out huge block
+fsck.c: remove utimensat(), will replace later, either way
+sleep.c: getprogname()
+remove systemd-activate
+fstab-generator: remove
+
 
 files modified:
 	src/shared/util.h
@@ -291,6 +367,8 @@ files modified:
 	src/shared/sparse-endian.h
 	src/shared/dbus-common.c
 	src/shared/unit-name.c
+	src/shared/strxcpyx.c
+	src/shared/strxcpyx.h
 	[removed] src/shared/dbus-loop.c
 	[removed] src/shared/dbus-loop.h
 	src/shared/audit.c
@@ -308,6 +386,9 @@ files modified:
 	src/core/namespace.c
 	src/core/system.conf
 	src/core/dbus.c
+	src/core/cgroup.c
+	src/core/cgroup.h
+	src/core/slice.c
 	src/core/device.c
 	src/core/job.c
 	src/core/manager.c
@@ -324,7 +405,7 @@ files modified:
 	src/core/transaction.c
 	src/core/execute.c
 	src/core/load-fragment.c
-	src/tmpfiles/tmpfiles.c
+	src/core/load-dropin.c
 	src/core/main.c
 	src/core/selinux-access.c
 	[removed] src/core/automount.c
@@ -340,9 +421,16 @@ files modified:
 	[removed] src/test/test-loopback.c
 	[removed] src/core/namespace.c
 	[removed] src/core/namespace.h
-	[removed] src/test/test-ns.c
 	[removed] src/core/switch-root.c
 	[removed] src/core/switch-root.h
+	[removed] src/core/syscall-list.c
+	[removed] src/core/syscall-list.h
+
+    [removed] src/test/test-ns.c
+    [removed] src/test/test-watchdog.c
+    src/test/test-tables.c
+
+    src/tmpfiles/tmpfiles.c
 
 ----------
 
