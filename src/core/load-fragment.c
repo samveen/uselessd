@@ -256,13 +256,6 @@ int config_parse_socket_listen(const char *unit,
                         log_syntax(unit, LOG_ERR, filename, line, -r,
                                    "Failed to resolve unit specifiers on %s, ignoring: %s", rvalue, strerror(-r));
 
-                r = socket_address_parse_netlink(&p->address, k ? k : rvalue);
-                if (r < 0) {
-                        log_syntax(unit, LOG_ERR, filename, line, -r,
-                                   "Failed to parse address value, ignoring: %s", rvalue);
-                        free(p);
-                        return 0;
-                }
 
         } else {
                 _cleanup_free_ char *k = NULL;
@@ -2467,7 +2460,7 @@ void unit_dump_config_items(FILE *f) {
 
         assert(f);
 
-        NULSTR_FOREACH(i, load_fragment_gperf_nulstr) {
+        /*NULSTR_FOREACH(i, load_fragment_gperf_nulstr) {
                 const char *rvalue = "OTHER", *lvalue;
                 unsigned j;
                 size_t prefix_len;
@@ -2494,5 +2487,5 @@ void unit_dump_config_items(FILE *f) {
 
                 fprintf(f, "%s=%s\n", lvalue, rvalue);
                 prev = i;
-        }
+        } */
 }
