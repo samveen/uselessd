@@ -1,0 +1,42 @@
+remove procfs and sysfs references
+
+some cgroups-related, proc and sysfs-related
+unit options (particularly for resource control)
+need to be removed
+
+procfs/core ->
+	src/core/condition.c [test_kernel_command_line()]
+	src/core/dbus-execute.c [oom_score_adj]
+	src/core/dbus-manager.c [/proc/cgroups and /etc/mtab]
+	src/core/execute.c [oom_score_adj]
+
+	src/core/killall.c [keep for now]
+
+	src/core/kmod-setup.c [rm it entirely]
+	src/core/locale-setup.c [/proc/cmdline for locale groups]
+	src/core/main.c [test_mtab(), test_cgroups(), parse_proc_cmdline*,
+	mount_cgroup_controllers() functions removed]
+
+	src/core/manager.c [comments only]
+	src/core/mount.c [mount_proc_self_mountinfo() removed]
+	src/core/mount-setup.[ch] [mount_cgroup_controllers() rm'd]
+	src/core/shutdown.c [kernel command line reading, procedures will likely be shafted anyway]
+	src/core/swap.c [/proc/swaps-related routines]
+
+procfs/shared ->
+	src/shared/cgroup-util.c
+	src/shared/fdset.c
+	src/shared/sleep-config.c
+	src/shared/util.c [/proc/self/* references]
+
+procfs/other ->
+	src/systemctl/systemctl.c [/proc/cmdline parsing]
+
+
+systemctl -> displays "Running in chroot.", made running_in_chroot() from
+util.c a no-op
+
+----------
+
+cgroups need to be weeded out
+caveat: O_CLOEXEC may not be present
