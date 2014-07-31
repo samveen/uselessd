@@ -1482,12 +1482,6 @@ static int mount_add_one(
                         goto fail;
                 }
 
-                u->source_path = strdup("/proc/self/mountinfo");
-                if (!u->source_path) {
-                        r = -ENOMEM;
-                        goto fail;
-                }
-
                 r = unit_add_dependency_by_name(u, UNIT_BEFORE, SPECIAL_LOCAL_FS_TARGET, NULL, true);
                 if (r < 0)
                         goto fail;
@@ -1569,62 +1563,6 @@ fail:
         return r;
 }
 
-static int mount_load_proc_self_mountinfo(Manager *m, bool set_flags) {
-        int r = 0;
-        unsigned i;
-
-        assert(m);
-
-        rewind(m->proc_self_mountinfo);
-
-        for (i = 1;; i++) {
-                _cleanup_free_ char *device = NULL, *path = NULL, *options = NULL, *options2 = NULL, *fstype = NULL, *d = NULL, *p = NULL, *o = NULL;
-                int k;
-
-                k = fscanf(m->proc_self_mountinfo,
-                           "%*s "       /* (1) mount id */
-                           "%*s "       /* (2) parent id */
-                           "%*s "       /* (3) major:minor */
-                           "%*s "       /* (4) root */
-                           "%ms "       /* (5) mount point */
-                           "%ms"        /* (6) mount options */
-                           "%*[^-]"     /* (7) optional fields */
-                           "- "         /* (8) separator */
-                           "%ms "       /* (9) file system type */
-                           "%ms"        /* (10) mount source */
-                           "%ms"        /* (11) mount options 2 */
-                           "%*[^\n]",   /* some rubbish at the end */
-                           &path,
-                           &options,
-                           &fstype,
-                           &device,
-                           &options2);
-
-                if (k == EOF)
-                        break;
-
-                if (k != 5) {
-                        log_warning("Failed to parse /proc/self/mountinfo:%u.", i);
-                        continue;
-                }
-
-                o = strjoin(options, ",", options2, NULL);
-                if (!o)
-                        return log_oom();
-
-                d = cunescape(device);
-                p = cunescape(path);
-                if (!d || !p)
-                        return log_oom();
-
-                k = mount_add_one(m, d, p, o, fstype, 0, set_flags);
-                if (k < 0)
-                        r = k;
-        }
-
-        return r;
-}
-
 static void mount_shutdown(Manager *m) {
         assert(m);
 
@@ -1637,21 +1575,6 @@ static void mount_shutdown(Manager *m) {
 static int mount_enumerate(Manager *m) {
         int r;
         assert(m);
-
-        if (!m->proc_self_mountinfo) {
-
-                m->proc_self_mountinfo = fopen("/proc/self/mountinfo", "re");
-                if (!m->proc_self_mountinfo)
-                        return -errno;
-
-                m->mount_watch.type = WATCH_MOUNT;
-                m->mount_watch.fd = fileno(m->proc_self_mountinfo);
-
-        }
-
-        r = mount_load_proc_self_mountinfo(m, false);
-        if (r < 0)
-                goto fail;
 
         return 0;
 
@@ -1666,24 +1589,6 @@ void mount_fd_event(Manager *m, int events) {
 
         assert(m);
         //assert(events & EPOLLPRI);
-
-        /* The manager calls this for every fd event happening on the
-         * /proc/self/mountinfo file, which informs us about mounting
-         * table changes */
-
-        r = mount_load_proc_self_mountinfo(m, true);
-        if (r < 0) {
-                log_error("Failed to reread /proc/self/mountinfo: %s", strerror(-r));
-
-                /* Reset flags, just in case, for later calls */
-                LIST_FOREACH(units_by_type, u, m->units_by_type[UNIT_MOUNT]) {
-                        Mount *mount = MOUNT(u);
-
-                        mount->is_mounted = mount->just_mounted = mount->just_changed = false;
-                }
-
-                return;
-        }
 
         manager_dispatch_load_queue(m);
 

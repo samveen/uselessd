@@ -77,54 +77,6 @@ void condition_free_list(Condition *first) {
                 condition_free(c);
 }
 
-static bool test_kernel_command_line(const char *parameter) {
-        char *line, *w, *state, *word = NULL;
-        bool equal;
-        int r;
-        size_t l, pl;
-        bool found = false;
-
-        assert(parameter);
-
-        if (detect_container(NULL) > 0)
-                return false;
-
-        r = read_one_line_file("/proc/cmdline", &line);
-        if (r < 0) {
-                log_warning("Failed to read /proc/cmdline, ignoring: %s", strerror(-r));
-                return false;
-        }
-
-        equal = !!strchr(parameter, '=');
-        pl = strlen(parameter);
-
-        FOREACH_WORD_QUOTED(w, l, line, state) {
-
-                free(word);
-                word = strndup(w, l);
-                if (!word)
-                        break;
-
-                if (equal) {
-                        if (streq(word, parameter)) {
-                                found = true;
-                                break;
-                        }
-                } else {
-                        if (startswith(word, parameter) && (word[pl] == '=' || word[pl] == 0)) {
-                                found = true;
-                                break;
-                        }
-                }
-
-        }
-
-        free(word);
-        free(line);
-
-        return found;
-}
-
 static bool test_virtualization(const char *parameter) {
         int b;
         Virtualization v;
@@ -275,9 +227,6 @@ static bool condition_test(Condition *c) {
 
                 return (S_ISREG(st.st_mode) && (st.st_mode & 0111)) == !c->negate;
         }
-
-        case CONDITION_KERNEL_COMMAND_LINE:
-                return test_kernel_command_line(c->parameter) == !c->negate;
 
         case CONDITION_VIRTUALIZATION:
                 return test_virtualization(c->parameter) == !c->negate;

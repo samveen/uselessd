@@ -169,11 +169,11 @@ int machine_id_setup(void) {
                  * will be owned by root it doesn't matter much, but maybe
                  * people look. */
 
-                fd = open("/etc/machine-id", O_RDWR|O_CREAT|O_CLOEXEC|O_NOCTTY, 0444);
+                fd = open("/etc/machine-id", O_RDWR|O_CREAT|O_NOCTTY, 0444);
                 if (fd >= 0)
                         writable = true;
                 else {
-                        fd = open("/etc/machine-id", O_RDONLY|O_CLOEXEC|O_NOCTTY);
+                        fd = open("/etc/machine-id", O_RDONLY|O_NOCTTY);
                         if (fd < 0) {
                                 log_error("Cannot open /etc/machine-id: %m");
                                 return -errno;

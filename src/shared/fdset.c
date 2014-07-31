@@ -114,10 +114,6 @@ int fdset_new_fill(FDSet **_s) {
         /* Creates an fdset and fills in all currently open file
          * descriptors. */
 
-        d = opendir("/proc/self/fd");
-        if (!d)
-                return -errno;
-
         s = fdset_new();
         if (!s) {
                 r = -ENOMEM;

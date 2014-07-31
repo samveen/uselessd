@@ -3943,16 +3943,6 @@ static int switch_root(DBusConnection *bus, char **args) {
 
         root = args[1];
 
-        if (l >= 3)
-                init = strdup(args[2]);
-        else {
-                parse_env_file("/proc/cmdline", WHITESPACE,
-                               "init", &init,
-                               NULL);
-
-                if (!init)
-                        init = strdup("");
-        }
         if (!init)
                 return log_oom();
 

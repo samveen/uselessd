@@ -52,33 +52,6 @@ static const UnitActiveState state_translation_table[_SWAP_STATE_MAX] = {
         [SWAP_FAILED] = UNIT_FAILED
 };
 
-static void swap_unset_proc_swaps(Swap *s) {
-        Swap *first;
-        Hashmap *swaps;
-
-        assert(s);
-
-        if (!s->parameters_proc_swaps.what)
-                return;
-
-        /* Remove this unit from the chain of swaps which share the
-         * same kernel swap device. */
-        swaps = UNIT(s)->manager->swaps_by_proc_swaps;
-        first = hashmap_get(swaps, s->parameters_proc_swaps.what);
-        LIST_REMOVE(Swap, same_proc_swaps, first, s);
-
-        if (first)
-                hashmap_remove_and_replace(swaps,
-                                           s->parameters_proc_swaps.what,
-                                           first->parameters_proc_swaps.what,
-                                           first);
-        else
-                hashmap_remove(swaps, s->parameters_proc_swaps.what);
-
-        free(s->parameters_proc_swaps.what);
-        s->parameters_proc_swaps.what = NULL;
-}
-
 static void swap_init(Unit *u) {
         Swap *s = SWAP(u);
 
@@ -116,8 +89,6 @@ static void swap_done(Unit *u) {
         Swap *s = SWAP(u);
 
         assert(s);
-
-        swap_unset_proc_swaps(s);
 
         free(s->what);
         s->what = NULL;
@@ -972,45 +943,6 @@ static void swap_timer_event(Unit *u, uint64_t elapsed, Watch *w) {
         }
 }
 
-static int swap_load_proc_swaps(Manager *m, bool set_flags) {
-        unsigned i;
-        int r = 0;
-
-        assert(m);
-
-        rewind(m->proc_swaps);
-
-        (void) fscanf(m->proc_swaps, "%*s %*s %*s %*s %*s\n");
-
-        for (i = 1;; i++) {
-                _cleanup_free_ char *dev = NULL, *d = NULL;
-                int prio = 0, k;
-
-                k = fscanf(m->proc_swaps,
-                           "%ms "  /* device/file */
-                           "%*s "  /* type of swap */
-                           "%*s "  /* swap size */
-                           "%*s "  /* used */
-                           "%i\n", /* priority */
-                           &dev, &prio);
-                if (k != 2) {
-                        if (k == EOF)
-                                break;
-
-                        log_warning("Failed to parse /proc/swaps:%u", i);
-                        continue;
-                }
-
-                d = cunescape(dev);
-                if (!d)
-                        return -ENOMEM;
-
-                r = k;
-        }
-
-        return r;
-}
-
 int swap_dispatch_reload(Manager *m) {
         /* This function should go as soon as the kernel properly notifies us */
 
@@ -1030,20 +962,6 @@ int swap_fd_event(Manager *m, int events) {
         assert(m);
         //assert(events & EPOLLPRI);
 
-        r = swap_load_proc_swaps(m, true);
-        if (r < 0) {
-                log_error("Failed to reread /proc/swaps: %s", strerror(-r));
-
-                /* Reset flags, just in case, for late calls */
-                LIST_FOREACH(units_by_type, u, m->units_by_type[UNIT_SWAP]) {
-                        Swap *swap = SWAP(u);
-
-                        swap->is_active = swap->just_activated = false;
-                }
-
-                return 0;
-        }
-
         manager_dispatch_load_queue(m);
 
         LIST_FOREACH(units_by_type, u, m->units_by_type[UNIT_SWAP]) {
@@ -1053,7 +971,6 @@ int swap_fd_event(Manager *m, int events) {
                         /* This has just been deactivated */
 
                         swap->from_proc_swaps = false;
-                        swap_unset_proc_swaps(swap);
 
                         switch (swap->state) {
 
@@ -1175,20 +1092,12 @@ static int swap_enumerate(Manager *m) {
                         .data.ptr = &m->swap_watch,
                 }; */
 
-                m->proc_swaps = fopen("/proc/swaps", "re");
-                if (!m->proc_swaps)
-                        return (errno == ENOENT) ? 0 : -errno;
-
                 m->swap_watch.type = WATCH_SWAP;
                 m->swap_watch.fd = fileno(m->proc_swaps);
 
                 //if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->swap_watch.fd, &ev) < 0)
                         //return -errno;
         }
-
-        r = swap_load_proc_swaps(m, false);
-        if (r < 0)
-                swap_shutdown(m);
 
         return r;
 }

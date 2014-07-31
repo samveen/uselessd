@@ -330,14 +330,6 @@ static int bus_manager_append_tainted(DBusMessageIter *i, const char *property, 
         if (m->taint_usr)
                 e = stpcpy(e, "split-usr:");
 
-        if (readlink_malloc("/etc/mtab", &p) < 0)
-                e = stpcpy(e, "mtab-not-symlink:");
-        else
-                free(p);
-
-        if (access("/proc/cgroups", F_OK) < 0)
-                e = stpcpy(e, "cgroups-missing:");
-
         if (hwclock_is_localtime() > 0)
                 e = stpcpy(e, "local-hwclock:");
 

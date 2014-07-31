@@ -238,181 +238,6 @@ static int set_default_unit(const char *u) {
         return 0;
 }
 
-static int parse_proc_cmdline_word(const char *word) {
-
-        static const char * const rlmap[] = {
-                "emergency", SPECIAL_EMERGENCY_TARGET,
-                "-b",        SPECIAL_EMERGENCY_TARGET,
-                "single",    SPECIAL_RESCUE_TARGET,
-                "-s",        SPECIAL_RESCUE_TARGET,
-                "s",         SPECIAL_RESCUE_TARGET,
-                "S",         SPECIAL_RESCUE_TARGET,
-                "1",         SPECIAL_RESCUE_TARGET,
-                "2",         SPECIAL_RUNLEVEL2_TARGET,
-                "3",         SPECIAL_RUNLEVEL3_TARGET,
-                "4",         SPECIAL_RUNLEVEL4_TARGET,
-                "5",         SPECIAL_RUNLEVEL5_TARGET,
-        };
-
-        assert(word);
-
-        if (startswith(word, "systemd.unit=")) {
-
-                if (!in_initrd())
-                        return set_default_unit(word + 13);
-
-        } else if (startswith(word, "rd.systemd.unit=")) {
-
-                if (in_initrd())
-                        return set_default_unit(word + 16);
-
-        } else if (startswith(word, "systemd.log_target=")) {
-
-                if (log_set_target_from_string(word + 19) < 0)
-                        log_warning("Failed to parse log target %s. Ignoring.", word + 19);
-
-        } else if (startswith(word, "systemd.log_level=")) {
-
-                if (log_set_max_level_from_string(word + 18) < 0)
-                        log_warning("Failed to parse log level %s. Ignoring.", word + 18);
-
-        } else if (startswith(word, "systemd.log_color=")) {
-
-                if (log_show_color_from_string(word + 18) < 0)
-                        log_warning("Failed to parse log color setting %s. Ignoring.", word + 18);
-
-        } else if (startswith(word, "systemd.log_location=")) {
-
-                if (log_show_location_from_string(word + 21) < 0)
-                        log_warning("Failed to parse log location setting %s. Ignoring.", word + 21);
-
-        } else if (startswith(word, "systemd.dump_core=")) {
-                int r;
-
-                if ((r = parse_boolean(word + 18)) < 0)
-                        log_warning("Failed to parse dump core switch %s. Ignoring.", word + 18);
-                else
-                        arg_dump_core = r;
-
-        } else if (startswith(word, "systemd.crash_shell=")) {
-                int r;
-
-                if ((r = parse_boolean(word + 20)) < 0)
-                        log_warning("Failed to parse crash shell switch %s. Ignoring.", word + 20);
-                else
-                        arg_crash_shell = r;
-
-        } else if (startswith(word, "systemd.confirm_spawn=")) {
-                int r;
-
-                if ((r = parse_boolean(word + 22)) < 0)
-                        log_warning("Failed to parse confirm spawn switch %s. Ignoring.", word + 22);
-                else
-                        arg_confirm_spawn = r;
-
-        } else if (startswith(word, "systemd.crash_chvt=")) {
-                int k;
-
-                if (safe_atoi(word + 19, &k) < 0)
-                        log_warning("Failed to parse crash chvt switch %s. Ignoring.", word + 19);
-                else
-                        arg_crash_chvt = k;
-
-        } else if (startswith(word, "systemd.show_status=")) {
-                int r;
-
-                if ((r = parse_boolean(word + 20)) < 0)
-                        log_warning("Failed to parse show status switch %s. Ignoring.", word + 20);
-                else
-                        arg_show_status = r;
-        } else if (startswith(word, "systemd.default_standard_output=")) {
-                int r;
-
-                if ((r = exec_output_from_string(word + 32)) < 0)
-                        log_warning("Failed to parse default standard output switch %s. Ignoring.", word + 32);
-                else
-                        arg_default_std_output = r;
-        } else if (startswith(word, "systemd.default_standard_error=")) {
-                int r;
-
-                if ((r = exec_output_from_string(word + 31)) < 0)
-                        log_warning("Failed to parse default standard error switch %s. Ignoring.", word + 31);
-                else
-                        arg_default_std_error = r;
-        } else if (startswith(word, "systemd.setenv=")) {
-                _cleanup_free_ char *cenv = NULL;
-
-                cenv = strdup(word + 15);
-                if (!cenv)
-                        return -ENOMEM;
-
-                if (env_assignment_is_valid(cenv)) {
-                        char **env;
-
-                        env = strv_env_set(arg_default_environment, cenv);
-                        if (env)
-                                arg_default_environment = env;
-                        else
-                                log_warning("Setting environment variable '%s' failed, ignoring: %m", cenv);
-                } else
-                        log_warning("Environment variable name '%s' is not valid. Ignoring.", cenv);
-
-        } else if (startswith(word, "systemd.") ||
-                   (in_initrd() && startswith(word, "rd.systemd."))) {
-
-                const char *c;
-
-                /* Ignore systemd.journald.xyz and friends */
-                c = word;
-                if (startswith(c, "rd."))
-                        c += 3;
-                if (startswith(c, "systemd."))
-                        c += 8;
-                if (c[strcspn(c, ".=")] != '.')  {
-
-                        log_warning("Unknown kernel switch %s. Ignoring.", word);
-
-                        log_info("Supported kernel switches:\n"
-                                 "systemd.unit=UNIT                        Default unit to start\n"
-                                 "rd.systemd.unit=UNIT                     Default unit to start when run in initrd\n"
-                                 "systemd.dump_core=0|1                    Dump core on crash\n"
-                                 "systemd.crash_shell=0|1                  Run shell on crash\n"
-                                 "systemd.crash_chvt=N                     Change to VT #N on crash\n"
-                                 "systemd.confirm_spawn=0|1                Confirm every process spawn\n"
-                                 "systemd.show_status=0|1                  Show status updates on the console during bootup\n"
-                                 "systemd.log_target=console|kmsg|syslog|syslog-or-kmsg|null\n"
-                                 "                                         Log target\n"
-                                 "systemd.log_level=LEVEL                  Log level\n"
-                                 "systemd.log_color=0|1                    Highlight important log messages\n"
-                                 "systemd.log_location=0|1                 Include code location in log messages\n"
-                                 "systemd.default_standard_output=null|tty|syslog|syslog+console|kmsg|kmsg+console\n"
-                                 "                                         Set default log output for services\n"
-                                 "systemd.default_standard_error=null|tty|syslog|syslog+console|kmsg|kmsg+console\n"
-                                 "                                         Set default log error output for services\n"
-                                 "systemd.setenv=ASSIGNMENT                Set an environment variable for all spawned processes\n");
-                }
-
-        } else if (streq(word, "quiet"))
-                arg_show_status = false;
-        else if (streq(word, "debug")) {
-                /* Log to kmsg, the journal socket will fill up before the
-                 * journal is started and tools running during that time
-                 * will block with every log message for for 60 seconds,
-                 * before they give up. */
-                log_set_max_level(LOG_DEBUG);
-                log_set_target(LOG_TARGET_KMSG);
-        } else if (!in_initrd()) {
-                unsigned i;
-
-                /* SysV compatibility */
-                for (i = 0; i < ELEMENTSOF(rlmap); i += 2)
-                        if (streq(word, rlmap[i]))
-                                return set_default_unit(rlmap[i+1]);
-        }
-
-        return 0;
-}
-
 #define DEFINE_SETTER(name, func, descr)                              \
         static int name(const char *unit,                             \
                         const char *filename,                         \
@@ -605,40 +430,6 @@ static int parse_config_file(void) {
         r = config_parse(NULL, fn, f, "Manager\0", config_item_table_lookup, (void*) items, false, false, NULL);
         if (r < 0)
                 log_warning("Failed to parse configuration file: %s", strerror(-r));
-
-        return 0;
-}
-
-static int parse_proc_cmdline(void) {
-        _cleanup_free_ char *line = NULL;
-        char *w, *state;
-        int r;
-        size_t l;
-
-        /* Don't read /proc/cmdline if we are in a container, since
-         * that is only relevant for the host system */
-        if (detect_container(NULL) > 0)
-                return 0;
-
-        r = read_one_line_file("/proc/cmdline", &line);
-        if (r < 0) {
-                log_warning("Failed to read /proc/cmdline, ignoring: %s", strerror(-r));
-                return 0;
-        }
-
-        FOREACH_WORD_QUOTED(w, l, line, state) {
-                _cleanup_free_ char *word;
-
-                word = strndup(w, l);
-                if (!word)
-                        return log_oom();
-
-                r = parse_proc_cmdline_word(word);
-                if (r < 0) {
-                        log_error("Failed on cmdline argument %s: %s", word, strerror(-r));
-                        return r;
-                }
-        }
 
         return 0;
 }
@@ -912,24 +703,6 @@ static int parse_argv(int argc, char *argv[]) {
                 return -EINVAL;
         }
 
-        if (detect_container(NULL) > 0) {
-                char **a;
-
-                /* All /proc/cmdline arguments the kernel didn't
-                 * understand it passed to us. We're not really
-                 * interested in that usually since /proc/cmdline is
-                 * more interesting and complete. With one exception:
-                 * if we are run in a container /proc/cmdline is not
-                 * relevant for the container, hence we rely on argv[]
-                 * instead. */
-
-                for (a = argv; a < argv + argc; a++)
-                        if ((r = parse_proc_cmdline_word(*a)) < 0) {
-                                log_error("Failed on cmdline argument %s: %s", *a, strerror(-r));
-                                return r;
-                        }
-        }
-
         return 0;
 }
 
@@ -1065,26 +838,6 @@ static int bump_rlimit_nofile(struct rlimit *saved_rlimit) {
         return 0;
 }
 
-static void test_mtab(void) {
-        char *p;
-
-        /* Check that /etc/mtab is a symlink */
-
-        if (readlink_malloc("/etc/mtab", &p) >= 0) {
-                bool b;
-
-                b = streq(p, "/proc/self/mounts") || streq(p, "/proc/mounts");
-                free(p);
-
-                if (b)
-                        return;
-        }
-
-        log_warning("/etc/mtab is not a symlink or not pointing to /proc/self/mounts. "
-                    "This is not supported anymore. "
-                    "Please make sure to replace this file by a symlink to avoid incorrect or misleading mount(8) output.");
-}
-
 static void test_usr(void) {
 
         /* Check that /usr is not a separate fs */
@@ -1095,21 +848,6 @@ static void test_usr(void) {
         log_warning("/usr appears to be on its own filesytem and is not already mounted. This is not a supported setup. "
                     "Some things will probably break (sometimes even silently) in mysterious ways. "
                     "Consult http://freedesktop.org/wiki/Software/systemd/separate-usr-is-broken for more information.");
-}
-
-static void test_cgroups(void) {
-
-        if (access("/proc/cgroups", F_OK) >= 0)
-                return;
-
-        log_warning("CONFIG_CGROUPS was not set when your kernel was compiled. "
-                    "Systems without control groups are not supported. "
-                    "We will now sleep for 10s, and then continue boot-up. "
-                    "Expect breakage and please do not file bugs. "
-                    "Instead fix your kernel and enable CONFIG_CGROUPS. "
-                    "Consult http://0pointer.de/blog/projects/cgroups-vs-cgroups.html for more information.");
-
-        sleep(10);
 }
 
 static int initialize_join_controllers(void) {
@@ -1297,10 +1035,6 @@ int main(int argc, char *argv[]) {
         if (parse_config_file() < 0)
                 goto finish;
 
-        if (arg_running_as == SYSTEMD_SYSTEM)
-                if (parse_proc_cmdline() < 0)
-                        goto finish;
-
         log_parse_environment();
 
         if (parse_argv(argc, argv) < 0)
@@ -1379,10 +1113,6 @@ int main(int argc, char *argv[]) {
          * kernel. */
         if (getpid() == 1) {
                 install_crash_handler();
-
-                r = mount_cgroup_controllers(arg_join_controllers);
-                if (r < 0)
-                        goto finish;
         }
 
         if (arg_running_as == SYSTEMD_SYSTEM) {
@@ -1410,9 +1140,7 @@ int main(int argc, char *argv[]) {
                 hostname_setup();
                 machine_id_setup();
 
-                test_mtab();
                 test_usr();
-                test_cgroups();
         }
 
       /*  if (arg_timer_slack_nsec != (nsec_t) -1)

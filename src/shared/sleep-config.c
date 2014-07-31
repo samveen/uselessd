@@ -172,14 +172,6 @@ static int hibernation_partition_size(size_t *size, size_t *used) {
         assert(size);
         assert(used);
 
-        f = fopen("/proc/swaps", "r");
-        if (!f) {
-                log_full(errno == ENOENT ? LOG_DEBUG : LOG_WARNING,
-                         "Failed to retrieve open /proc/swaps: %m");
-                assert(errno > 0);
-                return -errno;
-        }
-
         (void) fscanf(f, "%*s %*s %*s %*s %*s\n");
 
         for (i = 1;; i++) {
@@ -229,19 +221,6 @@ static bool enough_memory_for_hibernation(void) {
         r = hibernation_partition_size(&size, &used);
         if (r < 0)
                 return false;
-
-        r = get_status_field("/proc/meminfo", "\nActive(anon):", &active);
-        if (r < 0) {
-                log_error("Failed to retrieve Active(anon) from /proc/meminfo: %s", strerror(-r));
-                return false;
-        }
-
-        r = safe_atollu(active, &act);
-        if (r < 0) {
-                log_error("Failed to parse Active(anon) from /proc/meminfo: %s: %s",
-                          active, strerror(-r));
-                return false;
-        }
 
         r = act <= (size - used) * HIBERNATION_SWAP_THRESHOLD;
         log_debug("Hibernation is %spossible, Active(anon)=%llu kB, size=%zu kB, used=%zu kB, threshold=%.2g%%",

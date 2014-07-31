@@ -99,20 +99,6 @@ int main(int argc, char *argv[]) {
         bool in_container = false;
         char *arguments[3];
 
-        /* suppress shutdown status output if 'quiet' is used  */
-        r = read_one_line_file("/proc/cmdline", &line);
-        if (r >= 0) {
-                char *w, *state;
-                size_t l;
-
-                FOREACH_WORD_QUOTED(w, l, line, state) {
-                        if (l == 5 && memcmp(w, "quiet", 5) == 0) {
-                                log_set_max_level(LOG_WARNING);
-                                break;
-                        }
-                }
-        }
-
         log_parse_environment();
         log_set_target(LOG_TARGET_CONSOLE); /* syslog will die if not gone yet */
         log_open();

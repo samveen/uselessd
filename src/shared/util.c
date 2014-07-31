@@ -507,11 +507,6 @@ int get_starttime_of_pid(pid_t pid, unsigned long long *st) {
         assert(pid >= 0);
         assert(st);
 
-        if (pid == 0)
-                p = "/proc/self/stat";
-        else
-                p = procfs_file_alloca(pid, "stat");
-
         f = fopen(p, "re");
         if (!f)
                 return -errno;
@@ -584,11 +579,6 @@ int get_process_comm(pid_t pid, char **name) {
         assert(name);
         assert(pid >= 0);
 
-        if (pid == 0)
-                p = "/proc/self/comm";
-        else
-                p = procfs_file_alloca(pid, "comm");
-
         return read_one_line_file(p, name);
 }
 
@@ -600,11 +590,6 @@ int get_process_cmdline(pid_t pid, size_t max_length, bool comm_fallback, char *
 
         assert(line);
         assert(pid >= 0);
-
-        if (pid == 0)
-                p = "/proc/self/cmdline";
-        else
-                p = procfs_file_alloca(pid, "cmdline");
 
         f = fopen(p, "re");
         if (!f)
@@ -725,11 +710,6 @@ int get_process_capeff(pid_t pid, char **capeff) {
         assert(capeff);
         assert(pid >= 0);
 
-        if (pid == 0)
-                p = "/proc/self/status";
-        else
-                p = procfs_file_alloca(pid, "status");
-
         return get_status_field(p, "\nCapEff:", capeff);
 }
 
@@ -740,11 +720,6 @@ int get_process_exe(pid_t pid, char **name) {
 
         assert(pid >= 0);
         assert(name);
-
-        if (pid == 0)
-                p = "/proc/self/exe";
-        else
-                p = procfs_file_alloca(pid, "exe");
 
         r = readlink_malloc(p, name);
         if (r < 0)
@@ -1547,28 +1522,28 @@ int close_all_fds(const int except[], unsigned n_except) {
 
         assert(n_except == 0 || except);
 
-        d = opendir("/proc/self/fd");
-        if (!d) {
-                int fd;
-                struct rlimit rl;
+        int fd;
+        struct rlimit rl;
 
-                /* When /proc isn't available (for example in chroots)
-                 * the fallback is brute forcing through the fd
-                 * table */
+        /* When /proc isn't available (for example in chroots)
+         * the fallback is brute forcing through the fd
+         * table */
 
-                assert_se(getrlimit(RLIMIT_NOFILE, &rl) >= 0);
-                for (fd = 3; fd < (int) rl.rlim_max; fd ++) {
+        assert_se(getrlimit(RLIMIT_NOFILE, &rl) >= 0);
+        for (fd = 3; fd < (int) rl.rlim_max; fd ++) {
 
-                        if (fd_in_set(fd, except, n_except))
-                                continue;
+               if (fd_in_set(fd, except, n_except)) {
+                      continue;
+               }
 
-                        if (close_nointr(fd) < 0)
-                                if (errno != EBADF && r == 0)
-                                        r = -errno;
+               if (close_nointr(fd) < 0) {
+                       if (errno != EBADF && r == 0) {
+                              r = -errno;
                 }
 
-                return r;
-        }
+        return r;
+      }
+  }
 
         while ((de = readdir(d))) {
                 int fd = -1;
@@ -3140,13 +3115,6 @@ bool on_tty(void) {
 
 int running_in_chroot(void) {
         struct stat a = {}, b = {};
-
-        /* Only works as root */
-        if (stat("/proc/1/root", &a) < 0)
-                return -errno;
-
-        if (stat("/", &b) < 0)
-                return -errno;
 
         return
                 a.st_dev != b.st_dev ||
@@ -4928,11 +4896,6 @@ int getenv_for_pid(pid_t pid, const char *field, char **_value) {
         assert(pid >= 0);
         assert(field);
         assert(_value);
-
-        if (pid == 0)
-                path = "/proc/self/environ";
-        else
-                path = procfs_file_alloca(pid, "environ");
 
         f = fopen(path, "re");
         if (!f)

@@ -79,9 +79,6 @@ static int bus_execute_append_oom_score_adjust(DBusMessageIter *i, const char *p
                 _cleanup_free_ char *t = NULL;
 
                 n = 0;
-                if (read_one_line_file("/proc/self/oom_score_adj", &t) >= 0) {
-                        safe_atoi(t, &n);
-                }
         }
 
         if (!dbus_message_iter_append_basic(i, DBUS_TYPE_INT32, &n))
