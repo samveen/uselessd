@@ -801,7 +801,7 @@ static int mount_spawn(Mount *m, ExecCommand *c, pid_t *_pid) {
         if (r < 0)
                 goto fail;
 
-        r = exec_spawn(c,
+        /*r = exec_spawn(c,
                        NULL,
                        &m->exec_context,
                        NULL, 0,
@@ -814,7 +814,7 @@ static int mount_spawn(Mount *m, ExecCommand *c, pid_t *_pid) {
                        UNIT(m)->cgroup_path,
                        UNIT(m)->id,
                        NULL,
-                       &pid);
+                       &pid); */
         if (r < 0)
                 goto fail;
 

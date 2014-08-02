@@ -48,7 +48,6 @@
 #include "path-util.h"
 #include "strv.h"
 #include "dbus-common.h"
-#include "cgroup-util.h"
 #include "list.h"
 #include "path-lookup.h"
 #include "conf-parser.h"
@@ -2554,31 +2553,6 @@ static void print_status_info(UnitStatusInfo *i,
         if (i->status_text)
                 printf("   Status: \"%s\"\n", i->status_text);
 
-        if (i->control_group &&
-            (i->main_pid > 0 || i->control_pid > 0 || cg_is_empty_recursive(SYSTEMD_CGROUP_CONTROLLER, i->control_group, false) == 0)) {
-                unsigned c;
-
-                printf("   CGroup: %s\n", i->control_group);
-
-                if (arg_transport != TRANSPORT_SSH) {
-                        unsigned k = 0;
-                        pid_t extra[2];
-                        char prefix[] = "           ";
-
-                        c = columns();
-                        if (c > sizeof(prefix) - 1)
-                                c -= sizeof(prefix) - 1;
-                        else
-                                c = 0;
-
-                        if (i->main_pid > 0)
-                                extra[k++] = i->main_pid;
-
-                        if (i->control_pid > 0)
-                                extra[k++] = i->control_pid;
-                }
-        }
-
         if (i->need_daemon_reload)
                 printf("\n%sWarning:%s Unit file changed on disk, 'systemctl %sdaemon-reload' recommended.\n",
                        ansi_highlight_red(),
@@ -2670,16 +2644,6 @@ static int status_property(const char *name, DBusMessageIter *iter, UnitStatusIn
                                 i->fragment_path = s;
                         else if (streq(name, "SourcePath"))
                                 i->source_path = s;
-#ifndef NOLEGACY
-                        else if (streq(name, "DefaultControlGroup")) {
-                                const char *e;
-                                e = startswith(s, SYSTEMD_CGROUP_CONTROLLER ":");
-                                if (e)
-                                        i->control_group = e;
-                        }
-#endif
-                        else if (streq(name, "ControlGroup"))
-                                i->control_group = s;
                         else if (streq(name, "StatusText"))
                                 i->status_text = s;
                         else if (streq(name, "PIDFile"))

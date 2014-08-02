@@ -27,7 +27,6 @@
 #include "unit-name.h"
 #include "unit-printf.h"
 #include "macro.h"
-#include "cgroup-util.h"
 #include "special.h"
 
 static int specifier_prefix_and_instance(char specifier, void *data, void *userdata, char **ret) {
@@ -108,47 +107,6 @@ static int specifier_filename(char specifier, void *data, void *userdata, char *
 
         if (!n)
                 return -ENOMEM;
-
-        *ret = n;
-        return 0;
-}
-
-static int specifier_cgroup(char specifier, void *data, void *userdata, char **ret) {
-        Unit *u = userdata;
-        char *n;
-
-        assert(u);
-
-        n = unit_default_cgroup_path(u);
-        if (!n)
-                return -ENOMEM;
-
-        *ret = n;
-        return 0;
-}
-
-static int specifier_cgroup_root(char specifier, void *data, void *userdata, char **ret) {
-        Unit *u = userdata;
-        const char *slice;
-        char *n;
-        int r;
-
-        assert(u);
-
-        slice = unit_slice_name(u);
-        if (specifier == 'R' || !slice)
-                n = strdup(u->manager->cgroup_root);
-        else {
-                _cleanup_free_ char *p = NULL;
-
-                r = cg_slice_to_path(slice, &p);
-                if (r < 0)
-                        return r;
-
-                n = strjoin(u->manager->cgroup_root, "/", p, NULL);
-                if (!n)
-                        return -ENOMEM;
-        }
 
         *ret = n;
         return 0;
@@ -343,9 +301,6 @@ int unit_full_printf(Unit *u, const char *format, char **ret) {
                 { 'I', specifier_instance_unescaped,  NULL },
 
                 { 'f', specifier_filename,            NULL },
-                { 'c', specifier_cgroup,              NULL },
-                { 'r', specifier_cgroup_root,         NULL },
-                { 'R', specifier_cgroup_root,         NULL },
                 { 't', specifier_runtime,             NULL },
                 { 'U', specifier_user_name,           NULL },
                 { 'u', specifier_user_name,           NULL },

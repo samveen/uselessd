@@ -50,11 +50,6 @@ static bool ignore_proc(pid_t pid) {
         if (uid != 0)
                 return false;
 
-        p = procfs_file_alloca(pid, "cmdline");
-        f = fopen(p, "re");
-        if (!f)
-                return true; /* not really, but has the desired effect */
-
         count = fread(&c, 1, 1, f);
 
         /* Kernel threads have an empty cmdline */
@@ -146,41 +141,7 @@ static void wait_for_children(Set *pids, sigset_t *mask) {
 }
 
 static int killall(int sig, Set *pids) {
-        _cleanup_closedir_ DIR *dir = NULL;
-        struct dirent *d;
-
-        dir = opendir("/proc");
-        if (!dir)
-                return -errno;
-
-        while ((d = readdir(dir))) {
-                pid_t pid;
-
-                if (d->d_type != DT_DIR &&
-                    d->d_type != DT_UNKNOWN)
-                        continue;
-
-                if (parse_pid(d->d_name, &pid) < 0)
-                        continue;
-
-                if (ignore_proc(pid))
-                        continue;
-
-                if (sig == SIGKILL) {
-                        _cleanup_free_ char *s = NULL;
-
-                        get_process_comm(pid, &s);
-                        log_notice("Sending SIGKILL to PID %lu (%s).", (unsigned long) pid, strna(s));
-                }
-
-                if (kill(pid, sig) >= 0) {
-                        if (pids)
-                                set_put(pids, ULONG_TO_PTR((unsigned long) pid));
-                } else if (errno != ENOENT)
-                        log_warning("Could not kill %d: %m", pid);
-        }
-
-        return set_size(pids);
+        return -errno;
 }
 
 void broadcast_signal(int sig, bool wait_for_exit) {

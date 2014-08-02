@@ -772,15 +772,6 @@ int unlink_noerrno(const char *path);
                 _c_;                                    \
         })
 
-#define procfs_file_alloca(pid, field)                                  \
-        ({                                                              \
-                pid_t _pid_ = (pid);                                    \
-                char *_r_;                                              \
-                _r_ = alloca(sizeof("/proc/") -1 + DECIMAL_STR_MAX(pid_t) + 1 + sizeof(field)); \
-                sprintf(_r_, "/proc/%lu/" field, (unsigned long) _pid_); \
-                _r_;                                                    \
-        })
-
 struct _locale_struct_ {
         locale_t saved_locale;
         locale_t new_locale;

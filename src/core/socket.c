@@ -1167,7 +1167,7 @@ static int socket_spawn(Socket *s, ExecCommand *c, pid_t *_pid) {
         if (r < 0)
                 goto fail;
 
-        r = exec_spawn(c,
+       /* r = exec_spawn(c,
                        argv,
                        &s->exec_context,
                        NULL, 0,
@@ -1180,7 +1180,7 @@ static int socket_spawn(Socket *s, ExecCommand *c, pid_t *_pid) {
                        UNIT(s)->cgroup_path,
                        UNIT(s)->id,
                        NULL,
-                       &pid);
+                       &pid); */
 
         strv_free(argv);
         if (r < 0)

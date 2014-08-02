@@ -67,7 +67,6 @@
 #include "bus-errors.h"
 #include "exit-status.h"
 #include "virt.h"
-#include "cgroup-util.h"
 #include "path-util.h"
 #include "audit-fd.h"
 #include "boot-timestamps.h"
@@ -531,7 +530,6 @@ int manager_new(SystemdRunningAs running_as, bool reexecuting, Manager **_m) {
         m->running_as = running_as;
         m->name_data_slot = m->conn_data_slot = m->subscribed_data_slot = -1;
         m->exit_code = _MANAGER_EXIT_CODE_INVALID;
-        m->pin_cgroupfs_fd = -1;
         m->idle_pipe[0] = m->idle_pipe[1] = m->idle_pipe[2] = m->idle_pipe[3] = -1;
 
         watch_init(&m->signal_watch);
@@ -556,10 +554,6 @@ int manager_new(SystemdRunningAs running_as, bool reexecuting, Manager **_m) {
         if (!(m->watch_pids = hashmap_new(trivial_hash_func, trivial_compare_func)))
                 goto fail;
 
-        m->cgroup_unit = hashmap_new(string_hash_func, string_compare_func);
-        if (!m->cgroup_unit)
-                goto fail;
-
         m->watch_bus = hashmap_new(string_hash_func, string_compare_func);
         if (!m->watch_bus)
                 goto fail;
@@ -569,10 +563,6 @@ int manager_new(SystemdRunningAs running_as, bool reexecuting, Manager **_m) {
               //  goto fail;
 
         r = manager_setup_signals(m);
-        if (r < 0)
-                goto fail;
-
-        r = manager_setup_cgroup(m);
         if (r < 0)
                 goto fail;
 
@@ -758,10 +748,6 @@ void manager_free(Manager *m) {
                 if (unit_vtable[c]->shutdown)
                         unit_vtable[c]->shutdown(m);
 
-        /* If we reexecute ourselves, we keep the root cgroup
-         * around */
-        manager_shutdown_cgroup(m, m->exit_code != MANAGER_REEXECUTE);
-
         manager_undo_generators(m);
 
         bus_done(m);
@@ -786,8 +772,6 @@ void manager_free(Manager *m) {
 
         lookup_paths_free(&m->lookup_paths);
         strv_free(m->environment);
-
-        hashmap_free(m->cgroup_unit);
         set_free_free(m->unit_path_cache);
 
         close_idle_pipe(m);
@@ -1600,9 +1584,6 @@ int manager_loop(Manager *m) {
                         continue;
 
                 if (manager_dispatch_cleanup_queue(m) > 0)
-                        continue;
-
-                if (manager_dispatch_cgroup_queue(m) > 0)
                         continue;
 
                 if (manager_dispatch_run_queue(m) > 0)

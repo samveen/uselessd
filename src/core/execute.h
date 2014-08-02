@@ -36,7 +36,6 @@ typedef struct ExecContext ExecContext;
 
 #include "list.h"
 #include "util.h"
-#include "cgroup-util.h"
 
 typedef struct Unit Unit;
 
@@ -158,21 +157,6 @@ struct ExecContext {
 };
 
 #include "cgroup.h"
-
-int exec_spawn(ExecCommand *command,
-               char **argv,
-               ExecContext *context,
-               int fds[], unsigned n_fds,
-               char **environment,
-               bool apply_permissions,
-               bool apply_chroot,
-               bool apply_tty_stdin,
-               bool confirm_spawn,
-               CGroupControllerMask cgroup_mask,
-               const char *cgroup_path,
-               const char *unit_id,
-               int pipe_fd[2],
-               pid_t *ret);
 
 void exec_command_done(ExecCommand *c);
 void exec_command_done_array(ExecCommand *c, unsigned n);

@@ -69,36 +69,14 @@ typedef struct MountPoint {
 #define N_EARLY_MOUNT 5
 
 static const MountPoint mount_table[] = {
-        { "proc",       "/proc",                     "proc",       NULL, MNT_NOSUID|MNT_NOEXEC,
-          NULL,       MNT_FATAL|MNT_IN_CONTAINER },
-        { "sysfs",      "/sys",                      "sysfs",      NULL, MNT_NOSUID|MNT_NOEXEC,
-          NULL,       MNT_FATAL|MNT_IN_CONTAINER },
         { "devtmpfs",   "/dev",                      "devtmpfs",   "mode=755", MNT_NOSUID,
           NULL,       MNT_FATAL|MNT_IN_CONTAINER },
-        { "securityfs", "/sys/kernel/security",      "securityfs", NULL, MNT_NOSUID|MNT_NOEXEC,
-          NULL,       MNT_NONE },
-        { "smackfs",    "/sys/fs/smackfs",           "smackfs",    "smackfsdef=*", MNT_NOSUID|MNT_NOEXEC,
-          NULL,       MNT_NONE },
         { "tmpfs",      "/dev/shm",                  "tmpfs",      "mode=1777", MNT_NOSUID,
           NULL,       MNT_FATAL|MNT_IN_CONTAINER },
         { "devpts",     "/dev/pts",                  "devpts",     "mode=620,gid=" STRINGIFY(TTY_GID), MNT_NOSUID|MNT_NOEXEC,
           NULL,       MNT_IN_CONTAINER },
         { "tmpfs",      "/run",                      "tmpfs",      "mode=755", MNT_NOSUID,
           NULL,       MNT_FATAL|MNT_IN_CONTAINER },
-        { "tmpfs",      "/sys/fs/cgroup",            "tmpfs",      "mode=755", MNT_NOSUID|MNT_NOEXEC,
-          NULL,       MNT_IN_CONTAINER },
-#ifdef HAVE_XATTR
-        { "cgroup",     "/sys/fs/cgroup/systemd",    "cgroup",     "none,name=systemd,xattr", MNT_NOSUID|MNT_NOEXEC,
-          NULL,       MNT_IN_CONTAINER },
-#endif
-        { "cgroup",     "/sys/fs/cgroup/systemd",    "cgroup",     "none,name=systemd", MNT_NOSUID|MNT_NOEXEC,
-          NULL,       MNT_IN_CONTAINER },
-        { "pstore",     "/sys/fs/pstore",            "pstore",     NULL, MNT_NOSUID|MNT_NOEXEC,
-          NULL,       MNT_NONE },
-#ifdef ENABLE_EFI
-        { "efivarfs",   "/sys/firmware/efi/efivars", "efivarfs",   NULL, MNT_NOSUID|MNT_NOEXEC,
-          is_efi_boot, MNT_NONE },
-#endif
 };
 
 /* These are API file systems that might be mounted by other software,
@@ -193,7 +171,7 @@ int mount_setup_early(void) {
         unsigned i;
         int r = 0;
 
-        assert_cc(N_EARLY_MOUNT <= ELEMENTSOF(mount_table));
+        //assert_cc(N_EARLY_MOUNT <= ELEMENTSOF(mount_table));
 
         /* Do a minimal mount of /proc and friends to enable the most
          * basic stuff, such as SELinux */

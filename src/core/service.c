@@ -1800,7 +1800,7 @@ static int service_spawn(
         } else
                 path = UNIT(s)->cgroup_path;
 
-        r = exec_spawn(c,
+        /*r = exec_spawn(c,
                        argv,
                        &s->exec_context,
                        fds, n_fds,
@@ -1813,7 +1813,7 @@ static int service_spawn(
                        path,
                        UNIT(s)->id,
                        s->type == SERVICE_IDLE ? UNIT(s)->manager->idle_pipe : NULL,
-                       &pid);
+                       &pid); */
         if (r < 0)
                 goto fail;
 

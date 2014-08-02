@@ -496,7 +496,7 @@ static int swap_spawn(Swap *s, ExecCommand *c, pid_t *_pid) {
         if (r < 0)
                 goto fail;
 
-        r = exec_spawn(c,
+        /*r = exec_spawn(c,
                        NULL,
                        &s->exec_context,
                        NULL, 0,
@@ -511,7 +511,7 @@ static int swap_spawn(Swap *s, ExecCommand *c, pid_t *_pid) {
                        NULL,
                        &pid);
         if (r < 0)
-                goto fail;
+                goto fail; */
 
         r = unit_watch_pid(UNIT(s), pid);
         if (r < 0)

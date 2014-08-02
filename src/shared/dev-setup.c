@@ -53,32 +53,16 @@ static int symlink_and_label(const char *old_path, const char *new_path) {
 void dev_setup(const char *prefix) {
         const char *j, *k;
 
-        static const char symlinks[] =
-                "-/proc/kcore\0"     "/dev/core\0"
-                "/proc/self/fd\0"    "/dev/fd\0"
-                "/proc/self/fd/0\0"  "/dev/stdin\0"
-                "/proc/self/fd/1\0"  "/dev/stdout\0"
-                "/proc/self/fd/2\0"  "/dev/stderr\0";
+        if (prefix) {
+                char *linkname;
 
-        NULSTR_FOREACH_PAIR(j, k, symlinks) {
-                if (j[0] == '-') {
-                        j++;
-
-                        if (access(j, F_OK))
-                                continue;
+                if (asprintf(&linkname, "%s/%s", prefix, k) < 0) {
+                          log_oom();
                 }
 
-                if (prefix) {
-                        char *linkname;
-
-                        if (asprintf(&linkname, "%s/%s", prefix, k) < 0) {
-                                log_oom();
-                                break;
-                        }
-
-                        symlink_and_label(j, linkname);
-                        free(linkname);
-                } else
+                   symlink_and_label(j, linkname);
+                   free(linkname);
+               } else {
                         symlink_and_label(j, k);
         }
 }

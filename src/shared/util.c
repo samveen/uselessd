@@ -465,11 +465,6 @@ int get_parent_of_pid(pid_t pid, pid_t *_ppid) {
                 return 0;
         }
 
-        p = procfs_file_alloca(pid, "stat");
-        f = fopen(p, "re");
-        if (!f)
-                return -errno;
-
         if (!fgets(line, sizeof(line), f)) {
                 r = feof(f) ? -EIO : -errno;
                 return r;
@@ -687,11 +682,6 @@ int is_kernel_thread(pid_t pid) {
 
         assert(pid > 0);
 
-        p = procfs_file_alloca(pid, "cmdline");
-        f = fopen(p, "re");
-        if (!f)
-                return -errno;
-
         count = fread(&c, 1, 1, f);
         eof = feof(f);
         fclose(f);
@@ -742,11 +732,6 @@ static int get_process_id(pid_t pid, const char *field, uid_t *uid) {
 
         if (pid == 0)
                 return getuid();
-
-        p = procfs_file_alloca(pid, "status");
-        f = fopen(p, "re");
-        if (!f)
-                return -errno;
 
         FOREACH_LINE(line, f, return -errno) {
                 char *l;
@@ -2439,11 +2424,6 @@ int get_ctty_devnr(pid_t pid, dev_t *d) {
 
         assert(pid >= 0);
         assert(d);
-
-        if (pid == 0)
-                fn = "/proc/self/stat";
-        else
-                fn = procfs_file_alloca(pid, "stat");
 
         f = fopen(fn, "re");
         if (!f)

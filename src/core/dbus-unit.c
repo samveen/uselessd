@@ -27,7 +27,6 @@
 #include "bus-errors.h"
 #include "dbus-common.h"
 #include "selinux-access.h"
-#include "cgroup-util.h"
 #include "strv.h"
 #include "path-util.h"
 #include "fileio.h"
