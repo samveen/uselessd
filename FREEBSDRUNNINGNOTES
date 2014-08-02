@@ -40,3 +40,19 @@ util.c a no-op
 
 cgroups need to be weeded out
 caveat: O_CLOEXEC may not be present
+
+----------
+
+cgroup-util.h ->
+
+	dbus-unit.c: removed header
+	execute.[ch]: remove exec_spawn()
+		-> commented out in mount, service, socket and swap, as well
+	manager.c: various struct members and checks
+	unit-printf.c: specifier_cgroup* functions
+	systemctl.c: service status-related cgroup functionality
+
+	unit.c: needs total rework
+
+
+	virt.h must be removed from sources
