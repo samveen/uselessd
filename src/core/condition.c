@@ -34,7 +34,6 @@
 #include <systemd/sd-id128.h>
 #include "util.h"
 #include "condition.h"
-#include "virt.h"
 #include "path-util.h"
 #include "fileio.h"
 #include "unit.h"
@@ -75,39 +74,6 @@ void condition_free_list(Condition *first) {
 
         LIST_FOREACH_SAFE(conditions, c, n, first)
                 condition_free(c);
-}
-
-static bool test_virtualization(const char *parameter) {
-        int b;
-        Virtualization v;
-        const char *id;
-
-        assert(parameter);
-
-        v = detect_virtualization(&id);
-        if (v < 0) {
-                log_warning("Failed to detect virtualization, ignoring: %s", strerror(-v));
-                return false;
-        }
-
-        /* First, compare with yes/no */
-        b = parse_boolean(parameter);
-
-        if (v > 0 && b > 0)
-                return true;
-
-        if (v == 0 && b == 0)
-                return true;
-
-        /* Then, compare categorization */
-        if (v == VIRTUALIZATION_VM && streq(parameter, "vm"))
-                return true;
-
-        if (v == VIRTUALIZATION_CONTAINER && streq(parameter, "container"))
-                return true;
-
-        /* Finally compare id */
-        return v > 0 && streq(parameter, id);
 }
 
 static bool test_apparmor_enabled(void) {
@@ -227,9 +193,6 @@ static bool condition_test(Condition *c) {
 
                 return (S_ISREG(st.st_mode) && (st.st_mode & 0111)) == !c->negate;
         }
-
-        case CONDITION_VIRTUALIZATION:
-                return test_virtualization(c->parameter) == !c->negate;
 
         case CONDITION_SECURITY:
                 return test_security(c->parameter) == !c->negate;

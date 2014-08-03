@@ -26,7 +26,6 @@
 #include "locale-setup.h"
 #include "util.h"
 #include "macro.h"
-#include "virt.h"
 #include "fileio.h"
 #include "strv.h"
 #include "env-util.h"

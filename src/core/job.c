@@ -36,7 +36,6 @@
 #include "dbus-job.h"
 #include "special.h"
 #include "async.h"
-#include "virt.h"
 
 JobBusClient* job_bus_client_new(DBusConnection *connection, const char *name) {
         JobBusClient *cl;
@@ -1101,9 +1100,6 @@ void job_shutdown_magic(Job *j) {
                 return;
 
         if (!unit_has_name(j->unit, SPECIAL_SHUTDOWN_TARGET))
-                return;
-
-        if (detect_container(NULL) > 0)
                 return;
 
         asynchronous_sync();

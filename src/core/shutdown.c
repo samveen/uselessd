@@ -41,7 +41,6 @@
 #include "fileio.h"
 #include "util.h"
 #include "mkdir.h"
-#include "virt.h"
 #include "killall.h"
 
 #define FINALIZE_ATTEMPTS 50
@@ -117,8 +116,6 @@ int main(int argc, char *argv[]) {
                 goto error;
         }
 
-        in_container = detect_container(NULL) > 0;
-
         if (streq(argv[1], "reboot")) {
                 cmd = RB_AUTOBOOT;
        } else {
@@ -167,7 +164,7 @@ int main(int argc, char *argv[]) {
         arguments[2] = NULL;
         execute_directory(SYSTEM_SHUTDOWN_PATH, NULL, arguments);
 
-        if (!in_container && !in_initrd() &&
+        if (!in_initrd() &&
             access("/run/initramfs/shutdown", X_OK) == 0) {
 
                 if (prepare_new_root() >= 0 &&
@@ -180,16 +177,9 @@ int main(int argc, char *argv[]) {
                 }
         }
 
-        /* The kernel will automaticall flush ATA disks and suchlike
-         * on reboot(), but the file systems need to be synce'd
-         * explicitly in advance. So let's do this here, but not
-         * needlessly slow down containers. */
-        if (!in_container)
-                sync();
-
         reboot(cmd);
 
-        if (errno == EPERM && in_container) {
+        if (errno == EPERM) {
                 /* If we are in a container, and we lacked
                  * CAP_SYS_BOOT just exit, this will kill our
                  * container for good. */

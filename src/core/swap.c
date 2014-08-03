@@ -38,7 +38,6 @@
 #include "exit-status.h"
 #include "def.h"
 #include "path-util.h"
-#include "virt.h"
 
 static const UnitActiveState state_translation_table[_SWAP_STATE_MAX] = {
         [SWAP_DEAD] = UNIT_INACTIVE,
@@ -137,9 +136,6 @@ static int swap_add_default_dependencies(Swap *s) {
         assert(s);
 
         if (UNIT(s)->manager->running_as != SYSTEMD_SYSTEM)
-                return 0;
-
-        if (detect_container(NULL) > 0)
                 return 0;
 
         r = unit_add_two_dependencies_by_name(UNIT(s), UNIT_BEFORE, UNIT_CONFLICTS, SPECIAL_UMOUNT_TARGET, NULL, true);
@@ -688,9 +684,6 @@ static int swap_start(Unit *u) {
 
         assert(s->state == SWAP_DEAD || s->state == SWAP_FAILED);
 
-        if (detect_container(NULL) > 0)
-                return -EPERM;
-
         s->result = SWAP_SUCCESS;
         swap_enter_activating(s);
         return 0;
@@ -710,9 +703,6 @@ static int swap_stop(Unit *u) {
 
         assert(s->state == SWAP_ACTIVATING ||
                s->state == SWAP_ACTIVE);
-
-        if (detect_container(NULL) > 0)
-                return -EPERM;
 
         swap_enter_deactivating(s);
         return 0;

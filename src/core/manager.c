@@ -66,7 +66,6 @@
 #include "special.h"
 #include "bus-errors.h"
 #include "exit-status.h"
-#include "virt.h"
 #include "path-util.h"
 #include "audit-fd.h"
 #include "boot-timestamps.h"
@@ -132,7 +131,7 @@ static int manager_setup_notify(Manager *m) {
                 return -errno;
         }
 
-        if (getpid() != 1 || detect_container(NULL) > 0)
+        if (getpid() != 1)
                 snprintf(sa.un.sun_path, sizeof(sa.un.sun_path), NOTIFY_SOCKET "/%llu", random_ull());
         else
                 strncpy(sa.un.sun_path, NOTIFY_SOCKET, sizeof(sa.un.sun_path));
@@ -521,11 +520,6 @@ int manager_new(SystemdRunningAs running_as, bool reexecuting, Manager **_m) {
         m = new0(Manager, 1);
         if (!m)
                 return -ENOMEM;
-
-#ifdef ENABLE_EFI
-        if (detect_container(NULL) <= 0)
-                boot_timestamps(&m->userspace_timestamp, &m->firmware_timestamp, &m->loader_timestamp);
-#endif
 
         m->running_as = running_as;
         m->name_data_slot = m->conn_data_slot = m->subscribed_data_slot = -1;
@@ -2227,7 +2221,7 @@ void manager_check_finished(Manager *m) {
 
         dual_timestamp_get(&m->finish_timestamp);
 
-        if (m->running_as == SYSTEMD_SYSTEM && detect_container(NULL) <= 0) {
+        if (m->running_as == SYSTEMD_SYSTEM) {
 
                 /* Note that m->kernel_usec.monotonic is always at 0,
                  * and m->firmware_usec.monotonic and

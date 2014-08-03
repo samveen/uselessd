@@ -46,7 +46,6 @@
 #include "build.h"
 #include "strv.h"
 #include "def.h"
-#include "virt.h"
 #include "path-util.h"
 #include "killall.h"
 #include "env-util.h"
@@ -933,9 +932,10 @@ int main(int argc, char *argv[]) {
         if (getpid() == 1)
                 umask(0);
 
-        if (getpid() == 1 && detect_container(NULL) <= 0) {
+        if (getpid() == 1) {
 
                 /* Running outside of a container as PID 1 */
+                /* Improper mechanism to detect this, as of yet. */
                 arg_running_as = SYSTEMD_SYSTEM;
                 make_null_stdio();
                 log_set_target(LOG_TARGET_KMSG);
@@ -1046,13 +1046,6 @@ int main(int argc, char *argv[]) {
                 goto finish;
         }
 
-        if (arg_running_as == SYSTEMD_USER &&
-            arg_action == ACTION_RUN &&
-            sd_booted() <= 0) {
-                log_error("Trying to run as user instance, but the system has not been booted with systemd.");
-                goto finish;
-        }
-
         if (arg_running_as == SYSTEMD_SYSTEM &&
             arg_action == ACTION_RUN &&
             running_in_chroot() > 0) {
@@ -1119,10 +1112,6 @@ int main(int argc, char *argv[]) {
                 const char *virtualization = NULL;
 
                 log_info(PACKAGE_STRING " running in system mode. (" SYSTEMD_FEATURES ")");
-
-                detect_virtualization(&virtualization);
-                if (virtualization)
-                        log_info("Detected virtualization '%s'.", virtualization);
 
                 if (in_initrd())
                         log_info("Running in initial RAM disk.");
@@ -1466,12 +1455,6 @@ finish:
                         NULL
                 };
                 char **env_block;
-
-                /* Avoid the creation of new processes forked by the
-                 * kernel; at this point, we will not listen to the
-                 * signals anyway */
-                if (detect_container(NULL) <= 0)
-                        cg_uninstall_release_agent(SYSTEMD_CGROUP_CONTROLLER);
 
                 execve(SYSTEMD_SHUTDOWN_BINARY_PATH, (char **) command_line, env_block);
                 free(env_block);

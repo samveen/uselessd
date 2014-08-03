@@ -34,7 +34,6 @@
 #include "hwclock.h"
 #include "path-util.h"
 #include "dbus-unit.h"
-#include "virt.h"
 #include "env-util.h"
 
 #define BUS_MANAGER_INTERFACE_BEGIN                                     \
@@ -456,8 +455,6 @@ static int bus_manager_append_virt(DBusMessageIter *i, const char *property, voi
         assert(i);
         assert(property);
         assert(m);
-
-        detect_virtualization(&id);
 
         if (!dbus_message_iter_append_basic(i, DBUS_TYPE_STRING, &id))
                 return -ENOMEM;

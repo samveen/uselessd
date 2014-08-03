@@ -40,7 +40,6 @@
 #include "mkdir.h"
 #include "path-util.h"
 #include "missing.h"
-#include "virt.h"
 #include "efivars.h"
 
 #ifndef TTY_GID
@@ -139,7 +138,7 @@ static int mount_one(const MountPoint *p, bool relabel) {
                 return 0;
 
         /* Skip securityfs in a container */
-        if (!(p->mode & MNT_IN_CONTAINER) && detect_container(NULL) > 0)
+        if (!(p->mode & MNT_IN_CONTAINER))
                 return 0;
 
         /* The access mode here doesn't really matter too much, since
@@ -235,16 +234,6 @@ int mount_setup(bool loaded_policy) {
          * by udevd, but some scripts might need them before we start
          * udevd. */
         dev_setup(NULL);
-
-        /* Mark the root directory as shared in regards to mount
-         * propagation. The kernel defaults to "private", but we think
-         * it makes more sense to have a default of "shared" so that
-         * nspawn and the container tools work out of the box. If
-         * specific setups need other settings they can reset the
-         * propagation mode to private if needed. */
-        if (detect_container(NULL) <= 0)
-                if (mount(NULL, "/", NULL, NULL) < 0)
-                        log_warning("Failed to set up the root directory for shared mount propagation: %m");
 
         /* Create a few directories we always want around, Note that
          * sd_booted() checks for /run/systemd/system, so this mkdir

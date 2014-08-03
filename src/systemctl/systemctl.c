@@ -219,17 +219,7 @@ static void warn_wall(enum action a) {
 }
 
 static bool avoid_bus(void) {
-
-        if (running_in_chroot() > 0)
-                return true;
-
-        if (sd_booted() <= 0)
-                return true;
-
         if (!isempty(arg_root))
-                return true;
-
-        if (arg_scope == UNIT_FILE_GLOBAL)
                 return true;
 
         return false;
