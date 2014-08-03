@@ -56,3 +56,19 @@ cgroup-util.h ->
 
 
 	virt.h must be removed from sources
+		removed test_virtualization() in condition.c
+		removed detection in bus_manager_append_virt() in dbus-manager.c
+		in job.c
+		in locale-setup.c, header only
+		in machine-id-setup.c
+		main.c
+		manager.c
+		shutdown.c
+		mount-setup.c
+		swap.c
+
+		done
+
+--------
+
+edited avoid_bus() in systemctl to sidestep error
