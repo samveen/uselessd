@@ -257,22 +257,6 @@ fi
 AM_CONDITIONAL(ENABLE_COVERAGE, [test "$have_coverage" = "yes"])
 
 # ------------------------------------------------------------------------------
-have_kmod=no
-AC_ARG_ENABLE(kmod, AS_HELP_STRING([--disable-kmod], [disable loadable modules support]))
-if test "x$enable_kmod" != "xno"; then
-        PKG_CHECK_EXISTS([ libkmod ], have_kmod=yes, have_kmod=no)
-        if test "x$have_kmod" = "xyes"; then
-                PKG_CHECK_MODULES(KMOD, [ libkmod >= 14 ],
-                        [AC_DEFINE(HAVE_KMOD, 1, [Define if kmod is available])],
-                        AC_MSG_ERROR([*** kmod version >= 14 not found]))
-        fi
-        if test "x$have_kmod" = xno -a "x$enable_kmod" = xyes; then
-                AC_MSG_ERROR([*** kmod support requested, but libraries not found])
-        fi
-fi
-AM_CONDITIONAL(HAVE_KMOD, [test "$have_kmod" = "yes"])
-
-# ------------------------------------------------------------------------------
 have_blkid=no
 AC_ARG_ENABLE(blkid, AS_HELP_STRING([--disable-blkid], [disable blkid support]))
 if test "x$enable_blkid" != "xno"; then
@@ -316,34 +300,6 @@ AC_ARG_ENABLE([chkconfig], AS_HELP_STRING([--disable-chkconfig],[Disable optiona
 if test "x${have_chkconfig}" != xno ; then
         AC_DEFINE(HAVE_CHKCONFIG, 1, [Define if CHKCONFIG is available])
 fi
-
-# ------------------------------------------------------------------------------
-have_selinux=no
-AC_ARG_ENABLE(selinux, AS_HELP_STRING([--disable-selinux], [Disable optional SELINUX support]))
-if test "x$enable_selinux" != "xno"; then
-        PKG_CHECK_MODULES([SELINUX], [libselinux >= 2.1.9],
-                [AC_DEFINE(HAVE_SELINUX, 1, [Define if SELinux is available]) have_selinux=yes], have_selinux=no)
-        if test "x$have_selinux" = xno -a "x$enable_selinux" = xyes; then
-                AC_MSG_ERROR([*** SELinux support requested but libraries not found])
-        fi
-fi
-AM_CONDITIONAL(HAVE_SELINUX, [test "$have_selinux" = "yes"])
-
-AC_ARG_WITH(debug-shell,
-        AS_HELP_STRING([--with-debug-shell=PATH],
-                [Path to debug shell binary]),
-        [SUSHELL="$withval"],[
-        AS_IF([test "x${have_selinux}" != "xno"], [SUSHELL="/sbin/sushell"] , [SUSHELL="/bin/sh"])])
-
-AC_SUBST(SUSHELL)
-
-AC_ARG_WITH([debug-tty],
-        AS_HELP_STRING([--with-debug-tty=PATH],
-                [Specify the tty device for debug shell]),
-        [DEBUGTTY="$withval"],
-        [DEBUGTTY=/dev/tty9])
-
-AC_SUBST(DEBUGTTY)
 
 # ------------------------------------------------------------------------------
 have_xz=no
@@ -472,31 +428,6 @@ AC_SUBST(XATTR_LIBS)
 AM_CONDITIONAL([HAVE_XATTR], [test "x$have_xattr" != xno])
 
 # ------------------------------------------------------------------------------
-AC_ARG_ENABLE([smack], AS_HELP_STRING([--disable-smack],[Disable optional SMACK support]),
-                [case "${enableval}" in
-                        yes) have_smack=yes ;;
-                        no) have_smack=no ;;
-                        *) AC_MSG_ERROR(bad value ${enableval} for --disable-smack) ;;
-                esac],
-                [have_smack=auto])
-
-if test "x${have_xattr}" = xno; then
-        if test "x${have_smack}" = xyes; then
-                AC_MSG_ERROR(SMACK requires xattr support)
-        else
-                have_smack=no
-        fi
-else
-        if test "x${have_smack}" = xauto; then
-                have_smack=yes
-        fi
-fi
-
-if test "x${have_smack}" = xyes ; then
-        AC_DEFINE(HAVE_SMACK, 1, [Define if SMACK is available])
-fi
-
-# ------------------------------------------------------------------------------
 AC_ARG_ENABLE([gcrypt],
         AS_HELP_STRING([--disable-gcrypt],[Disable optional GCRYPT support]),
                 [case "${enableval}" in
@@ -530,51 +461,6 @@ AC_SUBST(GCRYPT_CFLAGS)
 AM_CONDITIONAL([HAVE_GCRYPT], [test "x$have_gcrypt" != xno])
 
 # ------------------------------------------------------------------------------
-AC_ARG_ENABLE([audit],
-        AS_HELP_STRING([--disable-audit],[Disable optional AUDIT support]),
-                [case "${enableval}" in
-                        yes) have_audit=yes ;;
-                        no) have_audit=no ;;
-                        *) AC_MSG_ERROR(bad value ${enableval} for --disable-audit) ;;
-                esac],
-                [have_audit=auto])
-
-if test "x${have_audit}" != xno ; then
-        AC_CHECK_HEADERS(
-                [libaudit.h],
-                [have_audit=yes],
-                [if test "x$have_audit" = xyes ; then
-                        AC_MSG_ERROR([*** AUDIT headers not found.])
-                fi])
-
-        AC_CHECK_LIB(
-                [audit],
-                [audit_open],
-                [have_audit=yes],
-                [if test "x$have_audit" = xyes ; then
-                        AC_MSG_ERROR([*** libaudit not found.])
-                fi])
-
-        if test "x$have_audit" = xyes ; then
-                AUDIT_LIBS="-laudit"
-                AC_DEFINE(HAVE_AUDIT, 1, [AUDIT available])
-        else
-                have_audit=no
-        fi
-else
-        AUDIT_LIBS=
-fi
-AC_SUBST(AUDIT_LIBS)
-
-# ------------------------------------------------------------------------------
-have_quotacheck=no
-AC_ARG_ENABLE(quotacheck, AS_HELP_STRING([--disable-quotacheck], [disable quotacheck tools]))
-if test "x$enable_quotacheck" != "xno"; then
-        have_quotacheck=yes
-fi
-AM_CONDITIONAL(ENABLE_QUOTACHECK, [test "$have_quotacheck" = "yes"])
-
-# ------------------------------------------------------------------------------
 have_tmpfiles=no
 AC_ARG_ENABLE(tmpfiles, AS_HELP_STRING([--disable-tmpfiles], [disable tmpfiles support]))
 if test "x$enable_tmpfiles" != "xno"; then
@@ -589,24 +475,6 @@ if test "x$enable_randomseed" != "xno"; then
         have_randomseed=yes
 fi
 AM_CONDITIONAL(ENABLE_RANDOMSEED, [test "$have_randomseed" = "yes"])
-
-# ------------------------------------------------------------------------------
-have_polkit=no
-AC_ARG_ENABLE(polkit, AS_HELP_STRING([--disable-polkit], [disable PolicyKit support]))
-if test "x$enable_polkit" != "xno"; then
-        AC_DEFINE(ENABLE_POLKIT, 1, [Define if PolicyKit support is to be enabled])
-        have_polkit=yes
-fi
-AM_CONDITIONAL(ENABLE_POLKIT, [test "x$have_polkit" = "xyes"])
-
-# ------------------------------------------------------------------------------
-have_efi=no
-AC_ARG_ENABLE(efi, AS_HELP_STRING([--disable-efi], [disable EFI support]))
-if test "x$enable_efi" != "xno"; then
-        AC_DEFINE(ENABLE_EFI, 1, [Define if EFI support is to be enabled])
-        have_efi=yes
-fi
-AM_CONDITIONAL(ENABLE_EFI, [test "x$have_efi" = "xyes"])
 
 # ------------------------------------------------------------------------------
 AC_ARG_WITH(rc-local-script-path-start,
@@ -826,21 +694,14 @@ AC_MSG_RESULT([
         $PACKAGE_NAME $VERSION
 
         PAM:                     ${have_pam}
-        AUDIT:                   ${have_audit}
         IMA:                     ${have_ima}
-        SELinux:                 ${have_selinux}
-        SMACK:                   ${have_smack}
         XZ:                      ${have_xz}
         ACL:                     ${have_acl}
         XATTR:                   ${have_xattr}
         GCRYPT:                  ${have_gcrypt}
         CHKCONFIG:               ${have_chkconfig}
-        quotacheck:              ${have_quotacheck}
         tmpfiles:                ${have_tmpfiles}
         randomseed:              ${have_randomseed}
-        polkit:                  ${have_polkit}
-        efi:                     ${have_efi}
-        kmod:                    ${have_kmod}
         blkid:                   ${have_blkid}
         gintrospection:          ${enable_introspection}
         Python:                  ${have_python}

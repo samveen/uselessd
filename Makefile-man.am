@@ -597,17 +597,6 @@ man/systemd-update-utmp.html: man/systemd-update-utmp.service.html
 man/systemd-user.conf.html: man/systemd-system.conf.html
 	$(html-alias)
 
-if ENABLE_QUOTACHECK
-MANPAGES += \
-	man/systemd-quotacheck.service.8
-MANPAGES_ALIAS += \
-	man/systemd-quotacheck.8
-man/systemd-quotacheck.8: man/systemd-quotacheck.service.8
-man/systemd-quotacheck.html: man/systemd-quotacheck.service.html
-	$(html-alias)
-
-endif
-
 if ENABLE_RANDOMSEED
 MANPAGES += \
 	man/systemd-random-seed.service.8
@@ -615,18 +604,6 @@ MANPAGES_ALIAS += \
 	man/systemd-random-seed.8
 man/systemd-random-seed.8: man/systemd-random-seed.service.8
 man/systemd-random-seed.html: man/systemd-random-seed.service.html
-	$(html-alias)
-
-endif
-
-if HAVE_KMOD
-MANPAGES += \
-	man/modules-load.d.5 \
-	man/systemd-modules-load.service.8
-MANPAGES_ALIAS += \
-	man/systemd-modules-load.8
-man/systemd-modules-load.8: man/systemd-modules-load.service.8
-man/systemd-modules-load.html: man/systemd-modules-load.service.html
 	$(html-alias)
 
 endif

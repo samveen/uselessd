@@ -65,7 +65,6 @@ pkgsysconfdir=$(sysconfdir)/systemd
 userunitdir=$(prefix)/lib/systemd/user
 userpresetdir=$(prefix)/lib/systemd/user-preset
 tmpfilesdir=$(prefix)/lib/tmpfiles.d
-sysctldir=$(prefix)/lib/sysctl.d
 pkgincludedir=$(includedir)/systemd
 systemgeneratordir=$(rootlibexecdir)/system-generators
 usergeneratordir=$(prefix)/lib/systemd/user-generators
@@ -124,7 +123,6 @@ AM_CPPFLAGS = \
 	-DSYSTEM_SYSVRCND_PATH=\"$(SYSTEM_SYSVRCND_PATH)\" \
 	-DUSER_CONFIG_UNIT_PATH=\"$(pkgsysconfdir)/user\" \
 	-DUSER_DATA_UNIT_PATH=\"$(userunitdir)\" \
-	-DSYSTEMD_CGROUP_AGENT_PATH=\"$(rootlibexecdir)/systemd-cgroups-agent\" \
 	-DSYSTEMD_BINARY_PATH=\"$(rootlibexecdir)/systemd\" \
 	-DSYSTEMD_SHUTDOWN_BINARY_PATH=\"$(rootlibexecdir)/systemd-shutdown\" \
 	-DSYSTEMD_SLEEP_BINARY_PATH=\"$(rootlibexecdir)/systemd-sleep\" \
@@ -140,7 +138,6 @@ AM_CPPFLAGS = \
 	-DSYSTEMD_KBD_MODEL_MAP=\"$(pkgdatadir)/kbd-model-map\" \
 	-DX_SERVER=\"$(bindir)/X\" \
 	-DPOLKIT_AGENT_BINARY_PATH=\"$(bindir)/pkttyagent\" \
-	-DQUOTACHECK=\"$(QUOTACHECK)\" \
 	-DKEXEC=\"$(KEXEC)\" \
 	-I $(top_srcdir)/src \
 	-I $(top_srcdir)/src/shared \
@@ -258,7 +255,6 @@ bin_PROGRAMS = \
 
 rootlibexec_PROGRAMS = \
 	systemd \
-	systemd-cgroups-agent \
 	systemd-update-utmp \
 	systemd-shutdownd \
 	systemd-shutdown \
@@ -266,12 +262,7 @@ rootlibexec_PROGRAMS = \
 	systemd-reply-password \
 	systemd-fsck \
 	systemd-ac-power \
-	systemd-sysctl \
 	systemd-sleep
-
-systemgenerator_PROGRAMS = \
-	systemd-getty-generator \
-	systemd-system-update-generator
 
 systemd_analyze_SOURCES = \
 	src/analyze/systemd-analyze.c
@@ -295,9 +286,6 @@ dist_zshcompletion_DATA = \
 	shell-completion/zsh/_systemd-delta \
 	shell-completion/zsh/_systemd
 
-dist_sysctl_DATA = \
-	sysctl.d/50-default.conf
-
 dist_systemunit_DATA = \
 	units/graphical.target \
 	units/multi-user.target \
@@ -305,7 +293,6 @@ dist_systemunit_DATA = \
 	units/emergency.target \
 	units/sysinit.target \
 	units/basic.target \
-	units/getty.target \
 	units/halt.target \
 	units/kexec.target \
 	units/local-fs.target \
@@ -353,21 +340,16 @@ dist_systemunit_DATA = \
 	units/smartcard.target \
 	units/systemd-ask-password-wall.path \
 	units/systemd-ask-password-console.path \
-	units/system-update.target \
 	units/initrd-switch-root.target
 
 nodist_systemunit_DATA = \
-	units/getty@.service \
-	units/serial-getty@.service \
 	units/console-shell.service \
-	units/console-getty.service \
 	units/systemd-shutdownd.service \
 	units/systemd-remount-fs.service \
 	units/systemd-update-utmp.service \
 	units/systemd-update-utmp-runlevel.service \
 	units/systemd-ask-password-wall.service \
 	units/systemd-ask-password-console.service \
-	units/systemd-sysctl.service \
 	units/emergency.service \
 	units/rescue.service \
 	units/user@.service \
@@ -393,10 +375,7 @@ nodist_userunit_DATA = \
 	units/user/systemd-exit.service
 
 EXTRA_DIST += \
-	units/getty@.service.m4 \
-	units/serial-getty@.service.m4 \
 	units/console-shell.service.m4.in \
-	units/console-getty.service.m4.in \
 	units/rescue.service.m4.in \
 	units/systemd-shutdownd.service.in \
 	units/systemd-remount-fs.service.in \
@@ -404,7 +383,6 @@ EXTRA_DIST += \
 	units/systemd-update-utmp-runlevel.service.in \
 	units/systemd-ask-password-wall.service.in \
 	units/systemd-ask-password-console.service.in \
-	units/systemd-sysctl.service.in \
 	units/emergency.service.in \
 	units/systemd-halt.service.in \
 	units/systemd-poweroff.service.in \
@@ -426,7 +404,6 @@ EXTRA_DIST += \
 
 CLEANFILES += \
 	units/console-shell.service.m4 \
-	units/console-getty.service.m4 \
 	units/rescue.service.m4
 
 if HAVE_SYSV_COMPAT
@@ -434,7 +411,7 @@ nodist_systemunit_DATA += \
 	units/rc-local.service \
 	units/halt-local.service
 
-systemgenerator_PROGRAMS += \
+systemgenerator_PROGRAMS = \
 	systemd-rc-local-generator
 endif
 
@@ -847,12 +824,6 @@ libsystemd_core_la_SOURCES = \
 	src/core/async.c \
 	src/core/async.h
 
-if HAVE_KMOD
-libsystemd_core_la_SOURCES += \
-	src/core/kmod-setup.c \
-	src/core/kmod-setup.h
-endif
-
 libsystemd_core_la_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(DBUS_CFLAGS) \
@@ -1016,17 +987,6 @@ test_hostname_SOURCES = \
 
 test_hostname_LDADD = \
 	libsystemd-core.la
-
-if ENABLE_EFI
-manual_tests += \
-	test-boot-timestamp
-
-test_boot_timestamp_SOURCES = \
-	src/test/test-boot-timestamps.c
-
-test_boot_timestamp_LDADD = \
-	libsystemd-shared.la
-endif
 
 test_unit_name_SOURCES = \
 	src/test/test-unit-name.c
@@ -1314,41 +1274,6 @@ systemd_shutdown_LDADD = \
 	libsystemd-shared.la
 
 # ------------------------------------------------------------------------------
-if HAVE_KMOD
-systemd_modules_load_SOURCES = \
-	src/modules-load/modules-load.c
-
-systemd_modules_load_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(KMOD_CFLAGS)
-
-systemd_modules_load_LDADD = \
-	libsystemd-shared.la \
-	$(KMOD_LIBS)
-
-rootlibexec_PROGRAMS += \
-	systemd-modules-load
-
-nodist_systemunit_DATA += \
-	units/systemd-modules-load.service
-
-SYSINIT_TARGET_WANTS += \
-	systemd-modules-load.service
-
-if ENABLE_TMPFILES
-nodist_systemunit_DATA += \
-	units/kmod-static-nodes.service
-
-SYSINIT_TARGET_WANTS += \
-	kmod-static-nodes.service
-endif
-endif
-
-EXTRA_DIST += \
-        units/systemd-modules-load.service.in \
-        units/kmod-static-nodes.service.in
-
-# ------------------------------------------------------------------------------
 if ENABLE_TMPFILES
 systemd_tmpfiles_SOURCES = \
 	src/tmpfiles/tmpfiles.c \
@@ -1413,13 +1338,6 @@ systemd_machine_id_setup_LDADD = \
 	libsystemd-id128-internal.la
 
 # ------------------------------------------------------------------------------
-systemd_sysctl_SOURCES = \
-	src/sysctl/sysctl.c
-
-systemd_sysctl_LDADD = \
-	libsystemd-shared.la
-
-# ------------------------------------------------------------------------------
 systemd_sleep_SOURCES = \
 	src/sleep/sleep.c
 
@@ -1466,35 +1384,6 @@ systemd_delta_LDADD = \
 	libsystemd-shared.la
 
 # ------------------------------------------------------------------------------
-systemd_getty_generator_SOURCES = \
-	src/getty-generator/getty-generator.c
-
-systemd_getty_generator_LDADD = \
-	libsystemd-label.la \
-	libsystemd-shared.la
-
-# ------------------------------------------------------------------------------
-systemd_system_update_generator_SOURCES = \
-	src/system-update-generator/system-update-generator.c
-
-systemd_system_update_generator_LDADD = \
-	libsystemd-label.la \
-	libsystemd-shared.la
-
-if ENABLE_EFI
-# ------------------------------------------------------------------------------
-systemgenerator_PROGRAMS +=  \
-	systemd-efi-boot-generator
-
-systemd_efi_boot_generator_SOURCES = \
-	src/efi-boot-generator/efi-boot-generator.c
-
-systemd_efi_boot_generator_LDADD = \
-	libsystemd-label.la \
-	libsystemd-shared.la
-endif
-
-# ------------------------------------------------------------------------------
 systemd_rc_local_generator_SOURCES = \
 	src/rc-local-generator/rc-local-generator.c
 
@@ -1511,18 +1400,6 @@ systemd_remount_fs_SOURCES = \
 systemd_remount_fs_LDADD = \
 	libsystemd-label.la \
 	libsystemd-shared.la
-
-# ------------------------------------------------------------------------------
-systemd_cgroups_agent_SOURCES = \
-	src/cgroups-agent/cgroups-agent.c
-
-systemd_cgroups_agent_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(DBUS_CFLAGS)
-
-systemd_cgroups_agent_LDADD = \
-	libsystemd-shared.la \
-	libsystemd-dbus.la
 
 # ------------------------------------------------------------------------------
 systemctl_SOURCES = \
@@ -1677,27 +1554,6 @@ EXTRA_DIST += \
 	src/libsystemd-id128/libsystemd-id128.sym
 
 # ------------------------------------------------------------------------------
-if ENABLE_QUOTACHECK
-rootlibexec_PROGRAMS += \
-	systemd-quotacheck
-
-nodist_systemunit_DATA += \
-	units/systemd-quotacheck.service
-
-systemd_quotacheck_SOURCES = \
-	src/quotacheck/quotacheck.c
-
-systemd_quotacheck_LDADD = \
-	libsystemd-shared.la
-endif
-
-EXTRA_DIST += \
-	units/systemd-quotacheck.service.in
-
-nodist_systemunit_DATA += \
-	units/quotaon.service
-
-# ------------------------------------------------------------------------------
 if ENABLE_RANDOMSEED
 rootlibexec_PROGRAMS += \
 	systemd-random-seed
@@ -1736,7 +1592,6 @@ substitutions = \
        '|systempresetdir=$(systempresetdir)|' \
        '|userpresetdir=$(userpresetdir)|' \
        '|tmpfilesdir=$(tmpfilesdir)|' \
-       '|sysctldir=$(sysctldir)|' \
        '|systemgeneratordir=$(systemgeneratordir)|' \
        '|usergeneratordir=$(usergeneratordir)|' \
        '|PACKAGE_VERSION=$(PACKAGE_VERSION)|' \
@@ -1755,7 +1610,6 @@ substitutions = \
        '|KMOD=$(KMOD)|' \
        '|MKDIR_P=$(MKDIR_P)|' \
        '|QUOTAON=$(QUOTAON)|' \
-       '|QUOTACHECK=$(QUOTACHECK)|' \
        '|SYSTEM_SYSVINIT_PATH=$(sysvinitdir)|' \
        '|VARLOGDIR=$(varlogdir)|' \
        '|RC_LOCAL_SCRIPT_PATH_START=$(RC_LOCAL_SCRIPT_PATH_START)|' \
@@ -1772,9 +1626,6 @@ units/%: units/%.in Makefile
 	$(SED_PROCESS)
 
 man/%: man/%.in Makefile
-	$(SED_PROCESS)
-
-sysctl.d/%: sysctl.d/%.in Makefile
 	$(SED_PROCESS)
 
 %.pc: %.pc.in Makefile
@@ -1804,12 +1655,6 @@ units/%: units/%.m4 Makefile
 units/user/%: units/%.m4 Makefile
 	$(AM_V_M4)$(MKDIR_P) $(dir $@)
 	$(AM_V_M4)$(M4) -P $(M4_DEFINES) -DFOR_USER=1 < $< > $@
-
-if ENABLE_POLKIT
-nodist_polkitpolicy_DATA = \
-	$(polkitpolicy_files) \
-	$(polkitpolicy_in_in_files:.policy.in.in=.policy)
-endif
 
 EXTRA_DIST += \
 	$(polkitpolicy_in_files) \
@@ -1926,7 +1771,6 @@ LOCAL_FS_TARGET_WANTS += \
 	systemd-fsck-root.service \
 	tmp.mount
 MULTI_USER_TARGET_WANTS += \
-	getty.target \
 	systemd-ask-password-wall.path
 SYSINIT_TARGET_WANTS += \
 	dev-hugepages.mount \
@@ -1934,7 +1778,6 @@ SYSINIT_TARGET_WANTS += \
 	sys-kernel-config.mount \
 	sys-kernel-debug.mount \
 	sys-fs-fuse-connections.mount \
-	systemd-sysctl.service \
 	systemd-ask-password-console.path
 
 if HAVE_SYSV_COMPAT
@@ -1950,8 +1793,7 @@ endif
 
 SYSTEM_UNIT_ALIASES += \
 	graphical.target default.target \
-	reboot.target ctrl-alt-del.target \
-	getty@.service autovt@.service
+	reboot.target ctrl-alt-del.target
 
 USER_UNIT_ALIASES += \
 	$(systemunitdir)/shutdown.target shutdown.target \
@@ -1965,7 +1807,6 @@ USER_UNIT_ALIASES += \
 
 GENERAL_ALIASES += \
 	$(systemunitdir)/remote-fs.target $(pkgsysconfdir)/system/multi-user.target.wants/remote-fs.target \
-	$(systemunitdir)/getty@.service $(pkgsysconfdir)/system/getty.target.wants/getty@tty1.service \
 	$(pkgsysconfdir)/user $(sysconfdir)/xdg/systemd/user \
 	../system-services/org.freedesktop.systemd1.service $(dbussessionservicedir)/org.freedesktop.systemd1.service
 
@@ -1979,10 +1820,6 @@ INSTALL_DIRS += \
 endif
 
 INSTALL_DIRS += \
-	$(prefix)/lib/modules-load.d \
-	$(sysconfdir)/modules-load.d \
-	$(prefix)/lib/sysctl.d \
-	$(sysconfdir)/sysctl.d \
 	$(prefix)/lib/kernel/install.d \
 	$(sysconfdir)/kernel/install.d \
 	$(systemshutdowndir) \
@@ -1993,7 +1830,6 @@ INSTALL_DIRS += \
 	$(userunitdir) \
 	$(pkgsysconfdir)/system \
 	$(pkgsysconfdir)/system/multi-user.target.wants \
-	$(pkgsysconfdir)/system/getty.target.wants \
 	$(pkgsysconfdir)/user \
 	$(dbussessionservicedir) \
 	$(sysconfdir)/xdg/systemd
