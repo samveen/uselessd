@@ -43,7 +43,6 @@
 #include "unit-name.h"
 #include "dbus-unit.h"
 #include "special.h"
-#include "cgroup-util.h"
 #include "missing.h"
 #include "mkdir.h"
 #include "label.h"
@@ -2004,28 +2003,7 @@ char *unit_dbus_path(Unit *u) {
 }
 
 char *unit_default_cgroup_path(Unit *u) {
-        _cleanup_free_ char *escaped = NULL, *slice = NULL;
-        int r;
-
-        assert(u);
-
-        if (unit_has_name(u, SPECIAL_ROOT_SLICE))
-                return strdup(u->manager->cgroup_root);
-
-        if (UNIT_ISSET(u->slice) && !unit_has_name(UNIT_DEREF(u->slice), SPECIAL_ROOT_SLICE)) {
-                r = cg_slice_to_path(UNIT_DEREF(u->slice)->id, &slice);
-                if (r < 0)
-                        return NULL;
-        }
-
-        escaped = cg_escape(u->id);
-        if (!escaped)
-                return NULL;
-
-        if (slice)
-                return strjoin(u->manager->cgroup_root, "/", slice, "/", escaped, NULL);
-        else
-                return strjoin(u->manager->cgroup_root, "/", escaped, NULL);
+        return NULL;
 }
 
 int unit_add_default_slice(Unit *u) {
@@ -2614,20 +2592,6 @@ int unit_kill_common(
                         if (kill(main_pid, signo) < 0)
                                 r = -errno;
 
-        if (who == KILL_ALL && u->cgroup_path) {
-                _cleanup_set_free_ Set *pid_set = NULL;
-                int q;
-
-                /* Exclude the main/control pids from being killed via the cgroup */
-                pid_set = unit_pid_set(main_pid, control_pid);
-                if (!pid_set)
-                        return -ENOMEM;
-
-                q = cg_kill_recursive(SYSTEMD_CGROUP_CONTROLLER, u->cgroup_path, signo, false, true, false, pid_set);
-                if (q < 0 && q != -EAGAIN && q != -ESRCH && q != -ENOENT)
-                        r = q;
-        }
-
         return r;
 }
 
@@ -2995,32 +2959,6 @@ int unit_kill_context(
 
                         if (c->send_sighup)
                                 kill(control_pid, SIGHUP);
-                }
-        }
-
-        if (c->kill_mode == KILL_CONTROL_GROUP && u->cgroup_path) {
-                _cleanup_set_free_ Set *pid_set = NULL;
-
-                /* Exclude the main/control pids from being killed via the cgroup */
-                pid_set = unit_pid_set(main_pid, control_pid);
-                if (!pid_set)
-                        return -ENOMEM;
-
-                r = cg_kill_recursive(SYSTEMD_CGROUP_CONTROLLER, u->cgroup_path, sig, true, true, false, pid_set);
-                if (r < 0) {
-                        if (r != -EAGAIN && r != -ESRCH && r != -ENOENT)
-                                log_warning_unit(u->id, "Failed to kill control group: %s", strerror(-r));
-                } else if (r > 0) {
-                        wait_for_exit = true;
-                        if (c->send_sighup) {
-                                set_free(pid_set);
-
-                                pid_set = unit_pid_set(main_pid, control_pid);
-                                if (!pid_set)
-                                        return -ENOMEM;
-
-                                cg_kill_recursive(SYSTEMD_CGROUP_CONTROLLER, u->cgroup_path, SIGHUP, true, true, false, pid_set);
-                        }
                 }
         }
 

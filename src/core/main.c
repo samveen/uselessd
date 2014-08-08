@@ -96,12 +96,12 @@ static void nop_handler(int sig) {
 
 _noreturn_ static void crash(int sig) {
 
-        if (getpid() != 1)
-                /* Pass this on immediately, if this is not PID 1 */
-                raise(sig);
-        else if (!arg_dump_core)
+        //if (getpid() != 1)
+                 //Pass this on immediately, if this is not PID 1
+                //raise(sig);
+        if (!arg_dump_core) {
                 log_error("Caught <%s>, not dumping core.", signal_to_string(sig));
-        else {
+        } else {
                 struct sigaction sa = {
                         .sa_handler = nop_handler,
                         .sa_flags = SA_NOCLDSTOP|SA_RESTART,
@@ -1021,11 +1021,11 @@ int main(int argc, char *argv[]) {
 
         /* Mount /proc, /sys and friends, so that /proc/cmdline and
          * /proc/$PID/fd is available. */
-        if (getpid() == 1) {
-                r = mount_setup(loaded_policy);
-                if (r < 0)
-                        goto finish;
-        }
+       // if (getpid() == 1) {
+             //   r = mount_setup(loaded_policy);
+               // if (r < 0)
+               //         goto finish;
+       // }
 
         /* Reset all signal handlers. */
         assert_se(reset_all_signal_handlers() == 0);
@@ -1123,9 +1123,6 @@ int main(int argc, char *argv[]) {
                 if (arg_show_status || plymouth_running())
                         status_welcome();
 
-#ifdef HAVE_KMOD
-                kmod_setup();
-#endif
                 hostname_setup();
                 machine_id_setup();
 
