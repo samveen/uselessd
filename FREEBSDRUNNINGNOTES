@@ -72,3 +72,10 @@ cgroup-util.h ->
 --------
 
 edited avoid_bus() in systemctl to sidestep error
+
+-------
+
+Managed to port systemd-shim. org.freedesktop.systemd1 interface
+dependency is now satisfied.
+
+Next up: Remove dependency on /run sockets.
