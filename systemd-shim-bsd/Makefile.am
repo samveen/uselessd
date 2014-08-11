@@ -1,0 +1,3 @@
+SUBDIRS = data src
+
+EXTRA_DIST = COPYING NEWS
