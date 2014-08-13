@@ -201,45 +201,11 @@ int bus_connect(DBusBusType t, DBusConnection **_bus, bool *_private, DBusError 
 int bus_connect_system_ssh(const char *user, const char *host, DBusConnection **_bus, DBusError *error) {
         DBusConnection *bus;
         char *p = NULL;
-        int r;
 
         assert(_bus);
         assert(user || host);
 
-        if (user && host)
-                asprintf(&p, "unixexec:path=ssh,argv1=-xT,argv2=%s%%40%s,argv3=systemd-stdio-bridge", user, host);
-        else if (user)
-                asprintf(&p, "unixexec:path=ssh,argv1=-xT,argv2=%s%%40localhost,argv3=systemd-stdio-bridge", user);
-        else if (host)
-                asprintf(&p, "unixexec:path=ssh,argv1=-xT,argv2=%s,argv3=systemd-stdio-bridge", host);
-
-        if (!p) {
-                dbus_set_error_const(error, DBUS_ERROR_NO_MEMORY, NULL);
-                return -ENOMEM;
-        }
-
-        bus = dbus_connection_open_private(p, error);
-        free(p);
-
-        if (!bus)
-                return -EIO;
-
-        dbus_connection_set_exit_on_disconnect(bus, FALSE);
-
-        if ((r = sync_auth(bus, error)) < 0) {
-                dbus_connection_close(bus);
-                dbus_connection_unref(bus);
-                return r;
-        }
-
-        if (!dbus_bus_register(bus, error)) {
-                dbus_connection_close(bus);
-                dbus_connection_unref(bus);
-                return r;
-        }
-
-        *_bus = bus;
-        return 0;
+        return -EIO; // no systemd-stdio-bridge
 }
 
 int bus_connect_system_polkit(DBusConnection **_bus, DBusError *error) {
