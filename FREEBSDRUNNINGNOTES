@@ -78,4 +78,14 @@ edited avoid_bus() in systemctl to sidestep error
 Managed to port systemd-shim. org.freedesktop.systemd1 interface
 dependency is now satisfied.
 
-Next up: Remove dependency on /run sockets.
+Next up: Remove dependency on /run sockets, see dbus-common.c
+
+Edited bus_connect_system_ssh() to return -EIO, due to lack of stdio-bridge
+
+util.c: modify random_ull() and random_u() to use /dev/random and without
+O_CLOEXEC
+
+Specified custom D-Bus addresses to listen to in /etc/dbus-1.
+
+Permissions issue in bus_check_peercred() leading to SCM_CREDS failure
+when starting systemctl.
