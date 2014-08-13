@@ -2232,7 +2232,7 @@ unsigned long long random_ull(void) {
         uint64_t ull;
         ssize_t r;
 
-        fd = open("/dev/urandom", O_RDONLY|O_CLOEXEC|O_NOCTTY);
+        fd = open("/dev/random", O_RDONLY|O_NOCTTY);
         if (fd < 0)
                 goto fallback;
 
@@ -2251,7 +2251,7 @@ unsigned random_u(void) {
         unsigned u;
         ssize_t r;
 
-        fd = open("/dev/urandom", O_RDONLY|O_CLOEXEC|O_NOCTTY);
+        fd = open("/dev/random", O_RDONLY|O_NOCTTY);
         if (fd < 0)
                 goto fallback;
 
