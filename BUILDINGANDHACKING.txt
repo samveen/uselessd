@@ -34,8 +34,4 @@ Read relevant files in test, for information on the testing suite.
 
 -----------
 
-For virtualization testing, see:
-
-http://www.freedesktop.org/wiki/Software/systemd/VirtualizedTesting/
-
-
+For virtualization testing, see: http://www.freedesktop.org/wiki/Software/systemd/VirtualizedTesting/
