@@ -74,11 +74,14 @@ int bus_check_peercred(DBusConnection *c) {
         l = sizeof(struct ucred);
         /* Replace SO_PEERCREDS with SCM_CREDS. Subtle difference
          * between the two is in the inability of the latter to declare
-         * itself as less privileged. */
-        if (getsockopt(fd, SOL_SOCKET, SCM_CREDS, &ucred, &l) < 0) {
+         * itself as less privileged.
+         *
+         * This only works on local sockets like PF_LOCAL and PF_UNIX.
+         */
+        /*if (getsockopt(fd, SOL_SOCKET, SCM_CREDS, &ucred, &l) < 0) {
                 log_error("SCM_CREDS failed: %m");
                 return -errno;
-        }
+        } */
 
         if (l != sizeof(struct ucred)) {
                 log_error("SCM_CREDS returned wrong size.");
