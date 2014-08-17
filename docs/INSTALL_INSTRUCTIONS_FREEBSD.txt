@@ -1,0 +1,69 @@
+1. Load in the kernel modules for procfs, sysfs and Linux
+   binary compatibility:
+
+   kldload linux
+   kldload linprocfs
+   kldload linsysfs
+
+   Check if they're present:
+
+   kldstat
+
+2. Chdir into systemd-shim-bsd. This is a slightly patched
+   version of Canonical's systemd-shim, meant to emulate
+   the early-boot org.freedesktop.systemd1 bus interface,
+   which is used internally by systemd and its auxiliaries
+   to perform method calls:
+
+   ./configure
+   gmake
+   gmake install
+
+3. Launch systemd-shim:
+
+   /usr/local/libexec/systemd-shim &
+
+4. Symlink /var/run to /run, a directory used by systemd
+   to store runtime data, such as sockets, pipes,
+   PID files, text, etc.:
+
+   ln -s /var/run /run
+
+5. systemd depends on a set of sockets and FIFOs,
+   which are then mapped to D-Bus addresses.
+   Normally, these are created at boot time. Since
+   we are using systemd on non-Linux entirely as a
+   stage 2 daemon only, we'll need to instruct
+   D-Bus specifically to listen on these sockets.
+
+   This is a hack and not recommended practice,
+   but it is what we make use of at present, for
+   demonstration purposes.
+
+   touch /usr/local/etc/dbus-1/system-local.conf
+   $EDITOR /path/to/system-local.conf
+
+   Add the following lines:
+
+   <!DOCTYPE busconfig PUBLIC "-//freedesktop//DTD D-Bus Bus Configuration 1.0//EN"
+   "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+
+   <busconfig>
+       <listen>unix:path=/var/run/systemd/private</listen>
+   </busconfig>
+
+   Write changes and exit.
+
+6. Launch a dbus-daemon listening on these sockets:
+
+   dbus-daemon --fork --config-file=/usr/local/etc/dbus-1/system-local.conf
+
+7. Go back into the root source directory and build
+   systemd itself. Pick any configure prefixes if
+   needed, and once again:
+
+   ./configure $FLAGS && gmake && gmake install
+
+8. Type systemctl to see if things went successfully.
+
+Happy usage!
