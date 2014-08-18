@@ -2248,7 +2248,7 @@ fallback:
 
 unsigned random_u(void) {
         _cleanup_close_ int fd;
-        unsigned u;
+        unsigned int u;
         ssize_t r;
 
         fd = open("/dev/random", O_RDONLY|O_NOCTTY);
@@ -2872,7 +2872,7 @@ int status_welcome(void) {
         return status_printf(NULL, false, false,
                              "\nWelcome to \x1B[%sm%s\x1B[0m!\n",
                              isempty(ansi_color) ? "1" : ansi_color,
-                             isempty(pretty_name) ? "Linux" : pretty_name);
+                             isempty(pretty_name) ? "FreeBSD" : pretty_name);
 }
 
 char *replace_env(const char *format, char **env) {
