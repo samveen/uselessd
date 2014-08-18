@@ -91,8 +91,7 @@ static nsec_t arg_timer_slack_nsec = (nsec_t) -1;
 
 static FILE* serialization = NULL;
 
-static void nop_handler(int sig) {
-}
+static void nop_handler(int sig) {}
 
 _noreturn_ static void crash(int sig) {
 
@@ -890,6 +889,8 @@ int main(int argc, char *argv[]) {
         //char *switch_root_dir = NULL, *switch_root_init = NULL;
         static struct rlimit saved_rlimit_nofile = { 0, 0 };
 
+        arg_running_as = SYSTEMD_SYSTEM;
+
 #ifdef HAVE_SYSV_COMPAT
         if (getpid() != 1 && strstr(getprogname(), "init")) {
                 /* This is compatibility support for SysV, where
@@ -932,92 +933,12 @@ int main(int argc, char *argv[]) {
         if (getpid() == 1)
                 umask(0);
 
-        if (getpid() == 1) {
-
-                /* Running outside of a container as PID 1 */
-                /* Improper mechanism to detect this, as of yet. */
-                arg_running_as = SYSTEMD_SYSTEM;
-                make_null_stdio();
-                log_set_target(LOG_TARGET_KMSG);
-                log_open();
-
-                if (in_initrd())
-                        initrd_timestamp = userspace_timestamp;
-
-                if (!skip_setup) {
-                        mount_setup_early();
-                        if (selinux_setup(&loaded_policy) < 0)
-                                goto finish;
-                        if (ima_setup() < 0)
-                                goto finish;
-                        if (smack_setup() < 0)
-                                goto finish;
-                }
-
-                if (label_init(NULL) < 0)
-                        goto finish;
-
-                if (!skip_setup) {
-                        if (hwclock_is_localtime() > 0) {
-                                int min;
-
-                                /* The first-time call to settimeofday() does a time warp in the kernel */
-                                r = hwclock_set_timezone(&min);
-                                if (r < 0)
-                                        log_error("Failed to apply local time delta, ignoring: %s", strerror(-r));
-                                else
-                                        log_info("RTC configured in localtime, applying delta of %i minutes to system time.", min);
-                        } else if (!in_initrd()) {
-                                /*
-                                 * Do dummy first-time call to seal the kernel's time warp magic
-                                 *
-                                 * Do not call this this from inside the initrd. The initrd might not
-                                 * carry /etc/adjtime with LOCAL, but the real system could be set up
-                                 * that way. In such case, we need to delay the time-warp or the sealing
-                                 * until we reach the real system.
-                                 */
-                                hwclock_reset_timezone();
-
-                                /* Tell the kernel our timezone */
-                                r = hwclock_set_timezone(NULL);
-                                if (r < 0)
-                                        log_error("Failed to set the kernel's timezone, ignoring: %s", strerror(-r));
-                        }
-                }
-
-        } else if (getpid() == 1) {
-                /* Running inside a container, as PID 1 */
-                arg_running_as = SYSTEMD_SYSTEM;
-                log_set_target(LOG_TARGET_CONSOLE);
-                log_open();
-
-                /* clear the kernel timestamp,
-                 * because we are in a container */
-                kernel_timestamp.monotonic = 0ULL;
-                kernel_timestamp.realtime = 0ULL;
-
-        } else {
-                /* Running as user instance */
-                arg_running_as = SYSTEMD_USER;
-                log_set_target(LOG_TARGET_SYSLOG_OR_KMSG);
-                log_open();
-
-                /* clear the kernel timestamp,
-                 * because we are not PID 1 */
-                kernel_timestamp.monotonic = 0ULL;
-                kernel_timestamp.realtime = 0ULL;
-        }
-
         /* Initialize default unit */
         r = set_default_unit(SPECIAL_DEFAULT_TARGET);
         if (r < 0) {
                 log_error("Failed to set default unit %s: %s", SPECIAL_DEFAULT_TARGET, strerror(-r));
                 goto finish;
         }
-
-        r = initialize_join_controllers();
-        if (r < 0)
-                goto finish;
 
         /* Mount /proc, /sys and friends, so that /proc/cmdline and
          * /proc/$PID/fd is available. */
@@ -1031,9 +952,6 @@ int main(int argc, char *argv[]) {
         assert_se(reset_all_signal_handlers() == 0);
 
         ignore_signals(SIGNALS_IGNORE, -1);
-
-        if (parse_config_file() < 0)
-                goto finish;
 
         log_parse_environment();
 
@@ -1070,10 +988,13 @@ int main(int argc, char *argv[]) {
 
         assert_se(arg_action == ACTION_RUN || arg_action == ACTION_TEST);
 
-        /* Close logging fds, in order not to confuse fdset below */
+        /* Segfault mitigator from random_u() and random_ull(). */
+
+        /* Close logging fds, in order not to confuse fdset below
         log_close();
 
-        /* Remember open file descriptors for later deserialization */
+        Remember open file descriptors for later deserialization
+
         r = fdset_new_fill(&fds);
         if (r < 0) {
                 log_error("Failed to allocate fd set: %s", strerror(-r));
@@ -1085,7 +1006,7 @@ int main(int argc, char *argv[]) {
                 assert_se(fdset_remove(fds, fileno(serialization)) >= 0);
 
         if (arg_running_as == SYSTEMD_SYSTEM)
-                /* Become a session leader if we aren't one yet. */
+                 Become a session leader if we aren't one yet.
                 setsid();
 
         /* Move out of the way, so that we won't block unmounts */
@@ -1151,28 +1072,18 @@ int main(int argc, char *argv[]) {
                 goto finish;
         }
 
-        m->confirm_spawn = arg_confirm_spawn;
-        m->default_std_output = arg_default_std_output;
-        m->default_std_error = arg_default_std_error;
-        m->userspace_timestamp = userspace_timestamp;
-        m->kernel_timestamp = kernel_timestamp;
-        m->initrd_timestamp = initrd_timestamp;
-
-        manager_set_default_rlimits(m, arg_default_rlimit);
-
         if (arg_default_environment)
                 manager_environment_add(m, arg_default_environment);
 
         manager_set_show_status(m, arg_show_status);
 
-        /* Remember whether we should queue the default job */
-        queue_default_job = !serialization || arg_switched_root;
+        //queue_default_job = !serialization || arg_switched_root;
 
-        before_startup = now(CLOCK_MONOTONIC);
-
-        r = manager_startup(m, serialization, fds);
-        if (r < 0)
-                log_error("Failed to fully start up daemon: %s", strerror(-r));
+        // TODO: This is where things fail. Looping will later proceed,
+        // indiscriminately, without it.
+        //r = manager_startup(m, serialization, fds);
+        //if (r < 0)
+                //log_error("Failed to fully start up daemon: %s", strerror(-r));
 
         /* This will close all file descriptors that were opened, but
          * not claimed by any unit. */
