@@ -111,61 +111,7 @@ struct ucred {
 extern char **environ; // from <unistd.h> doesn't seem to be declared
 
 static int manager_setup_notify(Manager *m) {
-        union {
-                struct sockaddr sa;
-                struct sockaddr_un un;
-        } sa = {
-                .sa.sa_family = AF_UNIX,
-        };
-        /*
-        struct epoll_event ev = {
-                .events = EPOLLIN,
-                .data.ptr = &m->notify_watch,
-        };*/
-        int one = 1, r;
-
-        m->notify_watch.type = WATCH_NOTIFY;
-        m->notify_watch.fd = socket(AF_UNIX, SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK, 0);
-        if (m->notify_watch.fd < 0) {
-                log_error("Failed to allocate notification socket: %m");
-                return -errno;
-        }
-
-        if (getpid() != 1)
-                snprintf(sa.un.sun_path, sizeof(sa.un.sun_path), NOTIFY_SOCKET "/%llu", random_ull());
-        else
-                strncpy(sa.un.sun_path, NOTIFY_SOCKET, sizeof(sa.un.sun_path));
-
-        sa.un.sun_path[0] = 0;
-
-        r = bind(m->notify_watch.fd, &sa.sa,
-                 offsetof(struct sockaddr_un, sun_path) + 1 + strlen(sa.un.sun_path+1));
-        if (r < 0) {
-                log_error("bind() failed: %m");
-                return -errno;
-        }
-
-       /* r = setsockopt(m->notify_watch.fd, SOL_SOCKET, SO_PASSCRED, &one, sizeof(one));
-        if (r < 0) {
-                log_error("SO_PASSCRED failed: %m");
-                return -errno;
-        } */
-
-		/*
-        r = epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->notify_watch.fd, &ev);
-        if (r < 0) {
-                log_error("Failed to add notification socket fd to epoll: %m");
-                return -errno;
-        }*/
-
-        sa.un.sun_path[0] = '@';
-        m->notify_socket = strdup(sa.un.sun_path);
-        if (!m->notify_socket)
-                return log_oom();
-
-        log_debug("Using notification socket %s", m->notify_socket);
-
-        return 0;
+	//nop
 }
 
 static int manager_jobs_in_progress_mod_timer(Manager *m) {
@@ -355,48 +301,7 @@ static void manager_unwatch_idle_pipe(Manager *m) {
 }
 
 static int manager_setup_time_change(Manager *m) {
-       /* struct epoll_event ev = {
-                .events = EPOLLIN,
-                .data.ptr = &m->time_change_watch,
-        };*/
-
-        /* We only care for the cancellation event, hence we set the
-         * timeout to the latest possible value. */
-        struct itimerspec its = {
-                .it_value.tv_sec = TIME_T_MAX,
-        };
-        assert_cc(sizeof(time_t) == sizeof(TIME_T_MAX));
-
-        assert(m->time_change_watch.type == WATCH_INVALID);
-
-        timer_t timerid;
-        struct sigevent sev;
-        sev.sigev_notify = SIGEV_SIGNAL;
-        sev.sigev_signo = SIGRTMIN;
-        sev.sigev_value.sival_ptr = &timerid;
-
-        m->time_change_watch.type = WATCH_TIME_CHANGE;
-        m->time_change_watch.fd = timer_create(CLOCK_REALTIME, &sev, &timerid);
-        if (m->time_change_watch.fd < 0) {
-                log_error("Failed to create timerfd: %m");
-                return -errno;
-        }
-
-        if (timer_settime(m->time_change_watch.fd, TIMER_ABSTIME, &its, NULL) < 0) {
-                log_debug("Failed to set up TIMER_ABSTIME, ignoring: %m");
-                close_nointr_nofail(m->time_change_watch.fd);
-                watch_init(&m->time_change_watch);
-                return 0;
-        }
-/*
-        if (epoll_ctl(m->epoll_fd, EPOLL_CTL_ADD, m->time_change_watch.fd, &ev) < 0) {
-                log_error("Failed to add timer change fd to epoll: %m");
-                return -errno;
-        }*/
-
-        log_debug("Set up TIMER_ABSTIME timer.");
-
-        return 0;
+//nop
 }
 
 static int enable_special_signals(Manager *m) {
@@ -404,7 +309,7 @@ static int enable_special_signals(Manager *m) {
 
         assert(m);
 
-        fd = open_terminal("/dev/tty0", O_RDWR|O_NOCTTY|O_CLOEXEC);
+        fd = open_terminal("/dev/ttyv0", O_RDWR|O_NOCTTY|O_CLOEXEC);
         if (fd < 0) {
                 /* Support systems without virtual console */
                 if (fd != -ENOENT)
@@ -552,9 +457,9 @@ int manager_new(SystemdRunningAs running_as, bool reexecuting, Manager **_m) {
         if (!m->watch_bus)
                 goto fail;
 
-        //m->epoll_fd = epoll_create1(EPOLL_CLOEXEC);
-       // if (m->epoll_fd < 0)
-              //  goto fail;
+       // m->epoll_fd = epoll_create1(EPOLL_CLOEXEC);
+        //if (m->epoll_fd < 0)
+                //goto fail;
 
         r = manager_setup_signals(m);
         if (r < 0)
@@ -577,7 +482,7 @@ int manager_new(SystemdRunningAs running_as, bool reexecuting, Manager **_m) {
         } else
                 log_debug("Skipping DBus session bus connection attempt - no DBUS_SESSION_BUS_ADDRESS set...");
 
-        m->taint_usr = dir_is_empty("/usr") > 0;
+       // m->taint_usr = dir_is_empty("/usr") > 0;
 
         *_m = m;
         return 0;
@@ -751,18 +656,18 @@ void manager_free(Manager *m) {
         hashmap_free(m->watch_pids);
         hashmap_free(m->watch_bus);
 
-        //if (m->epoll_fd >= 0)
+        /*if (m->epoll_fd >= 0)
                 //close_nointr_nofail(m->epoll_fd);
         if (m->signal_watch.fd >= 0)
                 close_nointr_nofail(m->signal_watch.fd);
         if (m->notify_watch.fd >= 0)
                 close_nointr_nofail(m->notify_watch.fd);
         if (m->time_change_watch.fd >= 0)
-                close_nointr_nofail(m->time_change_watch.fd);
+                close_nointr_nofail(m->time_change_watch.fd); */
         if (m->jobs_in_progress_watch.fd >= 0)
                 close_nointr_nofail(m->jobs_in_progress_watch.fd);
 
-        free(m->notify_socket);
+        //free(m->notify_socket);
 
         lookup_paths_free(&m->lookup_paths);
         strv_free(m->environment);
@@ -927,6 +832,12 @@ int manager_startup(Manager *m, FILE *serialization, FDSet *fds) {
                 if (q < 0)
                         r = q;
         }
+
+        /* We might have deserialized the notify fd, but if we didn't
+         * then let's create the bus now */
+        q = manager_setup_notify(m);
+        if (q < 0 && r == 0)
+                r = q;
 
         /* Third, fire things up! */
         q = manager_coldplug(m);
@@ -1544,7 +1455,6 @@ int manager_loop(Manager *m) {
 
         RATELIMIT_DEFINE(rl, 1*USEC_PER_SEC, 50000);
 
-        assert(m);
         m->exit_code = MANAGER_RUNNING;
 
         /* Release the path cache */
