@@ -214,19 +214,6 @@ Hashmap *hashmap_new(hash_func_t hash_func, compare_func_t compare_func) {
 
         h->from_pool = b;
 
-        /* Let's randomize our hash functions a bit so that they are
-         * harder to guess for clients. For this, start out by cheaply
-         * using some bits the kernel passed into the process using
-         * the auxiliary vector. If the hashmap grows later on we will
-         * rehash everything using a new random XOR mask from
-         * /dev/random. */
-#ifdef HAVE_SYS_AUXV_H
-        auxv = (void*) getauxval(AT_RANDOM);
-        h->random_xor = auxv ? *(unsigned*) auxv : random_u();
-#else
-        h->random_xor = random_u();
-#endif
-
         return h;
 }
 
