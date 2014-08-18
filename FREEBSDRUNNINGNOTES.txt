@@ -89,3 +89,12 @@ Specified custom D-Bus addresses to listen to in /etc/dbus-1.
 
 Permissions issue in bus_check_peercred() leading to SCM_CREDS failure
 when starting systemctl.
+
+---------
+
+Rewrite main.c to only start the important things (like the Manager
+for systemctl) without segfaulting.
+
+Redid main.c, touched up portions of manager.c. Ultimately, the issue
+has been isolated to manager_startup() which will fail. When not present,
+manager_loop() merely rotates clock_gettime() endlessly without fruition.
