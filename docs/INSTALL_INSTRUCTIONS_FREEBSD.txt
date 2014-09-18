@@ -60,11 +60,11 @@
    dbus-daemon --fork --config-file=/usr/local/etc/dbus-1/system-local.conf
 
 7. Go back into the root source directory and build
-   systemd itself. Pick any configure prefixes if
+   systemd/uselessd itself. Pick any configure prefixes if
    needed, and once again:
 
    ./configure $FLAGS && gmake && gmake install
 
-8. Type systemctl to see if things went successfully.
+8. Type systemctl to see if things went "successfully".
 
-Happy usage!
+Happy bumping your head into a desk.

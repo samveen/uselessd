@@ -254,7 +254,7 @@ bin_PROGRAMS = \
 	systemd-analyze
 
 rootlibexec_PROGRAMS = \
-	usysd \
+	uselessd \
 	systemd-update-utmp \
 	systemd-shutdownd \
 	systemd-shutdown \
@@ -846,14 +846,14 @@ libsystemd_core_la_LIBADD = \
 	$(KMOD_LIBS)
 
 # ------------------------------------------------------------------------------
-usysd_SOURCES = \
+uselessd_SOURCES = \
 	src/core/main.c
 
-usysd_CFLAGS = \
+uselessd_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(DBUS_CFLAGS)
 
-usysd_LDADD = \
+uselessd_LDADD = \
 	libsystemd-core.la \
 	libsystemd-daemon.la \
 	libsystemd-id128-internal.la \
@@ -885,7 +885,7 @@ dbusinterface_DATA += \
 polkitpolicy_in_in_files += \
 	src/core/org.freedesktop.systemd1.policy.in.in
 
-org.freedesktop.systemd1.%.xml: systemd
+org.freedesktop.systemd1.%.xml: uselessd
 	$(AM_V_GEN)$(LIBTOOL) --mode=execute $(OBJCOPY) -O binary -j introspect.$* $< $@.tmp && \
 		$(STRINGS) $@.tmp | $(AWK) -f $(srcdir)/introspect.awk | \
 		$(DBUS_PREPROCESS) -o $@ - && rm $@.tmp

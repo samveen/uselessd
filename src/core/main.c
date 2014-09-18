@@ -881,7 +881,7 @@ int main(int argc, char *argv[]) {
         dual_timestamp initrd_timestamp = { 0ULL, 0ULL };
         dual_timestamp userspace_timestamp = { 0ULL, 0ULL };
         dual_timestamp kernel_timestamp = { 0ULL, 0ULL };
-        static char systemd[] = "systemd";
+        static char usysd[] = "usysd";
         bool skip_setup = false;
         int j;
         bool loaded_policy = false;

@@ -19,11 +19,11 @@
 
 AC_PREREQ([2.64])
 
-AC_INIT([usysd],
+AC_INIT([uselessd],
         [1],
-        [http://bugs.freedesktop.org/enter_bug.cgi?product=systemd],
-        [usysd],
-        [http://www.freedesktop.org/wiki/Software/systemd])
+        [https://bitbucket.org/bcsd/uselessd/issues],
+        [uselessd],
+        [http://uselessd.darknedgy.net])
 
 AC_CONFIG_SRCDIR([src/core/main.c])
 AC_CONFIG_MACRO_DIR([m4])

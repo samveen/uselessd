@@ -20,7 +20,7 @@ systemdsystemgeneratordir=@systemgeneratordir@
 systemdusergeneratordir=@usergeneratordir@
 catalogdir=@catalogdir@
 
-Name: systemd
-Description: systemd System and Service Manager
+Name: uselessd
+Description: uselessd System and Service Manager
 URL: @PACKAGE_URL@
 Version: @PACKAGE_VERSION@
