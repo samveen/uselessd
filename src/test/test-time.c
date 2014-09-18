@@ -19,6 +19,7 @@
   along with systemd; If not, see <http://www.gnu.org/licenses/>.
 ***/
 
+#include <stdio.h>
 #include "time-util.h"
 
 static void test_parse_sec(void) {
@@ -127,10 +128,9 @@ static void test_format_timespan(usec_t accuracy) {
 }
 
 int main(int argc, char *argv[]) {
-        test_parse_sec();
-        test_parse_nsec();
-        test_format_timespan(1);
-        test_format_timespan(USEC_PER_MSEC);
-        test_format_timespan(USEC_PER_SEC);
-        return 0;
+       usec_t u;
+       int *r;
+       r = parse_sec(" 5.5s  ", &u);
+
+       printf("%s", r);
 }

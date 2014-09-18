@@ -31,9 +31,7 @@ static void test_specifier_printf(void) {
                 { 'a', specifier_string, (char*) "AAAA" },
                 { 'b', specifier_string, (char*) "BBBB" },
                 { 'm', specifier_machine_id, NULL },
-                { 'B', specifier_boot_id, NULL },
                 { 'H', specifier_host_name, NULL },
-                { 'v', specifier_kernel_release, NULL },
                 {}
         };
 
@@ -48,7 +46,7 @@ static void test_specifier_printf(void) {
         assert_se(streq(w, "xxx a=AAAA b=BBBB yyy"));
 
         free(w);
-        r = specifier_printf("machine=%m, boot=%B, host=%H, version=%v", table, NULL, &w);
+        r = specifier_printf("machine=%m, host=%H", table, NULL, &w);
         assert_se(r >= 0);
         assert_se(w);
         puts(w);

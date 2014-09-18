@@ -254,7 +254,7 @@ bin_PROGRAMS = \
 	systemd-analyze
 
 rootlibexec_PROGRAMS = \
-	systemd \
+	usysd \
 	systemd-update-utmp \
 	systemd-shutdownd \
 	systemd-shutdown \
@@ -846,14 +846,14 @@ libsystemd_core_la_LIBADD = \
 	$(KMOD_LIBS)
 
 # ------------------------------------------------------------------------------
-systemd_SOURCES = \
+usysd_SOURCES = \
 	src/core/main.c
 
-systemd_CFLAGS = \
+usysd_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(DBUS_CFLAGS)
 
-systemd_LDADD = \
+usysd_LDADD = \
 	libsystemd-core.la \
 	libsystemd-daemon.la \
 	libsystemd-id128-internal.la \

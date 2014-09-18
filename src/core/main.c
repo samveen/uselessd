@@ -889,6 +889,7 @@ int main(int argc, char *argv[]) {
         //char *switch_root_dir = NULL, *switch_root_init = NULL;
         static struct rlimit saved_rlimit_nofile = { 0, 0 };
 
+		/* Hardcoded. Segfaults on SYSTEMD_USER. */
         arg_running_as = SYSTEMD_SYSTEM;
 
 #ifdef HAVE_SYSV_COMPAT
@@ -951,6 +952,9 @@ int main(int argc, char *argv[]) {
         /* Reset all signal handlers. */
         assert_se(reset_all_signal_handlers() == 0);
 
+        if (parse_config_file() < 0)
+                goto finish;
+
         ignore_signals(SIGNALS_IGNORE, -1);
 
         log_parse_environment();
@@ -988,14 +992,12 @@ int main(int argc, char *argv[]) {
 
         assert_se(arg_action == ACTION_RUN || arg_action == ACTION_TEST);
 
-        /* Segfault mitigator from random_u() and random_ull(). */
-
-        /* Close logging fds, in order not to confuse fdset below
+        /* Close logging fds, in order not to confuse fdset below */
         log_close();
 
-        Remember open file descriptors for later deserialization
+        /* Remember open file descriptors for later deserialization */
 
-        r = fdset_new_fill(&fds);
+        /*r = fdset_new_fill(&fds);
         if (r < 0) {
                 log_error("Failed to allocate fd set: %s", strerror(-r));
                 goto finish;
@@ -1003,10 +1005,10 @@ int main(int argc, char *argv[]) {
                 fdset_cloexec(fds, true);
 
         if (serialization)
-                assert_se(fdset_remove(fds, fileno(serialization)) >= 0);
+                assert_se(fdset_remove(fds, fileno(serialization)) >= 0); */
 
         if (arg_running_as == SYSTEMD_SYSTEM)
-                 Become a session leader if we aren't one yet.
+                 /* Become a session leader if we aren't one yet. */
                 setsid();
 
         /* Move out of the way, so that we won't block unmounts */
@@ -1077,13 +1079,13 @@ int main(int argc, char *argv[]) {
 
         manager_set_show_status(m, arg_show_status);
 
-        //queue_default_job = !serialization || arg_switched_root;
+        queue_default_job = !serialization || arg_switched_root;
 
         // TODO: This is where things fail. Looping will later proceed,
         // indiscriminately, without it.
-        //r = manager_startup(m, serialization, fds);
-        //if (r < 0)
-                //log_error("Failed to fully start up daemon: %s", strerror(-r));
+        r = manager_startup(m, serialization, fds);
+        if (r < 0)
+                log_error("Failed to fully start up daemon: %s", strerror(-r));
 
         /* This will close all file descriptors that were opened, but
          * not claimed by any unit. */
@@ -1244,7 +1246,6 @@ finish:
                 free(arg_default_rlimit[j]);
 
         free(arg_default_unit);
-        free_join_controllers();
 
         dbus_shutdown();
         label_finish();

@@ -3759,7 +3759,7 @@ int fopen_temporary(const char *path, FILE **_f, char **_temp_path) {
         t[k] = '.';
         stpcpy(stpcpy(t+k+1, fn), "XXXXXX");
 
-        fd = mkostemp(t, O_WRONLY|O_CLOEXEC);
+        fd = mkostemp(t, O_WRONLY);
         if (fd < 0) {
                 free(t);
                 return -errno;

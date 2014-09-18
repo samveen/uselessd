@@ -15,6 +15,7 @@
    which is used internally by systemd and its auxiliaries
    to perform method calls:
 
+   autoreconf -fvi
    ./configure
    gmake
    gmake install

@@ -31,8 +31,8 @@
 #include "ctype.h"
 
 static void test_parse_env_file(void) {
-        char    t[] = "/tmp/test-fileio-in-XXXXXX",
-                p[] = "/tmp/test-fileio-out-XXXXXX";
+        char    t[] = "/tmp/test-fileio-in-XXXXXX";
+        char    p[] = "/tmp/test-fileio-out-XXXXXX";
         int fd, r;
         FILE *f;
         _cleanup_free_ char *one = NULL, *two = NULL, *three = NULL, *four = NULL, *five = NULL,

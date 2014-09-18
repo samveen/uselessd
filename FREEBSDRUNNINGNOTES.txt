@@ -98,3 +98,20 @@ for systemctl) without segfaulting.
 Redid main.c, touched up portions of manager.c. Ultimately, the issue
 has been isolated to manager_startup() which will fail. When not present,
 manager_loop() merely rotates clock_gettime() endlessly without fruition.
+
+systemd-main segfaults when running in SYSTEMD_USER. Use SYSTEMD_SYSTEM.
+
+Issue further boiled down to manager_enumerate(), which causes looking up
+/etc/rc*.d dirs
+
+
+-----------------
+
+manager_check_finished() displays time right before the clock_gettime()
+rotation, it is a part of manager_loop()
+
+ratelimit_test() functions as a placebo, there is no communication going
+on
+
+lack of process_event() due to missing epoll may be culprit
+replace with kqueue

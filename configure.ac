@@ -19,10 +19,10 @@
 
 AC_PREREQ([2.64])
 
-AC_INIT([systemd],
-        [208],
+AC_INIT([usysd],
+        [1],
         [http://bugs.freedesktop.org/enter_bug.cgi?product=systemd],
-        [systemd],
+        [usysd],
         [http://www.freedesktop.org/wiki/Software/systemd])
 
 AC_CONFIG_SRCDIR([src/core/main.c])
@@ -50,7 +50,7 @@ AS_IF([test "x$enable_largefile" = "xno"], [AC_MSG_ERROR([--disable-largefile is
 # i18n stuff for the PolicyKit policy files
 IT_PROG_INTLTOOL([0.40.0])
 
-GETTEXT_PACKAGE=systemd
+GETTEXT_PACKAGE=usysd
 AC_SUBST(GETTEXT_PACKAGE)
 
 AC_PROG_MKDIR_P

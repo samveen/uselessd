@@ -702,7 +702,6 @@ int manager_enumerate(Manager *m) {
                                 r = q;
                 }
 
-        manager_dispatch_load_queue(m);
         return r;
 }
 
@@ -813,7 +812,7 @@ int manager_startup(Manager *m, FILE *serialization, FDSet *fds) {
 
         /* First, enumerate what we can from all config files */
         dual_timestamp_get(&m->unitsload_start_timestamp);
-        r = manager_enumerate(m);
+        //r = manager_enumerate(m);
         dual_timestamp_get(&m->unitsload_finish_timestamp);
 
         /* Second, deserialize if there is something to deserialize */
@@ -1462,12 +1461,6 @@ int manager_loop(Manager *m) {
         m->unit_path_cache = NULL;
 
         manager_check_finished(m);
-
-        /* There might still be some zombies hanging around from
-         * before we were exec()'ed. Leat's reap them */
-        r = manager_dispatch_sigchld(m);
-        if (r < 0)
-                return r;
 
         while (m->exit_code == MANAGER_RUNNING) {
                 //struct epoll_event event;
