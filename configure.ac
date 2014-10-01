@@ -20,7 +20,7 @@
 AC_PREREQ([2.64])
 
 AC_INIT([uselessd],
-        [1],
+        [3],
         [https://bitbucket.org/bcsd/uselessd/issues],
         [uselessd],
         [http://uselessd.darknedgy.net])
@@ -50,7 +50,7 @@ AS_IF([test "x$enable_largefile" = "xno"], [AC_MSG_ERROR([--disable-largefile is
 # i18n stuff for the PolicyKit policy files
 IT_PROG_INTLTOOL([0.40.0])
 
-GETTEXT_PACKAGE=usysd
+GETTEXT_PACKAGE=systemd
 AC_SUBST(GETTEXT_PACKAGE)
 
 AC_PROG_MKDIR_P
@@ -302,18 +302,6 @@ if test "x${have_chkconfig}" != xno ; then
 fi
 
 # ------------------------------------------------------------------------------
-have_xz=no
-AC_ARG_ENABLE(xz, AS_HELP_STRING([--disable-xz], [Disable optional XZ support]))
-if test "x$enable_xz" != "xno"; then
-        PKG_CHECK_MODULES(XZ, [ liblzma ],
-                [AC_DEFINE(HAVE_XZ, 1, [Define if XZ is available]) have_xz=yes], have_xz=no)
-        if test "x$have_xz" = xno -a "x$enable_xz" = xyes; then
-                AC_MSG_ERROR([*** Xz support requested but libraries not found])
-        fi
-fi
-AM_CONDITIONAL(HAVE_XZ, [test "$have_xz" = "yes"])
-
-# ------------------------------------------------------------------------------
 AC_ARG_ENABLE([pam],
         AS_HELP_STRING([--disable-pam],[Disable optional PAM support]),
                 [case "${enableval}" in
@@ -428,39 +416,6 @@ AC_SUBST(XATTR_LIBS)
 AM_CONDITIONAL([HAVE_XATTR], [test "x$have_xattr" != xno])
 
 # ------------------------------------------------------------------------------
-AC_ARG_ENABLE([gcrypt],
-        AS_HELP_STRING([--disable-gcrypt],[Disable optional GCRYPT support]),
-                [case "${enableval}" in
-                        yes) have_gcrypt=yes ;;
-                        no) have_gcrypt=no ;;
-                        *) AC_MSG_ERROR(bad value ${enableval} for --disable-gcrypt) ;;
-                esac],
-                [have_gcrypt=auto])
-
-if test "x${have_gcrypt}" != xno ; then
-        AM_PATH_LIBGCRYPT(
-                [1.4.5],
-                [have_gcrypt=yes],
-                [if test "x$have_gcrypt" = xyes ; then
-                        AC_MSG_ERROR([*** GCRYPT headers not found.])
-                fi])
-
-        if test "x$have_gcrypt" = xyes ; then
-                GCRYPT_LIBS="$LIBGCRYPT_LIBS"
-                GCRYPT_CFLAGS="$LIBGCRYPT_CFLAGS"
-                AC_DEFINE(HAVE_GCRYPT, 1, [GCRYPT available])
-        else
-                have_gcrypt=no
-        fi
-else
-        GCRYPT_LIBS=
-        GCRYPT_CFLAGS=
-fi
-AC_SUBST(GCRYPT_LIBS)
-AC_SUBST(GCRYPT_CFLAGS)
-AM_CONDITIONAL([HAVE_GCRYPT], [test "x$have_gcrypt" != xno])
-
-# ------------------------------------------------------------------------------
 have_tmpfiles=no
 AC_ARG_ENABLE(tmpfiles, AS_HELP_STRING([--disable-tmpfiles], [disable tmpfiles support]))
 if test "x$enable_tmpfiles" != "xno"; then
@@ -475,6 +430,22 @@ if test "x$enable_randomseed" != "xno"; then
         have_randomseed=yes
 fi
 AM_CONDITIONAL(ENABLE_RANDOMSEED, [test "$have_randomseed" = "yes"])
+
+# ------------------------------------------------------------------------------
+have_machine_id_setup=no
+AC_ARG_ENABLE(machine_id_setup, AS_HELP_STRING([--disable-machine-id-setup], [disable machine-id tools]))
+if test "x$enable_machine_id_setup" != "xno"; then
+        have_machine_id_setup=yes
+fi
+AM_CONDITIONAL(ENABLE_MACHINE_ID_SETUP, [test "$have_machine_id_setup" = "yes"])
+
+# ------------------------------------------------------------------------------
+have_hostname_setup=no
+AC_ARG_ENABLE(hostname_setup, AS_HELP_STRING([--disable-hostname-setup], [disable hostname setup tool]))
+if test "x$enable_hostname_setup" != "xno"; then
+        have_hostname_setup=yes
+fi
+AM_CONDITIONAL(ENABLE_HOSTNAME_SETUP, [test "$have_hostname_setup" = "yes"])
 
 # ------------------------------------------------------------------------------
 AC_ARG_WITH(rc-local-script-path-start,
@@ -695,10 +666,8 @@ AC_MSG_RESULT([
 
         PAM:                     ${have_pam}
         IMA:                     ${have_ima}
-        XZ:                      ${have_xz}
         ACL:                     ${have_acl}
         XATTR:                   ${have_xattr}
-        GCRYPT:                  ${have_gcrypt}
         CHKCONFIG:               ${have_chkconfig}
         tmpfiles:                ${have_tmpfiles}
         randomseed:              ${have_randomseed}

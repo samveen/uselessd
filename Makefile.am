@@ -245,8 +245,7 @@ rootbin_PROGRAMS = \
 	systemctl \
 	systemd-notify \
 	systemd-ask-password \
-	systemd-tty-ask-password-agent \
-	systemd-machine-id-setup
+	systemd-tty-ask-password-agent
 
 bin_PROGRAMS = \
 	systemd-detect-virt \
@@ -405,6 +404,28 @@ EXTRA_DIST += \
 CLEANFILES += \
 	units/console-shell.service.m4 \
 	units/rescue.service.m4
+
+if ENABLE_MACHINE_ID_SETUP
+rootbin_PROGRAMS += \
+	systemd-machine-id-setup
+
+nodist_systemunit_DATA += \
+	units/systemd-machine-id-setup.service
+
+EXTRA_DIST += \
+	units/systemd-machine-id-setup.service.in
+endif
+
+if ENABLE_HOSTNAME_SETUP
+rootbin_PROGRAMS += \
+	uselessd-hostname-setup
+
+nodist_systemunit_DATA += \
+	units/uselessd-hostname-setup.service
+
+EXTRA_DIST += \
+	units/uselessd-hostname-setup.service.in
+endif
 
 if HAVE_SYSV_COMPAT
 nodist_systemunit_DATA += \
@@ -565,7 +586,7 @@ libsystemd_shared_la_SOURCES = \
 	src/shared/fdset.h \
 	src/shared/prioq.c \
 	src/shared/prioq.h \
-        src/shared/printf.h \
+    src/shared/printf.h \
 	src/shared/sleep-config.c \
 	src/shared/sleep-config.h \
 	src/shared/strv.c \
@@ -801,10 +822,6 @@ libsystemd_core_la_SOURCES = \
 	src/core/ima-setup.h \
 	src/core/locale-setup.h \
 	src/core/locale-setup.c \
-	src/core/hostname-setup.c \
-	src/core/hostname-setup.h \
-	src/core/machine-id-setup.c \
-	src/core/machine-id-setup.h \
 	src/core/mount-setup.c \
 	src/core/mount-setup.h \
 	src/core/condition.c \
@@ -905,7 +922,6 @@ CLEANFILES += \
 # ------------------------------------------------------------------------------
 manual_tests += \
 	test-engine \
-	test-hostname \
 	test-daemon \
 	test-cgroup \
 	test-install \
@@ -979,12 +995,6 @@ test_job_type_LDADD = \
 test_ns_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(DBUS_CFLAGS)
-
-test_hostname_SOURCES = \
-	src/test/test-hostname.c
-
-test_hostname_LDADD = \
-	libsystemd-core.la
 
 test_unit_name_SOURCES = \
 	src/test/test-unit-name.c
@@ -1326,14 +1336,19 @@ EXTRA_DIST += \
 
 # ------------------------------------------------------------------------------
 systemd_machine_id_setup_SOURCES = \
-	src/machine-id-setup/machine-id-setup-main.c \
-	src/core/machine-id-setup.c \
-	src/core/machine-id-setup.h
+	src/machine-id-setup/machine-id-setup-main.c
 
 systemd_machine_id_setup_LDADD = \
 	libsystemd-label.la \
 	libsystemd-shared.la \
 	libsystemd-id128-internal.la
+
+# ------------------------------------------------------------------------------
+uselessd_hostname_setup_SOURCES = \
+	src/hostname-setup/hostname-setup.c
+
+uselessd_hostname_setup_LDADD = \
+	libsystemd-shared.la
 
 # ------------------------------------------------------------------------------
 systemd_sleep_SOURCES = \

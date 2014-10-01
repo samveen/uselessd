@@ -57,8 +57,6 @@
 #ifdef HAVE_KMOD
 #include "kmod-setup.h"
 #endif
-#include "hostname-setup.h"
-#include "machine-id-setup.h"
 #include "selinux-setup.h"
 #include "ima-setup.h"
 #include "fileio.h"
@@ -1045,9 +1043,6 @@ int main(int argc, char *argv[]) {
         if (arg_running_as == SYSTEMD_SYSTEM && !skip_setup) {
                 if (arg_show_status || plymouth_running())
                         status_welcome();
-
-                hostname_setup();
-                machine_id_setup();
 
                 test_usr();
         }
