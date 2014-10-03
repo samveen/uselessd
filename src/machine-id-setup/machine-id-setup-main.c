@@ -26,7 +26,6 @@
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
-#include <sys/mount.h>
 
 #include <systemd/sd-id128.h>
 
@@ -222,20 +221,6 @@ int machine_id_setup(void) {
                 unlink("/run/machine-id");
                 return r;
         }
-
-        /* And now, let's mount it over */
-        r = mount("/run/machine-id", "/etc/machine-id", NULL, MS_BIND, NULL);
-        if (r < 0) {
-                log_error("Failed to mount /etc/machine-id: %m");
-                unlink_noerrno("/run/machine-id");
-                return -errno;
-        }
-
-        log_info("Installed transient /etc/machine-id file.");
-
-        /* Mark the mount read-only */
-        if (mount(NULL, "/etc/machine-id", NULL, MS_BIND|MS_RDONLY|MS_REMOUNT, NULL) < 0)
-                log_warning("Failed to make transient /etc/machine-id read-only: %m");
 
         return 0;
 }
