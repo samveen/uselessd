@@ -26,7 +26,7 @@
 #include <sys/un.h>
 #include <stddef.h>
 #include <sys/poll.h>
-#include <sys/endian.h>
+#include <endian.h>
 //#include <sys/inotify.h>
 #include <unistd.h>
 #include <getopt.h>

@@ -33,7 +33,7 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <sys/endian.h>
+#include <endian.h>
 #include <sys/stat.h>
 
 #include "time-dst.h"
