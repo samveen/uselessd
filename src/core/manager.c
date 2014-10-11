@@ -36,7 +36,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <sys/ucred.h>
 //#include <sys/timerfd.h>
 
 #ifdef HAVE_AUDIT

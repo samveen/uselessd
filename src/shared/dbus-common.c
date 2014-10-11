@@ -27,7 +27,6 @@
 #include <stdlib.h>
 #include <dbus/dbus.h>
 #include <string.h>
-#include <sys/ucred.h>
 #include <sys/priv.h>
 #include <sys/stat.h>
 
