@@ -27,8 +27,6 @@
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/param.h>
-#include <sys/priv.h>
-#include <bsm/audit.h>
 #include <string.h>
 #include <sys/un.h>
 #include <stddef.h>
