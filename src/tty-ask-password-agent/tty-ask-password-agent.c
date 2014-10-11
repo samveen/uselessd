@@ -642,7 +642,7 @@ static int help(void) {
                "     --wall     Continuously forward password requests to wall\n"
                "     --plymouth Ask question with Plymouth instead of on TTY\n"
                "     --console  Ask question on /dev/console instead of current TTY\n",
-               getprogname());
+               program_invocation_short_name);
 
         return 0;
 }

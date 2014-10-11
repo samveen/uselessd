@@ -100,7 +100,7 @@ static int help(void) {
                "Initialize and set /etc/hostname.\n\n"
                "  -h --help             Show this help\n"
                "     --version          Show package version\n",
-               getprogname());
+               program_invocation_short_name);
 
         return 0;
 }

@@ -1185,7 +1185,7 @@ static void analyze_help(void) {
                "  critical-chain      Print a tree of the time critical chain of units\n"
                "  plot                Output SVG graphic showing service initialization\n"
                "  dot                 Output dependency graph in dot(1) format\n",
-               getprogname());
+               program_invocation_short_name);
 
         /* When updating this list, including descriptions, apply
          * changes to shell-completion/bash/systemd and

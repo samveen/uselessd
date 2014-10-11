@@ -723,7 +723,7 @@ static int help(void) {
                "     --log-location[=0|1]        Include code location in log messages\n"
                "     --default-standard-output=  Set default standard output for services\n"
                "     --default-standard-error=   Set default standard error output for services\n",
-               getprogname());
+               program_invocation_short_name);
 
         return 0;
 }
@@ -891,7 +891,7 @@ int main(int argc, char *argv[]) {
         arg_running_as = SYSTEMD_SYSTEM;
 
 #ifdef HAVE_SYSV_COMPAT
-        if (getpid() != 1 && strstr(getprogname(), "init")) {
+        if (getpid() != 1 && strstr(program_invocation_short_name, "init")) {
                 /* This is compatibility support for SysV, where
                  * calling init as a user is identical to telinit. */
 

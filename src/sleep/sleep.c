@@ -140,7 +140,7 @@ static int help(void) {
                "  suspend              Suspend the system\n"
                "  hibernate            Hibernate the system\n"
                "  hybrid-sleep         Both hibernate and suspend the system\n"
-               , getprogname()
+               , program_invocation_short_name
                );
 
         return 0;
@@ -183,7 +183,7 @@ static int parse_argv(int argc, char *argv[]) {
 
         if (argc - optind != 1) {
                 log_error("Usage: %s COMMAND",
-                          getprogname());
+                          program_invocation_short_name);
                 return -EINVAL;
         }
 

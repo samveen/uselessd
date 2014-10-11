@@ -4531,7 +4531,7 @@ static int systemctl_help(void) {
                "  suspend                         Suspend the system\n"
                "  hibernate                       Hibernate the system\n"
                "  hybrid-sleep                    Hibernate and suspend the system\n",
-               getprogname());
+               program_invocation_short_name);
 
         return 0;
 }
@@ -4548,7 +4548,7 @@ static int halt_help(void) {
                "  -w --wtmp-only Don't halt/power-off/reboot, just write wtmp record\n"
                "  -d --no-wtmp   Don't write wtmp record\n"
                "     --no-wall   Don't send wall message before halt/power-off/reboot\n",
-               getprogname(),
+               program_invocation_short_name,
                arg_action == ACTION_REBOOT   ? "Reboot" :
                arg_action == ACTION_POWEROFF ? "Power off" :
                                                "Halt");
@@ -4568,7 +4568,7 @@ static int shutdown_help(void) {
                "  -k             Don't halt/power-off/reboot, just send warnings\n"
                "     --no-wall   Don't send wall message before halt/power-off/reboot\n"
                "  -c             Cancel a pending shutdown\n",
-               getprogname());
+               program_invocation_short_name);
 
         return 0;
 }
@@ -4586,7 +4586,7 @@ static int telinit_help(void) {
                "  1, s, S        Enter rescue mode\n"
                "  q, Q           Reload init daemon configuration\n"
                "  u, U           Reexecute init daemon\n",
-               getprogname());
+               program_invocation_short_name);
 
         return 0;
 }
@@ -4596,7 +4596,7 @@ static int runlevel_help(void) {
         printf("%s [OPTIONS...]\n\n"
                "Prints the previous and current runlevel of the init system.\n\n"
                "     --help      Show this help\n",
-               getprogname());
+               program_invocation_short_name);
 
         return 0;
 }
@@ -5311,24 +5311,24 @@ static int parse_argv(int argc, char *argv[]) {
         assert(argc >= 0);
         assert(argv);
 
-        if (getprogname()) {
+        if (program_invocation_short_name) {
 
-                if (strstr(getprogname(), "halt")) {
+                if (strstr(program_invocation_short_name, "halt")) {
                         arg_action = ACTION_HALT;
                         return halt_parse_argv(argc, argv);
-                } else if (strstr(getprogname(), "poweroff")) {
+                } else if (strstr(program_invocation_short_name, "poweroff")) {
                         arg_action = ACTION_POWEROFF;
                         return halt_parse_argv(argc, argv);
-                } else if (strstr(getprogname(), "reboot")) {
+                } else if (strstr(program_invocation_short_name, "reboot")) {
                         if (kexec_loaded())
                                 arg_action = ACTION_KEXEC;
                         else
                                 arg_action = ACTION_REBOOT;
                         return halt_parse_argv(argc, argv);
-                } else if (strstr(getprogname(), "shutdown")) {
+                } else if (strstr(program_invocation_short_name, "shutdown")) {
                         arg_action = ACTION_POWEROFF;
                         return shutdown_parse_argv(argc, argv);
-                } else if (strstr(getprogname(), "init")) {
+                } else if (strstr(program_invocation_short_name, "init")) {
 
                         if (sd_booted() > 0) {
                                 arg_action = ACTION_INVALID;
@@ -5345,7 +5345,7 @@ static int parse_argv(int argc, char *argv[]) {
                                 return -EIO;
                         }
 
-                } else if (strstr(getprogname(), "runlevel")) {
+                } else if (strstr(program_invocation_short_name, "runlevel")) {
                         arg_action = ACTION_RUNLEVEL;
                         return runlevel_parse_argv(argc, argv);
                 }

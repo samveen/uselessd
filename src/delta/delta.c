@@ -437,7 +437,7 @@ static void help(void) {
                "     --version        Show package version\n"
                "     --diff[=1|0]     Show a diff when overridden files differ\n"
                "  -t --type=LIST...   Only display a selected set of override types\n",
-               getprogname());
+               program_invocation_short_name);
 }
 
 static int parse_flags(const char *flag_str, int flags) {

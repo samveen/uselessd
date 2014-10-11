@@ -232,7 +232,7 @@ static int help(void) {
                "Initialize /etc/machine-id from a random source.\n\n"
                "  -h --help             Show this help\n"
                "     --version          Show package version\n",
-               getprogname());
+               program_invocation_short_name);
 
         return 0;
 }

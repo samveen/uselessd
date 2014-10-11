@@ -1258,7 +1258,7 @@ static int help(void) {
                "     --remove               Remove marked files/directories\n"
                "     --prefix=PATH          Only apply rules that apply to paths with the specified prefix\n"
                "     --exclude-prefix=PATH  Ignore rules that apply to paths with the specified prefix\n",
-               getprogname());
+               program_invocation_short_name);
 
         return 0;
 }
