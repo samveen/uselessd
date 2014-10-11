@@ -32,7 +32,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 //#include <sys/prctl.h>
-#include <sys/mount.h>
+#include <sys/statfs.h>
 
 #include "manager.h"
 #include "log.h"

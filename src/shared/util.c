@@ -54,7 +54,7 @@
 #include <glob.h>
 #include <grp.h>
 #include <sys/mman.h>
-#include <sys/mount.h> // was <sys/vfs.h> on Linux
+#include <sys/statfs.h> // was <sys/vfs.h> on Linux
 //#include <linux/magic.h>
 #include <limits.h>
 #include <langinfo.h>

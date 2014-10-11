@@ -30,7 +30,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <dirent.h>
-#include <sys/mount.h>
+#include <sys/statfs.h>
 #include <stdint.h>
 
 #include "macro.h"
