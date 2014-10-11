@@ -82,10 +82,6 @@ int socket_address_listen(
         }
 
         if (socket_address_family(a) == AF_INET || socket_address_family(a) == AF_INET6) {
-                if (bind_to_device)
-                        if (setsockopt(fd, SOL_SOCKET, IP_RECVIF, bind_to_device, strlen(bind_to_device)+1) < 0)
-                                goto fail;
-
                 if (free_bind) {
                         one = 1;
                         if (setsockopt(fd, IPPROTO_IP, IP_FREEBIND, &one, sizeof(one)) < 0)
