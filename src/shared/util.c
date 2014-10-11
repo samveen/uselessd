@@ -2751,9 +2751,8 @@ int fchmod_and_fchown(int fd, mode_t mode, uid_t uid, gid_t gid) {
         return 0;
 }
 
-/* Changed cpu_set_t to cpuset_t. */
-cpuset_t* cpu_set_malloc(unsigned *ncpus) {
-        cpuset_t *r;
+cpu_set_t* cpu_set_malloc(unsigned *ncpus) {
+        cpu_set_t *r;
         unsigned n = 1024;
 
         /* Allocates the cpuset in the right size */
