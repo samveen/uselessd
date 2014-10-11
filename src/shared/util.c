@@ -3220,7 +3220,7 @@ int wait_for_terminate(pid_t pid, siginfo_t *status) {
         for (;;) {
                 zero(*status);
 
-                if (waitid(P_PID, pid, status, WEXITED) < 0) {
+                if (waitpid(0, &status, WIFEXITED(status)) < 0) {
 
                         if (errno == EINTR)
                                 continue;
@@ -3567,13 +3567,14 @@ void execute_directory(const char *directory, DIR *d, char *argv[]) {
                 pid_t pid = PTR_TO_UINT(hashmap_first_key(pids));
                 siginfo_t si = {};
                 char *path;
+                int status;
 
-                if (waitid(P_PID, pid, &si, WEXITED) < 0) {
+                if (waitpid(0, &status, WIFEXITED(status)) < 0) {
 
                         if (errno == EINTR)
                                 continue;
 
-                        log_error("waitid() failed: %m");
+                        log_error("waitpid() failed: %m");
                         goto finish;
                 }
 

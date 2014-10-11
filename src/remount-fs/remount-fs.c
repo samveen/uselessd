@@ -153,13 +153,14 @@ int main(int argc, char *argv[]) {
         while (!hashmap_isempty(pids)) {
                 siginfo_t si = {};
                 char *s;
+                int status;
 
-                if (waitid(P_ALL, 0, &si, WEXITED) < 0) {
+                if (waitpid(-1, &status, WNOHANG) < 0) {
 
                         if (errno == EINTR)
                                 continue;
 
-                        log_error("waitid() failed: %m");
+                        log_error("waitpid() failed: %m");
                         ret = EXIT_FAILURE;
                         break;
                 }

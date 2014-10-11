@@ -1229,11 +1229,12 @@ static int manager_dispatch_sigchld(Manager *m) {
                 siginfo_t si = {};
                 Unit *u;
                 int r;
+                int status;
 
                 /* First we call waitd() for a PID and do not reap the
                  * zombie. That way we can still access /proc/$PID for
                  * it while it is a zombie. */
-                if (waitid(P_ALL, 0, &si, WEXITED|WNOHANG|WNOWAIT) < 0) {
+                if (waitpid(-1, &status, WNOHANG) < 0) {
 
                         if (errno == ECHILD)
                                 break;
@@ -1268,7 +1269,7 @@ static int manager_dispatch_sigchld(Manager *m) {
                         u = manager_get_unit_by_pid(m, si.si_pid);
 
                 /* And now, we actually reap the zombie. */
-                if (waitid(P_PID, si.si_pid, &si, WEXITED) < 0) {
+                if (waitpid(0, &status, WIFEXITED(status)) < 0) {
                         if (errno == EINTR)
                                 continue;
 
