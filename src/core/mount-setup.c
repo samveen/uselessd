@@ -67,6 +67,10 @@ typedef struct MountPoint {
  * other ones we can delay until SELinux and IMA are loaded. */
 #define N_EARLY_MOUNT 5
 
+/* stopgaps for the Hurd */
+#define MNT_NOEXEC 0x00000004
+#define MNT_NOSUID 0x00000008
+
 static const MountPoint mount_table[] = {
         { "devtmpfs",   "/dev",                      "devtmpfs",   "mode=755", MNT_NOSUID,
           NULL,       MNT_FATAL|MNT_IN_CONTAINER },
