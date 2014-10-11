@@ -466,7 +466,7 @@ bool socket_address_matches_fd(const SocketAddress *a, int fd) {
 
         if (a->protocol != 0)  {
                 solen = sizeof(protocol);
-                if (getsockopt(fd, SOL_SOCKET, SO_PROTOCOL, &protocol, &solen) < 0)
+                if (getsockopt(fd, SOL_SOCKET, SO_TYPE, &protocol, &solen) < 0)
                         return false;
 
                 if (protocol != a->protocol)
