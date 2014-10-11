@@ -376,7 +376,7 @@ int rm_rf(const char *path, bool only_dirs, bool delete_root, bool honour_sticky
 
 int pipe_eof(int fd);
 
-cpuset_t* cpu_set_malloc(unsigned *ncpus);
+cpu_set_t* cpu_set_malloc(unsigned *ncpus);
 
 void status_vprintf(const char *status, bool ellipse, const char *format, va_list ap);
 void status_printf(const char *status, bool ellipse, const char *format, ...);

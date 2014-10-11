@@ -418,7 +418,7 @@ int rm_rf_dangerous(const char *path, bool only_dirs, bool delete_root, bool hon
 
 int pipe_eof(int fd);
 
-cpuset_t* cpu_set_malloc(unsigned *ncpus); /* cpuset_t instead of cpu_set_t */
+cpu_set_t* cpu_set_malloc(unsigned *ncpus); /* cpuset_t instead of cpu_set_t */
 
 int status_vprintf(const char *status, bool ellipse, bool ephemeral, const char *format, va_list ap) _printf_attr_(4,0);
 int status_printf(const char *status, bool ellipse, bool ephemeral, const char *format, ...) _printf_attr_(4,5);
