@@ -29,9 +29,9 @@
 #include <syslog.h>
 #include <sched.h>
 #include <sys/resource.h>
-#include <sys/sched.h> /* FreeBSD */
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/socket.h>
 #include <fcntl.h>
 #include <dirent.h>
 #include <sys/ioctl.h>
