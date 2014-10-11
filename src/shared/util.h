@@ -39,8 +39,6 @@
 #include <unistd.h>
 #include <locale.h>
 
-#include <pthread_np.h>
-
 #include "macro.h"
 #include "time-util.h"
 
@@ -117,6 +115,13 @@ union dirent_storage {
 #define ANSI_HIGHLIGHT_YELLOW_ON "\x1B[1;33m"
 #define ANSI_HIGHLIGHT_OFF "\x1B[0m"
 #define ANSI_ERASE_TO_END_OF_LINE "\x1B[K"
+
+/* Ugly and incorrect hacks to satisfy the Hurd
+ * at compile time. Address later on. */
+#define SIGRTMIN 32
+#define SIGRTMAX 32
+#define PATH_MAX 4096
+#define PIPE_BUF 512
 
 size_t page_size(void);
 #define PAGE_ALIGN(l) ALIGN_TO((l), page_size())
