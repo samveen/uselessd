@@ -29,7 +29,6 @@ typedef struct ExecContext ExecContext;
 #include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/resource.h>
-#include <sys/capability.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <sched.h>

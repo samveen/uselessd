@@ -39,7 +39,6 @@
 #include <sys/time.h>
 #include <glob.h>
 #include <fnmatch.h>
-#include <sys/capability.h>
 
 #include "log.h"
 #include "util.h"

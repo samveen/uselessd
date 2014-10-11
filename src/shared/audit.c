@@ -26,7 +26,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <sys/capability.h>
 
 #include "macro.h"
 #include "audit.h"
