@@ -22,7 +22,7 @@
 ***/
 
 #include "list.h"
-#include <sys/types.h>
+#include <stdint>
 #include <stdbool.h>
 
 typedef struct CGroupContext CGroupContext;
