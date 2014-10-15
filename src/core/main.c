@@ -49,6 +49,7 @@
 #include "path-util.h"
 #include "killall.h"
 #include "env-util.h"
+#include "mkdir.h"
 #include "hwclock.h"
 #include "sd-daemon.h"
 #include "sd-messages.h"
@@ -938,6 +939,10 @@ int main(int argc, char *argv[]) {
                 log_error("Failed to set default unit %s: %s", SPECIAL_DEFAULT_TARGET, strerror(-r));
                 goto finish;
         }
+
+        mkdir_label("/run/systemd", 0755);
+        mkdir_label("/run/systemd/system", 0755);
+        mkdir_label("/run/systemd/inaccessible", 0000);
 
         /* Reset all signal handlers. */
         assert_se(reset_all_signal_handlers() == 0);
