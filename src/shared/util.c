@@ -2305,8 +2305,7 @@ void sigset_add_many(sigset_t *ss, ...) {
         assert(ss);
 
         va_start(ap, ss);
-        while ((sig = va_arg(ap, int)) > 0)
-                assert_se(sigaddset(ss, sig) == 0);
+        if (sigaddset(ss, sig) > 0) log_error("sigaddset(ss, sig) failed.");
         va_end(ap);
 }
 
