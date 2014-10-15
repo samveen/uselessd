@@ -155,7 +155,7 @@ _noreturn_ static void crash(int sig) {
         if (arg_crash_shell) {
                 struct sigaction sa = {
                         .sa_handler = SIG_IGN,
-                        .sa_flags = SA_NOCLDSTOP|SA_NOCLDWAIT|SA_RESTART,
+                        .sa_flags = SA_NOCLDSTOP|SA_RESTART,
                 };
                 pid_t pid;
 
