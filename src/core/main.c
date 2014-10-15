@@ -939,21 +939,11 @@ int main(int argc, char *argv[]) {
                 goto finish;
         }
 
-        /* Mount /proc, /sys and friends, so that /proc/cmdline and
-         * /proc/$PID/fd is available. */
-       // if (getpid() == 1) {
-             //   r = mount_setup(loaded_policy);
-               // if (r < 0)
-               //         goto finish;
-       // }
-
         /* Reset all signal handlers. */
         assert_se(reset_all_signal_handlers() == 0);
 
         if (parse_config_file() < 0)
                 goto finish;
-
-        ignore_signals(SIGNALS_IGNORE, -1);
 
         log_parse_environment();
 
@@ -1244,107 +1234,6 @@ finish:
 
         dbus_shutdown();
         label_finish();
-
-        if (reexecute) {
-                const char **args;
-                unsigned i, args_size;
-
-                /* Reset the RLIMIT_NOFILE to the kernel default, so
-                 * that the new systemd can pass the kernel default to
-                 * its child processes */
-                if (saved_rlimit_nofile.rlim_cur > 0)
-                        setrlimit(RLIMIT_NOFILE, &saved_rlimit_nofile);
-
-               /* if (switch_root_dir) {
-                        /* Kill all remaining processes from the
-                         * initrd, but don't wait for them, so that we
-                         * can handle the SIGCHLD for them after
-                         * deserializing.
-                        broadcast_signal(SIGTERM, false);
-
-                        /* And switch root
-                        r = switch_root(switch_root_dir);
-                        if (r < 0)
-                                log_error("Failed to switch root, ignoring: %s", strerror(-r));
-                } */
-
-                args_size = MAX(6, argc+1);
-                args = newa(const char*, args_size);
-
-               /* if (!switch_root_init) {
-                        char sfd[16];
-
-                        /* First try to spawn ourselves with the right
-                         * path, and with full serialization. We do
-                         * this only if the user didn't specify an
-                         * explicit init to spawn.
-
-                        assert(serialization);
-                        assert(fds);
-
-                        snprintf(sfd, sizeof(sfd), "%i", fileno(serialization));
-                        char_array_0(sfd);
-
-                        i = 0;
-                        args[i++] = SYSTEMD_BINARY_PATH;
-                        if (switch_root_dir)
-                                args[i++] = "--switched-root";
-                        args[i++] = arg_running_as == SYSTEMD_SYSTEM ? "--system" : "--user";
-                        args[i++] = "--deserialize";
-                        args[i++] = sfd;
-                        args[i++] = NULL;
-
-                        /* do not pass along the environment we inherit from the kernel or initrd
-                        if (switch_root_dir)
-                                clearenv();
-
-                        assert(i <= args_size);
-                        execv(args[0], (char* const*) args);
-                } */
-
-                /* Try the fallback, if there is any, without any
-                 * serialization. We pass the original argv[] and
-                 * envp[]. (Well, modulo the ordering changes due to
-                 * getopt() in argv[], and some cleanups in envp[],
-                 * but let's hope that doesn't matter.) */
-
-                if (serialization) {
-                        fclose(serialization);
-                        serialization = NULL;
-                }
-
-                if (fds) {
-                        fdset_free(fds);
-                        fds = NULL;
-                }
-
-                /* Reopen the console */
-                make_console_stdio();
-
-                for (j = 1, i = 1; j < argc; j++)
-                        args[i++] = argv[j];
-                args[i++] = NULL;
-                assert(i <= args_size);
-
-               /* if (switch_root_init) {
-                        args[0] = switch_root_init;
-                        execv(args[0], (char* const*) args);
-                        log_warning("Failed to execute configured init, trying fallback: %m");
-                } */
-
-                args[0] = "/sbin/init";
-                execv(args[0], (char* const*) args);
-
-                if (errno == ENOENT) {
-                        log_warning("No /sbin/init, trying fallback");
-
-                        args[0] = "/bin/sh";
-                        args[1] = NULL;
-                        execv(args[0], (char* const*) args);
-                        log_error("Failed to execute /bin/sh, giving up: %m");
-                } else
-                        log_warning("Failed to execute /sbin/init, giving up: %m");
-        }
 
         if (serialization)
                 fclose(serialization);
