@@ -84,7 +84,6 @@ static char ***arg_join_controllers = NULL;
 static ExecOutput arg_default_std_output = EXEC_OUTPUT_SYSLOG;
 static ExecOutput arg_default_std_error = EXEC_OUTPUT_INHERIT;
 static char **arg_default_environment = NULL;
-static struct rlimit *arg_default_rlimit[RLIMIT_CPU] = {};
 static nsec_t arg_timer_slack_nsec = (nsec_t) -1;
 
 static FILE* serialization = NULL;
@@ -396,16 +395,6 @@ static int parse_config_file(void) {
                 { "Manager", "JoinControllers",       config_parse_join_controllers, 0, &arg_join_controllers },
                 { "Manager", "TimerSlackNSec",        config_parse_nsec,         0, &arg_timer_slack_nsec    },
                 { "Manager", "DefaultEnvironment",    config_parse_environ,      0, &arg_default_environment },
-                { "Manager", "DefaultLimitCPU",       config_parse_limit,        0, &arg_default_rlimit[RLIMIT_CPU]},
-                { "Manager", "DefaultLimitFSIZE",     config_parse_limit,        0, &arg_default_rlimit[RLIMIT_FSIZE]},
-                { "Manager", "DefaultLimitDATA",      config_parse_limit,        0, &arg_default_rlimit[RLIMIT_DATA]},
-                { "Manager", "DefaultLimitSTACK",     config_parse_limit,        0, &arg_default_rlimit[RLIMIT_STACK]},
-                { "Manager", "DefaultLimitCORE",      config_parse_limit,        0, &arg_default_rlimit[RLIMIT_CORE]},
-                { "Manager", "DefaultLimitRSS",       config_parse_limit,        0, &arg_default_rlimit[RLIMIT_RSS]},
-                { "Manager", "DefaultLimitNOFILE",    config_parse_limit,        0, &arg_default_rlimit[RLIMIT_NOFILE]},
-                { "Manager", "DefaultLimitAS",        config_parse_limit,        0, &arg_default_rlimit[RLIMIT_AS]},
-                { "Manager", "DefaultLimitNPROC",     config_parse_limit,        0, &arg_default_rlimit[RLIMIT_NPROC]},
-                { "Manager", "DefaultLimitMEMLOCK",   config_parse_limit,        0, &arg_default_rlimit[RLIMIT_MEMLOCK]},
                 { NULL, NULL, NULL, 0, NULL }
         };
 
@@ -798,42 +787,6 @@ fail:
         return r;
 }
 
-static int bump_rlimit_nofile(struct rlimit *saved_rlimit) {
-        struct rlimit nl;
-        int r;
-
-        assert(saved_rlimit);
-
-        /* Save the original RLIMIT_NOFILE so that we can reset it
-         * later when transitioning from the initrd to the main
-         * systemd or suchlike. */
-        if (getrlimit(RLIMIT_NOFILE, saved_rlimit) < 0) {
-                log_error("Reading RLIMIT_NOFILE failed: %m");
-                return -errno;
-        }
-
-        /* Make sure forked processes get the default kernel setting */
-        if (!arg_default_rlimit[RLIMIT_NOFILE]) {
-                struct rlimit *rl;
-
-                rl = newdup(struct rlimit, saved_rlimit, 1);
-                if (!rl)
-                        return log_oom();
-
-                arg_default_rlimit[RLIMIT_NOFILE] = rl;
-        }
-
-        /* Bump up the resource limit for ourselves substantially */
-        nl.rlim_cur = nl.rlim_max = 64*1024;
-        r = setrlimit_closest(RLIMIT_NOFILE, &nl);
-        if (r < 0) {
-                log_error("Setting RLIMIT_NOFILE failed: %s", strerror(-r));
-                return r;
-        }
-
-        return 0;
-}
-
 static void test_usr(void) {
 
         /* Check that /usr is not a separate fs */
@@ -1060,9 +1013,6 @@ int main(int argc, char *argv[]) {
                 }
         } */
 
-        if (arg_running_as == SYSTEMD_SYSTEM)
-                bump_rlimit_nofile(&saved_rlimit_nofile);
-
         r = manager_new(arg_running_as, !!serialization, &m);
         if (r < 0) {
                 log_error("Failed to allocate manager object: %s", strerror(-r));
@@ -1236,9 +1186,6 @@ int main(int argc, char *argv[]) {
 finish:
         if (m)
                 manager_free(m);
-
-        for (j = 0; j < 16; j++) // RLIMIT_NLIMITS
-                free(arg_default_rlimit[j]);
 
         free(arg_default_unit);
 
