@@ -138,15 +138,13 @@ int bus_connect(DBusBusType t, DBusConnection **_bus, bool *_private, DBusError 
 
         assert(_bus);
 
-        if (geteuid() == 0 && t == DBUS_BUS_SYSTEM) {
-                /* If we are root, then let's talk directly to the
-                 * system instance, instead of going via the bus */
+        /* If we are root, then let's talk directly to the
+         * system instance, instead of going via the bus */
 
-                bus = dbus_connection_open_private("unix:path=/run/systemd/private", error);
-                if (!bus)
-                        return -EIO;
+         bus = dbus_connection_open_private("unix:path=/run/systemd/private", error);
+         if (!bus)
+                return -EIO;
 
-        } else {
                 if (t == DBUS_BUS_SESSION) {
                         const char *e;
 
@@ -173,7 +171,6 @@ int bus_connect(DBusBusType t, DBusConnection **_bus, bool *_private, DBusError 
 
                         private = false;
                 }
-        }
 
         dbus_connection_set_exit_on_disconnect(bus, FALSE);
 

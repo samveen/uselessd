@@ -2751,12 +2751,13 @@ int fchmod_and_fchown(int fd, mode_t mode, uid_t uid, gid_t gid) {
         return 0;
 }
 
-/* Changed cpu_set_t to cpuset_t. */
+/* Changed cpu_set_t to cpuset_t.
+ * Reduce to noop for now to satisfy ld. */
 cpuset_t* cpu_set_malloc(unsigned *ncpus) {
-        cpuset_t *r;
+       /* cpuset_t *r;
         unsigned n = 1024;
 
-        /* Allocates the cpuset in the right size */
+         Allocates the cpuset in the right size
 
         for (;;) {
                 if (!(r = CPU_ALLOC(n)))
@@ -2778,6 +2779,7 @@ cpuset_t* cpu_set_malloc(unsigned *ncpus) {
 
                 n *= 2;
         }
+        */
 }
 
 int status_vprintf(const char *status, bool ellipse, bool ephemeral, const char *format, va_list ap) {
