@@ -130,7 +130,7 @@ static int create_log_socket(int type) {
         messages way too early. However, let's not hang forever in the
         unlikely case of a deadlock. */
         timeval_store(&tv, 1*USEC_PER_MINUTE);
-        setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+        (void)setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 
         return fd;
 }
