@@ -129,7 +129,7 @@ static int parse_argv(int argc, char *argv[]) {
                 }
         }
 
-        if (optind != argc-1) {
+        if (optind != argc - 1) {
                 help();
                 return -EINVAL;
         }
