@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
 	   log_open();
 
 	   r = parse_argv(argc, argv);
-       if (r <= 0)
+	   if (r <= 0)
                return r < 0 ? EXIT_FAILURE : EXIT_SUCCESS;
 
 	   return hostname_setup() < 0 ? EXIT_FAILURE : EXIT_SUCCESS;
