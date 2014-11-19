@@ -39,17 +39,17 @@
 const char *arg_dest = "/tmp";
 
 static int add_symlink(const char *service, const char *where) {
-        char *from = NULL, *to = NULL;
+        _cleanup_free_ char *from = NULL, *to = NULL;
         int r;
 
         assert(service);
+        assert(where);
 
         asprintf(&from, SYSTEM_DATA_UNIT_PATH "/%s", service);
         asprintf(&to, "%s/%s.wants/%s", arg_dest, where, service);
 
         if (!from || !to) {
                 r = log_oom();
-                goto finish;
         }
 
         mkdir_parents_label(to, 0755);
@@ -63,10 +63,6 @@ static int add_symlink(const char *service, const char *where) {
                         r = -errno;
                 }
         }
-
-finish:
-        free(from);
-        free(to);
 
         return r;
 }
