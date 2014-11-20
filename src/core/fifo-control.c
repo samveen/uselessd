@@ -53,7 +53,7 @@ void fifo_control_loop(void) {
                         log_error("Failed to read from fifoctl IPC endpoint: %s.", strerror(-r));
                 }
 
-                if (strcmp("test", fifobuf) == 0) {
+                if (streq("test", fifobuf)) {
                         log_info("Badabing.\n");
                 }
         }
