@@ -30,11 +30,15 @@
 
 #include "fifo-control.h"
 #include "log.h"
+#include "manager.h"
+#include "unit.h"
+#include "install.h"
 #include "util.h"
 
 void fifo_control_loop(void) {
         int c, f, r;
         char fifobuf[BUFSIZ];
+        Manager *m;
 
         c = mkfifo("/run/systemd/fifoctl", 0644);
         if (c < 0) {
@@ -55,7 +59,23 @@ void fifo_control_loop(void) {
 
                 if (streq("test", fifobuf)) {
                         log_info("Badabing.\n");
+                } else if (streq("reld", fifobuf)) {
+                        m->exit_code = MANAGER_RELOAD;
+                } else if (streq("rexc", fifobuf)) {
+                        m->exit_code = MANAGER_REEXECUTE;
+                } else if (streq("exit", fifobuf)) {
+                        if (m->running_as == SYSTEMD_SYSTEM)
+                                log_error("Exit is only supported for user service managers.");
+
+                        m->exit_code = MANAGER_EXIT;
+                } else if (streq("gdtr", fifobuf)) {
+                        int def;
+                        _cleanup_free_ char *default_target = NULL;
+
+                        def = unit_file_get_default(UNIT_FILE_GLOBAL, NULL, &default_target);
+                        log_info("Default target: %u", def);
                 }
+
         }
 
 finish:
