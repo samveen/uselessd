@@ -57,6 +57,7 @@
 #include "sd-daemon.h"
 #include "sd-messages.h"
 
+#include "fifo-control.h"
 #include "mount-setup.h"
 #include "fileio.h"
 
@@ -1021,6 +1022,7 @@ int main(int argc, char *argv[]) {
                 }
         }
 
+        fifo_control_loop();
         for (;;) {
                 r = manager_loop(m);
                 if (r < 0) {
