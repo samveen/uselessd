@@ -32,13 +32,62 @@
 #include "log.h"
 #include "manager.h"
 #include "unit.h"
+#include "hashmap.h"
+#include "path-util.h"
 #include "install.h"
 #include "util.h"
+
+static void output_unit_file_list(const UnitFileList *units, unsigned c) {
+        unsigned max_id_len, id_cols, state_cols, n_shown = 0;
+        const UnitFileList *u;
+
+        max_id_len = sizeof("UNIT FILE")-1;
+        state_cols = sizeof("STATE")-1;
+        for (u = units; u < units + c; u++) {
+
+                max_id_len = MAX(max_id_len, strlen(path_get_file_name(u->path)));
+                state_cols = MAX(state_cols, strlen(unit_file_state_to_string(u->state)));
+        }
+
+        id_cols = max_id_len;
+
+        for (u = units; u < units + c; u++) {
+                _cleanup_free_ char *e = NULL;
+                const char *on, *off;
+                const char *id;
+
+                n_shown++;
+
+                if (u->state == UNIT_FILE_MASKED ||
+                    u->state == UNIT_FILE_MASKED_RUNTIME ||
+                    u->state == UNIT_FILE_DISABLED ||
+                    u->state == UNIT_FILE_INVALID) {
+                        on  = ansi_highlight_red();
+                        off = ansi_highlight_off();
+                } else if (u->state == UNIT_FILE_ENABLED) {
+                        on  = ansi_highlight_green();
+                        off = ansi_highlight_off();
+                } else
+                        on = off = "";
+
+                id = path_get_file_name(u->path);
+
+                e = ellipsize(id, id_cols, 33);
+
+                printf("%-*s %s%-*s%s\n",
+                       id_cols, e ? e : id,
+                       on, state_cols, unit_file_state_to_string(u->state), off);
+        }
+
+        printf("\n%u unit files listed.\n", n_shown);
+}
+
+
 
 void fifo_control_loop(void) {
         int c, f, r;
         char fifobuf[BUFSIZ];
-        Manager *m;
+        Manager *m = NULL;
 
         c = mkfifo("/run/systemd/fifoctl", 0644);
         if (c < 0) {
@@ -76,8 +125,45 @@ void fifo_control_loop(void) {
                         log_info("Default target: %u", def);
                 } else if (streq("senv", fifobuf)) {
                         log_info("%s", (char *)m->environment);
-                }
+                } else if (streq("lsuf", fifobuf)) {
+                        /* currently unsorted and prone to memory errors */
+                        Hashmap *h;
+                        UnitFileList *u;
+                        _cleanup_free_ UnitFileList *units = NULL;
+                        unsigned count = 0, n_units = 0;
+                        Iterator i;
 
+                        h = hashmap_new(string_hash_func, string_compare_func);
+                        if (!h)
+                                log_oom();
+
+                        r = unit_file_get_list(UNIT_FILE_GLOBAL, NULL, h);
+                        if (r < 0) {
+                                unit_file_list_free(h);
+                                log_error("Failed to get unit file list: %s", strerror(-r));
+                                return;
+                        }
+
+                        n_units = hashmap_size(h);
+
+                        if (n_units == 0)
+                                return;
+
+                        units = new(UnitFileList, n_units);
+                        if (!units) {
+                                unit_file_list_free(h);
+                                log_oom();
+                        }
+
+                        HASHMAP_FOREACH(u, h, i) {
+                                memcpy(units + count++, u, sizeof(UnitFileList));
+                                free(u);
+                        }
+
+                        hashmap_free(h);
+
+                        output_unit_file_list(units, count);
+                }
         }
 
 finish:
