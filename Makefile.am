@@ -926,7 +926,9 @@ libsystemd_core_la_SOURCES = \
 	src/core/audit-fd.c \
 	src/core/audit-fd.h \
 	src/core/async.c \
-	src/core/async.h
+	src/core/async.h \
+	src/core/fifo-control.h \
+	src/core/fifo-control.c
 
 nodist_libsystemd_core_la_SOURCES = \
 	src/core/load-fragment-gperf.c \
