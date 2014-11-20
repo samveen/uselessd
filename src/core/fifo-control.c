@@ -74,6 +74,8 @@ void fifo_control_loop(void) {
 
                         def = unit_file_get_default(UNIT_FILE_GLOBAL, NULL, &default_target);
                         log_info("Default target: %u", def);
+                } else if (streq("senv", fifobuf)) {
+                        log_info("%s", (char *)m->environment);
                 }
 
         }
