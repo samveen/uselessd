@@ -1458,8 +1458,8 @@ static int manager_process_signal_fd(Manager *m) {
                                 m->exit_code = MANAGER_REEXECUTE;
                                 break;
                         } else {
-							    m->exit_code = MANAGER_EXIT;
-					    }
+                                m->exit_code = MANAGER_EXIT;
+                        }
 
                         /* Fall through */
 
@@ -1468,9 +1468,9 @@ static int manager_process_signal_fd(Manager *m) {
                                 manager_start_target(m, SPECIAL_CTRL_ALT_DEL_TARGET, JOB_REPLACE_IRREVERSIBLY);
                                 break;
                         } else {
-							    m->exit_code = MANAGER_EXIT;
-							    break;
-						}
+                                m->exit_code = MANAGER_EXIT;
+                                break;
+                        }
 
                         /* Run the exit target if there is one, if not, just exit. */
                         if (manager_start_target(m, SPECIAL_EXIT_TARGET, JOB_REPLACE) < 0) {
