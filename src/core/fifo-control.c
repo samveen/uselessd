@@ -114,14 +114,23 @@ void fifo_control_loop(void) {
                 if (streq("test", fifobuf)) {
                         log_info("Badabing.\n");
                 } else if (streq("reld", fifobuf)) {
-                        m->exit_code = MANAGER_RELOAD;
+                        /*m->exit_code = MANAGER_RELOAD;*/
+                        if (kill(getpid(), SIGHUP) < 0)
+                                log_error("kill() failed: %m");
+                                return;
                 } else if (streq("rexc", fifobuf)) {
-                        m->exit_code = MANAGER_REEXECUTE;
+                        /*m->exit_code = MANAGER_REEXECUTE;*/
+                        if (kill(getpid(), SIGTERM) < 0)
+                                log_error("kill() failed: %m");
+                                return;
                 } else if (streq("exit", fifobuf)) {
-                        if (m->running_as == SYSTEMD_SYSTEM)
+                        /*if (m->running_as == SYSTEMD_SYSTEM)
                                 log_error("Exit is only supported for user service managers.");
 
-                        m->exit_code = MANAGER_EXIT;
+                        m->exit_code = MANAGER_EXIT;*/
+                        if (kill(getpid(), SIGINT) < 0)
+                                log_error("kill() failed: %m");
+                                return;
                 } else if (streq("gdtr", fifobuf)) {
                         int def;
                         _cleanup_free_ char *default_target = NULL;
