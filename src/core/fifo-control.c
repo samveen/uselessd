@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
+#include <stdint.h>
 
 #include "fifo-control.h"
 #include "log.h"
@@ -84,10 +85,45 @@ static void output_unit_file_list(const UnitFileList *units, unsigned c) {
         printf("\n%u unit files listed.\n", n_shown);
 }
 
-struct job_info {
-        uint32_t id;
-        char *name, *type, *state;
-};
+static void list_unit_files(void) {
+        Hashmap *h;
+        UnitFileList *u;
+        _cleanup_free_ UnitFileList *units = NULL;
+        unsigned count = 0, n_units = 0;
+        Iterator i;
+        int r;
+
+        h = hashmap_new(string_hash_func, string_compare_func);
+        if (!h)
+                log_oom();
+
+        r = unit_file_get_list(UNIT_FILE_GLOBAL, NULL, h);
+        if (r < 0) {
+                unit_file_list_free(h);
+                log_error("Failed to get unit file list: %s", strerror(-r));
+                return;
+        }
+
+        n_units = hashmap_size(h);
+
+        if (n_units == 0)
+                return;
+
+        units = new(UnitFileList, n_units);
+        if (!units) {
+                unit_file_list_free(h);
+                log_oom();
+        }
+
+        HASHMAP_FOREACH(u, h, i) {
+                memcpy(units + count++, u, sizeof(UnitFileList));
+                free(u);
+        }
+
+        hashmap_free(h);
+
+        output_unit_file_list(units, count);
+}
 
 void fifo_control_loop(void) {
         int c, f, r;
@@ -140,43 +176,8 @@ void fifo_control_loop(void) {
                 } else if (streq("senv", fifobuf)) {
                         log_info("%s", (char *)m->environment);
                 } else if (streq("lsuf", fifobuf)) {
-                        /* currently unsorted and prone to memory errors */
-                        Hashmap *h;
-                        UnitFileList *u;
-                        _cleanup_free_ UnitFileList *units = NULL;
-                        unsigned count = 0, n_units = 0;
-                        Iterator i;
-
-                        h = hashmap_new(string_hash_func, string_compare_func);
-                        if (!h)
-                                log_oom();
-
-                        r = unit_file_get_list(UNIT_FILE_GLOBAL, NULL, h);
-                        if (r < 0) {
-                                unit_file_list_free(h);
-                                log_error("Failed to get unit file list: %s", strerror(-r));
-                                return;
-                        }
-
-                        n_units = hashmap_size(h);
-
-                        if (n_units == 0)
-                                return;
-
-                        units = new(UnitFileList, n_units);
-                        if (!units) {
-                                unit_file_list_free(h);
-                                log_oom();
-                        }
-
-                        HASHMAP_FOREACH(u, h, i) {
-                                memcpy(units + count++, u, sizeof(UnitFileList));
-                                free(u);
-                        }
-
-                        hashmap_free(h);
-
-                        output_unit_file_list(units, count);
+                        /* currently unsorted */
+                        list_unit_files();
                 } else if (streq("lsjb", fifobuf)) {
                         Iterator i;
                         Job *j;
