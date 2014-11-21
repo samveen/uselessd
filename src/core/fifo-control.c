@@ -125,6 +125,9 @@ static void list_unit_files(void) {
         output_unit_file_list(units, count);
 }
 
+/* TODO: make things like arg_root, arg_scope, etc.
+ * user-configurable from systemctl... much of this functionality
+ * should probably be moved later on. */
 void fifo_control_loop(void) {
         int c, f, r;
         char fifobuf[BUFSIZ];
@@ -169,7 +172,7 @@ void fifo_control_loop(void) {
                                 return;
                 } else if (streq("gdtr", fifobuf)) {
                         int def;
-                        char *default_target = NULL;
+                        _cleanup_free_ char *default_target = NULL;
 
                         def = unit_file_get_default(UNIT_FILE_SYSTEM, "/", &default_target);
                         if (default_target)
