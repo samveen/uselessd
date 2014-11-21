@@ -19,6 +19,7 @@
   along with uselessd; If not, see <http://www.gnu.org/licenses/>.
 ***/
 
+#include <sys/reboot.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -215,7 +216,7 @@ void fifo_control_loop(void) {
                 } else if (streq("kxec", fifobuf)) {
                         /* todo */
                         break;
-                } else if (streq("resfa", fifobuf)) {
+                } else if (streq("refa", fifobuf)) {
                         manager_reset_failed(m);
                 }
 
