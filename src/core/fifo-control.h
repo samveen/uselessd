@@ -19,4 +19,9 @@
   along with uselessd; If not, see <http://www.gnu.org/licenses/>.
 ***/
 
+struct job_info {
+        uint32_t id;
+        char *name, *type, *state;
+};
+
 void fifo_control_loop(void);
