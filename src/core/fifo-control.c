@@ -197,7 +197,9 @@ void fifo_control_loop(void) {
                                 }
 
                         }
-                /* These would be better served by isolating to targets. */
+                /* These would be better served by isolating to targets.
+                 * Be sure to integrate send_shutdownd() utmp record
+                 * writing in full versions. */
                 } else if (streq("poff", fifobuf)) {
                         reboot(RB_ENABLE_CAD);
                         log_info("Powering off.");
