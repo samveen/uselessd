@@ -97,7 +97,7 @@ static void list_unit_files(void) {
         if (!h)
                 log_oom();
 
-        r = unit_file_get_list(UNIT_FILE_GLOBAL, NULL, h);
+        r = unit_file_get_list(UNIT_FILE_SYSTEM, NULL, h);
         if (r < 0) {
                 unit_file_list_free(h);
                 log_error("Failed to get unit file list: %s", strerror(-r));
@@ -169,10 +169,11 @@ void fifo_control_loop(void) {
                                 return;
                 } else if (streq("gdtr", fifobuf)) {
                         int def;
-                        _cleanup_free_ char *default_target = NULL;
+                        char *default_target = NULL;
 
-                        def = unit_file_get_default(UNIT_FILE_GLOBAL, NULL, &default_target);
-                        log_info("Default target: %u", def);
+                        def = unit_file_get_default(UNIT_FILE_SYSTEM, "/", &default_target);
+                        if (default_target)
+                                log_info("Default target: %s", default_target);
                 } else if (streq("senv", fifobuf)) {
                         log_info("%s", (char *)m->environment);
                 } else if (streq("lsuf", fifobuf)) {
