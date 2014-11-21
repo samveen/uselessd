@@ -196,7 +196,27 @@ void fifo_control_loop(void) {
                                 }
 
                         }
+                /* These would be better served by isolating to targets. */
+                } else if (streq("poff", fifobuf)) {
+                        reboot(RB_ENABLE_CAD);
+                        log_info("Powering off.");
+                        reboot(RB_POWER_OFF);
+                        goto finish;
+                } else if (streq("rebt", fifobuf)) {
+                        reboot(RB_ENABLE_CAD);
+                        log_info("Rebooting.");
+                        reboot(RB_AUTOBOOT);
+                        goto finish;
+                } else if (streq("halt", fifobuf)) {
+                        reboot(RB_ENABLE_CAD);
+                        log_info("Halting.");
+                        reboot(RB_HALT_SYSTEM);
+                        goto finish;
+                } else if (streq("kxec", fifobuf)) {
+                        /* todo */
+                        break;
                 }
+
         }
 finish:
         close(f);
