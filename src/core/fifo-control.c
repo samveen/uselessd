@@ -31,6 +31,7 @@
 #include "fifo-control.h"
 #include "log.h"
 #include "manager.h"
+#include "job.h"
 #include "unit.h"
 #include "hashmap.h"
 #include "path-util.h"
@@ -82,7 +83,10 @@ static void output_unit_file_list(const UnitFileList *units, unsigned c) {
         printf("\n%u unit files listed.\n", n_shown);
 }
 
-
+struct job_info {
+        uint32_t id;
+        char *name, *type, *state;
+};
 
 void fifo_control_loop(void) {
         int c, f, r;
@@ -163,9 +167,37 @@ void fifo_control_loop(void) {
                         hashmap_free(h);
 
                         output_unit_file_list(units, count);
+                } else if (streq("lsjb", fifobuf)) {
+                        Iterator i;
+                        Job *j;
+                        struct job_info *jobs = NULL;
+                        size_t size = 0, used = 0;
+
+                        HASHMAP_FOREACH(j, m->jobs, i) {
+                                char *u_path, *j_path;
+                                const char *name, *state, *type;
+                                uint32_t id;
+
+                                id = (uint32_t) j->id;
+                                state = job_state_to_string(j->state);
+                                type = job_type_to_string(j->type);
+
+                                if (!GREEDY_REALLOC(jobs, size, used + 1)) {
+                                        log_oom();
+                                }
+
+                                jobs[used++] = (struct job_info) { id,
+                                                                strdup(name),
+                                                                strdup(type),
+                                                                strdup(state) };
+
+                                if (!jobs[used-1].name || !jobs[used-1].type || !jobs[used-1].state) {
+                                        log_oom();
+                                }
+
+                        }
                 }
         }
-
 finish:
         close(f);
         unlink("/run/systemd/fifoctl");
