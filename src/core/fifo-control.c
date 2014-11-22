@@ -125,18 +125,39 @@ static void list_unit_files(void) {
         output_unit_file_list(units, count);
 }
 
-/* TODO: make things like arg_root, arg_scope, etc.
- * user-configurable from systemctl... much of this functionality
- * should probably be moved later on. */
-void fifo_control_loop(void) {
-        int c, f, r;
-        char fifobuf[BUFSIZ];
-        Manager *m = NULL;
+void create_control_fifo(void) {
+        int c;
 
         c = mkfifo("/run/systemd/fifoctl", 0644);
         if (c < 0) {
                 log_error("Creation of fifoctl IPC endpoint failed: %s.", strerror(-c));
+                return;
         }
+
+        return;
+}
+
+void unlink_control_fifo(void) {
+        int r;
+
+        r = unlink("/run/systemd/fifoctl");
+        if (r < 0) {
+                log_error("Unlinking the fifoctl IPC endpoint failed: %s.", strerror(-r));
+                return;
+        }
+
+        return;
+}
+
+/* TODO: make things like arg_root, arg_scope, etc.
+ * user-configurable from systemctl... much of this functionality
+ * should probably be moved later on. */
+void fifo_control_loop(void) {
+        int f, r;
+        char fifobuf[BUFSIZ];
+        Manager *m = NULL;
+
+        create_control_fifo();
 
         f = open("/run/systemd/fifoctl", O_RDWR);
         if (f < 0) {
@@ -239,5 +260,5 @@ void fifo_control_loop(void) {
         }
 finish:
         close(f);
-        unlink("/run/systemd/fifoctl");
+        unlink_control_fifo();
 }

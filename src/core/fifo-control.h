@@ -24,4 +24,6 @@ struct job_info {
         char *name, *type, *state;
 };
 
+void create_control_fifo(void);
+void unlink_control_fifo(void);
 void fifo_control_loop(void);
