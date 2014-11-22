@@ -151,11 +151,15 @@ void unlink_control_fifo(void) {
 
 /* TODO: make things like arg_root, arg_scope, etc.
  * user-configurable from systemctl... much of this functionality
- * should probably be moved later on. */
+ * should probably be moved later on. Perhaps store values in files. */
 void fifo_control_loop(void) {
-        int f, r;
+        int f, r, d;
         char fifobuf[BUFSIZ];
         Manager *m = NULL;
+
+        d = manager_new(SYSTEMD_SYSTEM, true, &m);
+        assert_se(d >= 0);
+        assert_se(manager_startup(m, NULL, NULL) >= 0);
 
         create_control_fifo();
 
@@ -198,7 +202,8 @@ void fifo_control_loop(void) {
                         def = unit_file_get_default(UNIT_FILE_SYSTEM, "/", &default_target);
                         if (default_target)
                                 log_info("Default target: %s", default_target);
-                } else if (streq("senv", fifobuf)) {
+                } else if (streq("lenv", fifobuf)) {
+                        /* UB */
                         log_info("%s", (char *)m->environment);
                 } else if (streq("lsuf", fifobuf)) {
                         /* currently unsorted */
