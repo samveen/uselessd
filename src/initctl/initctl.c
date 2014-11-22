@@ -33,7 +33,6 @@
 #include <fcntl.h>
 #include <ctype.h>
 
-#include <dbus/dbus.h>
 #include <systemd/sd-daemon.h>
 
 #include "util.h"
@@ -41,7 +40,6 @@
 #include "list.h"
 #include "initreq.h"
 #include "special.h"
-#include "dbus-common.h"
 #include "def.h"
 
 #define SERVER_FD_MAX 16
@@ -54,8 +52,6 @@ typedef struct Server {
 
         LIST_HEAD(Fifo, fifos);
         unsigned n_fifos;
-
-        DBusConnection *bus;
 
         bool quit;
 } Server;
@@ -103,16 +99,14 @@ static const char *translate_runlevel(int runlevel, bool *isolate) {
         return NULL;
 }
 
+/* TODO: Convert to a FIFO control command request once we have
+ * acquired start unit functionality. */
 static void change_runlevel(Server *s, int runlevel) {
         const char *target;
-        DBusMessage *m = NULL, *reply = NULL;
-        DBusError error;
         const char *mode;
         bool isolate = false;
 
         assert(s);
-
-        dbus_error_init(&error);
 
         if (!(target = translate_runlevel(runlevel, &isolate))) {
                 log_warning("Got request for unknown runlevel %c, ignoring.", runlevel);
@@ -126,32 +120,8 @@ static void change_runlevel(Server *s, int runlevel) {
 
         log_debug("Running request %s/start/%s", target, mode);
 
-        if (!(m = dbus_message_new_method_call("org.freedesktop.systemd1", "/org/freedesktop/systemd1", "org.freedesktop.systemd1.Manager", "StartUnit"))) {
-                log_error("Could not allocate message.");
-                goto finish;
-        }
-
-        if (!dbus_message_append_args(m,
-                                      DBUS_TYPE_STRING, &target,
-                                      DBUS_TYPE_STRING, &mode,
-                                      DBUS_TYPE_INVALID)) {
-                log_error("Could not attach target and flag information to message.");
-                goto finish;
-        }
-
-        if (!(reply = dbus_connection_send_with_reply_and_block(s->bus, m, -1, &error))) {
-                log_error("Failed to start unit: %s", bus_error_message(&error));
-                goto finish;
-        }
-
 finish:
-        if (m)
-                dbus_message_unref(m);
-
-        if (reply)
-                dbus_message_unref(reply);
-
-        dbus_error_free(&error);
+        return;
 }
 
 static void request_process(Server *s, const struct init_request *req) {
@@ -272,23 +242,14 @@ static void server_done(Server *s) {
 
         if (s->epoll_fd >= 0)
                 close_nointr_nofail(s->epoll_fd);
-
-        if (s->bus) {
-                dbus_connection_flush(s->bus);
-                dbus_connection_close(s->bus);
-                dbus_connection_unref(s->bus);
-        }
 }
 
 static int server_init(Server *s, unsigned n_sockets) {
         int r;
         unsigned i;
-        DBusError error;
 
         assert(s);
         assert(n_sockets > 0);
-
-        dbus_error_init(&error);
 
         zero(*s);
 
@@ -346,19 +307,11 @@ static int server_init(Server *s, unsigned n_sockets) {
                 s->n_fifos ++;
         }
 
-        if (bus_connect(DBUS_BUS_SYSTEM, &s->bus, NULL, &error) < 0) {
-                log_error("Failed to get D-Bus connection: %s",
-                          bus_error_message(&error));
-                r = -EIO;
-                goto fail;
-        }
-
         return 0;
 
 fail:
         server_done(s);
 
-        dbus_error_free(&error);
         return r;
 }
 
@@ -389,9 +342,9 @@ int main(int argc, char *argv[]) {
         int r = EXIT_FAILURE, n;
 
         if (getppid() != 1) {
-			    log_error("This program should be invoked by init only.");
-			    return EXIT_FAILURE;
-	    }
+                log_error("This program should be invoked by init only.");
+                return EXIT_FAILURE;
+        }
 
         if (argc > 1) {
                 log_error("This program does not take arguments.");
@@ -454,8 +407,6 @@ fail:
                   "STATUS=Shutting down...");
 
         server_done(&server);
-
-        dbus_shutdown();
 
         return r;
 }
