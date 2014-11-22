@@ -1042,6 +1042,7 @@ int main(int argc, char *argv[]) {
                         r = manager_reload(m);
                         if (r < 0)
                                 log_error("Failed to reload: %s", strerror(-r));
+                        fifo_control_loop();
                         break;
 
                 case MANAGER_REEXECUTE:
