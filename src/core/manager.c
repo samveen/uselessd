@@ -63,7 +63,6 @@
 #include "missing.h"
 #include "path-lookup.h"
 #include "special.h"
-#include "bus-errors.h"
 #include "exit-status.h"
 #include "virt.h"
 #include "watchdog.h"
@@ -950,12 +949,12 @@ int manager_add_job(Manager *m, JobType type, Unit *unit, JobMode mode, bool ove
         assert(mode < _JOB_MODE_MAX);
 
         if (mode == JOB_ISOLATE && type != JOB_START) {
-                dbus_set_error(e, BUS_ERROR_INVALID_JOB_MODE, "Isolate is only valid for start.");
+                log_error("Isolate is only valid for start.");
                 return -EINVAL;
         }
 
         if (mode == JOB_ISOLATE && !unit->allow_isolate) {
-                dbus_set_error(e, BUS_ERROR_NO_ISOLATION, "Operation refused, unit may not be isolated.");
+                log_error("Operation refused, unit may not be isolated.");
                 return -EPERM;
         }
 
@@ -1074,7 +1073,7 @@ int manager_load_unit_prepare(
          * load anything from disk. */
 
         if (path && !is_path(path)) {
-                dbus_set_error(e, BUS_ERROR_INVALID_PATH, "Path %s is not absolute.", path);
+                log_error("Path %s is not absolute.", path);
                 return -EINVAL;
         }
 
@@ -1084,7 +1083,7 @@ int manager_load_unit_prepare(
         t = unit_name_to_type(name);
 
         if (t == _UNIT_TYPE_INVALID || !unit_name_is_valid(name, false)) {
-                dbus_set_error(e, BUS_ERROR_INVALID_NAME, "Unit name %s is not valid.", name);
+                log_error("Unit name %s is not valid.", name);
                 return -EINVAL;
         }
 
