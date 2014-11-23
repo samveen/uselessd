@@ -859,8 +859,6 @@ libsystemd_core_la_SOURCES = \
 	src/core/kill.h \
 	src/core/dbus.c \
 	src/core/dbus.h \
-	src/core/selinux-access.c \
-	src/core/selinux-access.h \
 	src/core/dbus-manager.c \
 	src/core/dbus-manager.h \
 	src/core/dbus-unit.c \
