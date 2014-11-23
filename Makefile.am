@@ -255,6 +255,7 @@ bin_PROGRAMS =
 
 rootlibexec_PROGRAMS = \
 	uselessd \
+	uselessfs \
 	systemd-ac-power \
 	systemd-sysctl
 
@@ -1054,6 +1055,15 @@ CLEANFILES += \
 	src/core/macros.systemd \
 	src/core/org.freedesktop.systemd1.policy.in
 
+# ------------------------------------------------------------------------------
+uselessfs_SOURCES = \
+	src/uselessfs/uselessfs.c
+
+uselessfs_CFLAGS = \
+	$(AM_CFLAGS)
+
+uselessfs_LDADD = \
+	libsystemd-shared.la
 # ------------------------------------------------------------------------------
 manual_tests += \
 	test-engine \
