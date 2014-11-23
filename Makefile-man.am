@@ -398,20 +398,3 @@ man/uselessd-sleep.html: man/systemd-suspend.service.html
 	$(html-alias)
 
 endif
-
-if ENABLE_UPDATE_UTMP
-MANPAGES += \
-	man/runlevel.8 \
-	man/systemd-update-utmp.service.8
-MANPAGES_ALIAS += \
-	man/systemd-update-utmp-runlevel.service.8 \
-	man/systemd-update-utmp.8
-man/systemd-update-utmp-runlevel.service.8: man/systemd-update-utmp.service.8
-man/systemd-update-utmp.8: man/systemd-update-utmp.service.8
-man/systemd-update-utmp-runlevel.service.html: man/systemd-update-utmp.service.html
-	$(html-alias)
-
-man/systemd-update-utmp.html: man/systemd-update-utmp.service.html
-	$(html-alias)
-
-endif

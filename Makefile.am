@@ -498,19 +498,6 @@ EXTRA_DIST += \
 	units/uselessd-suspend.service.in
 endif
 
-if ENABLE_UPDATE_UTMP
-rootlibexec_PROGRAMS += \
-	systemd-update-utmp
-
-nodist_systemunit_DATA += \
-	units/systemd-update-utmp.service \
-	units/systemd-update-utmp-runlevel.service
-
-EXTRA_DIST += \
-	units/systemd-update-utmp.service.in \
-	units/systemd-update-utmp-runlevel.service.in
-endif
-
 if HAVE_SYSV_COMPAT
 nodist_systemunit_DATA += \
 	units/rc-local.service \
@@ -1436,22 +1423,6 @@ systemd_initctl_LDADD = \
 endif
 
 # ------------------------------------------------------------------------------
-if ENABLE_UPDATE_UTMP
-systemd_update_utmp_SOURCES = \
-	src/update-utmp/update-utmp.c
-
-systemd_update_utmp_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(DBUS_CFLAGS) \
-	$(AUDIT_CFLAGS)
-
-systemd_update_utmp_LDADD = \
-	libsystemd-shared.la \
-	libsystemd-dbus.la \
-	$(AUDIT_LIBS)
-endif
-
-# ------------------------------------------------------------------------------
 if ENABLE_INIT
 systemd_shutdownd_SOURCES = \
 	src/shutdownd/shutdownd.c
@@ -1990,22 +1961,7 @@ SOCKETS_TARGET_WANTS += \
 	systemd-initctl.socket \
 	systemd-shutdownd.socket
 
-if ENABLE_UPDATE_UTMP
 if HAVE_SYSV_COMPAT
-RUNLEVEL1_TARGET_WANTS += \
-	systemd-update-utmp-runlevel.service
-RUNLEVEL2_TARGET_WANTS += \
-	systemd-update-utmp-runlevel.service
-RUNLEVEL3_TARGET_WANTS += \
-	systemd-update-utmp-runlevel.service
-RUNLEVEL4_TARGET_WANTS += \
-	systemd-update-utmp-runlevel.service
-RUNLEVEL5_TARGET_WANTS += \
-	systemd-update-utmp-runlevel.service
-endif
-SYSINIT_TARGET_WANTS += \
-	systemd-update-utmp.service
-endif
 LOCAL_FS_TARGET_WANTS += \
 	systemd-remount-fs.service
 MULTI_USER_TARGET_WANTS += \
@@ -2014,6 +1970,7 @@ MULTI_USER_TARGET_WANTS += \
 SYSINIT_TARGET_WANTS += \
 	systemd-sysctl.service \
 	systemd-ask-password-console.path
+endif
 
 if HAVE_SYSV_COMPAT
 SYSTEM_UNIT_ALIASES += \
