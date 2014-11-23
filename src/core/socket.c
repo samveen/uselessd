@@ -2273,8 +2273,8 @@ static void socket_trigger_notify(Unit *u, Unit *other) {
                 socket_set_state(s, SOCKET_RUNNING);
 }
 
-static int socket_kill(Unit *u, KillWho who, int signo, DBusError *error) {
-        return unit_kill_common(u, who, signo, -1, SOCKET(u)->control_pid, error);
+static int socket_kill(Unit *u, KillWho who, int signo) {
+        return unit_kill_common(u, who, signo, -1, SOCKET(u)->control_pid);
 }
 
 static const char* const socket_state_table[_SOCKET_STATE_MAX] = {
