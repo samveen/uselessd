@@ -490,7 +490,7 @@ rescan:
         }
 }
 
-static int transaction_is_destructive(Transaction *tr, JobMode mode, DBusError *e) {
+static int transaction_is_destructive(Transaction *tr, JobMode mode) {
         Iterator i;
         Job *j;
 
@@ -711,9 +711,9 @@ int transaction_activate(Transaction *tr, Manager *m, JobMode mode, DBusError *e
         transaction_drop_redundant(tr);
 
         /* Ninth step: check whether we can actually apply this */
-        r = transaction_is_destructive(tr, mode, e);
+        r = transaction_is_destructive(tr, mode);
         if (r < 0) {
-                log_notice("Requested transaction contradicts existing jobs: %s", bus_error(e, r));
+                log_notice("Requested transaction contradicts existing jobs: %s", strerror(-r));
                 return r;
         }
 
