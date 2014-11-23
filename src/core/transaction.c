@@ -635,7 +635,7 @@ rollback:
         return r;
 }
 
-int transaction_activate(Transaction *tr, Manager *m, JobMode mode, DBusError *e) {
+int transaction_activate(Transaction *tr, Manager *m, JobMode mode) {
         Iterator i;
         Job *j;
         int r;

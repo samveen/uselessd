@@ -49,7 +49,7 @@ int transaction_add_job_and_dependencies(
                 bool conflicts,
                 bool ignore_requirements,
                 bool ignore_order);
-int transaction_activate(Transaction *tr, Manager *m, JobMode mode, DBusError *e);
+int transaction_activate(Transaction *tr, Manager *m, JobMode mode);
 int transaction_add_isolate_jobs(Transaction *tr, Manager *m);
 void transaction_abort(Transaction *tr);
 

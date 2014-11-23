@@ -980,7 +980,7 @@ int manager_add_job(Manager *m, JobType type, Unit *unit, JobMode mode, bool ove
                         goto tr_abort;
         }
 
-        r = transaction_activate(tr, m, mode, e);
+        r = transaction_activate(tr, m, mode);
         if (r < 0)
                 goto tr_abort;
 
