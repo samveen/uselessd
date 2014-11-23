@@ -333,7 +333,7 @@ _pure_ static bool unit_matters_to_anchor(Unit *u, Job *j) {
         return false;
 }
 
-static int transaction_verify_order_one(Transaction *tr, Job *j, Job *from, unsigned generation, DBusError *e) {
+static int transaction_verify_order_one(Transaction *tr, Job *j, Job *from, unsigned generation) {
         Iterator i;
         Unit *u;
         int r;
@@ -433,7 +433,7 @@ static int transaction_verify_order_one(Transaction *tr, Job *j, Job *from, unsi
                                 continue;
                 }
 
-                r = transaction_verify_order_one(tr, o, j, generation, e);
+                r = transaction_verify_order_one(tr, o, j, generation);
                 if (r < 0)
                         return r;
         }
@@ -445,7 +445,7 @@ static int transaction_verify_order_one(Transaction *tr, Job *j, Job *from, unsi
         return 0;
 }
 
-static int transaction_verify_order(Transaction *tr, unsigned *generation, DBusError *e) {
+static int transaction_verify_order(Transaction *tr, unsigned *generation) {
         Job *j;
         int r;
         Iterator i;
@@ -460,7 +460,7 @@ static int transaction_verify_order(Transaction *tr, unsigned *generation, DBusE
         g = (*generation)++;
 
         HASHMAP_FOREACH(j, tr->jobs, i)
-                if ((r = transaction_verify_order_one(tr, j, NULL, g, e)) < 0)
+                if ((r = transaction_verify_order_one(tr, j, NULL, g)) < 0)
                         return r;
 
         return 0;
@@ -672,12 +672,12 @@ int transaction_activate(Transaction *tr, Manager *m, JobMode mode, DBusError *e
 
                 /* Fifth step: verify order makes sense and correct
                  * cycles if necessary and possible */
-                r = transaction_verify_order(tr, &generation, e);
+                r = transaction_verify_order(tr, &generation);
                 if (r >= 0)
                         break;
 
                 if (r != -EAGAIN) {
-                        log_warning("Requested transaction contains an unfixable cyclic ordering dependency: %s", bus_error(e, r));
+                        log_warning("Requested transaction contains an unfixable cyclic ordering dependency: %s", strerror(-r));
                         return r;
                 }
 
