@@ -24,7 +24,6 @@
 #include "dbus.h"
 #include "log.h"
 #include "dbus-unit.h"
-#include "bus-errors.h"
 #include "dbus-common.h"
 #include "selinux-access.h"
 #include "cgroup-util.h"
@@ -493,7 +492,7 @@ static DBusHandlerResult bus_unit_message_dispatch(Unit *u, DBusConnection *conn
 
                 mode = job_mode_from_string(smode);
                 if (mode < 0) {
-                        dbus_set_error(&error, BUS_ERROR_INVALID_JOB_MODE, "Job mode %s is invalid.", smode);
+                        log_error("Job mode %s is invalid.", smode);
                         return bus_send_error_reply(connection, message, &error, -EINVAL);
                 }
 
@@ -781,15 +780,14 @@ DBusHandlerResult bus_unit_queue_job(
                                   type == JOB_STOP ? "stop" : "reload");
 
         if (type == JOB_STOP && (u->load_state == UNIT_NOT_FOUND || u->load_state == UNIT_ERROR) && unit_active_state(u) == UNIT_INACTIVE) {
-                dbus_set_error(&error, BUS_ERROR_NO_SUCH_UNIT, "Unit %s not loaded.", u->id);
+                log_error("Unit %s not loaded.", u->id);
                 return bus_send_error_reply(connection, message, &error, -EPERM);
         }
 
         if ((type == JOB_START && u->refuse_manual_start) ||
             (type == JOB_STOP && u->refuse_manual_stop) ||
             ((type == JOB_RESTART || type == JOB_TRY_RESTART) && (u->refuse_manual_start || u->refuse_manual_stop))) {
-                dbus_set_error(&error, BUS_ERROR_ONLY_BY_DEPENDENCY,
-                               "Operation refused, unit %s may be requested by dependency only.", u->id);
+                log_error("Operation refused, unit %s may be requested by dependency only.", u->id);
                 return bus_send_error_reply(connection, message, &error, -EPERM);
         }
 
@@ -1000,7 +998,7 @@ int bus_unit_set_properties(
                         return -EINVAL;
 
                 if (!UNIT_VTABLE(u)->bus_set_property) {
-                        dbus_set_error(error, DBUS_ERROR_PROPERTY_READ_ONLY, "Objects of this type do not support setting properties.");
+                        log_error("Objects of this type do not support setting properties.");
                         return -ENOENT;
                 }
 
@@ -1011,7 +1009,7 @@ int bus_unit_set_properties(
                 if (r < 0)
                         return r;
                 if (r == 0) {
-                        dbus_set_error(error, DBUS_ERROR_PROPERTY_READ_ONLY, "Cannot set property %s, or unknown property.", name);
+                        log_error("Cannot set property %s, or unknown property.", name);
                         return -ENOENT;
                 }
 

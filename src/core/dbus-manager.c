@@ -26,7 +26,6 @@
 #include "log.h"
 #include "dbus-manager.h"
 #include "strv.h"
-#include "bus-errors.h"
 #include "build.h"
 #include "dbus-common.h"
 #include "selinux-access.h"
@@ -639,7 +638,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
 
                 u = manager_get_unit(m, name);
                 if (!u) {
-                        dbus_set_error(&error, BUS_ERROR_NO_SUCH_UNIT, "Unit %s is not loaded.", name);
+                        log_error("Unit %s is not loaded.", name);
                         return bus_send_error_reply(connection, message, &error, -ENOENT);
                 }
 
@@ -671,7 +670,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
 
                 u = manager_get_unit_by_pid(m, (pid_t) pid);
                 if (!u) {
-                        dbus_set_error(&error, BUS_ERROR_NO_SUCH_UNIT, "No unit for PID %lu is loaded.", (unsigned long) pid);
+                        log_error("No unit for PID %lu is loaded.", (unsigned long) pid);
                         return bus_send_error_reply(connection, message, &error, -ENOENT);
                 }
 
@@ -767,7 +766,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
 
                 u = manager_get_unit(m, name);
                 if (!u) {
-                        dbus_set_error(&error, BUS_ERROR_NO_SUCH_UNIT, "Unit %s is not loaded.", name);
+                        log_error("Unit %s is not loaded.", name);
                         return bus_send_error_reply(connection, message, &error, -ENOENT);
                 }
 
@@ -794,7 +793,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
 
                 j = manager_get_job(m, id);
                 if (!j) {
-                        dbus_set_error(&error, BUS_ERROR_NO_SUCH_JOB, "Job %u does not exist.", (unsigned) id);
+                        log_error("Job %u does not exist.", (unsigned) id);
                         return bus_send_error_reply(connection, message, &error, -ENOENT);
                 }
 
@@ -827,7 +826,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
 
                 j = manager_get_job(m, id);
                 if (!j) {
-                        dbus_set_error(&error, BUS_ERROR_NO_SUCH_JOB, "Job %u does not exist.", (unsigned) id);
+                        log_error("Job %u does not exist.", (unsigned) id);
                         return bus_send_error_reply(connection, message, &error, -ENOENT);
                 }
 
@@ -870,7 +869,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
 
                 u = manager_get_unit(m, name);
                 if (!u) {
-                        dbus_set_error(&error, BUS_ERROR_NO_SUCH_UNIT, "Unit %s is not loaded.", name);
+                        log_error("Unit %s is not loaded.", name);
                         return bus_send_error_reply(connection, message, &error, -ENOENT);
                 }
 
@@ -1055,7 +1054,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
 
                 client = set_remove(BUS_CONNECTION_SUBSCRIBED(m, connection), (char*) bus_message_get_sender_with_fallback(message));
                 if (!client) {
-                        dbus_set_error(&error, BUS_ERROR_NOT_SUBSCRIBED, "Client is not subscribed.");
+                        log_error("Client is not subscribed.");
                         return bus_send_error_reply(connection, message, &error, -ENOENT);
                 }
 
@@ -1146,12 +1145,12 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
 
                 u = manager_get_unit(m, name);
                 if (!u) {
-                        dbus_set_error(&error, BUS_ERROR_NO_SUCH_UNIT, "Unit %s does not exist.", name);
+                        log_error("Unit %s does not exist.", name);
                         return bus_send_error_reply(connection, message, &error, -ENOENT);
                 }
 
                 if (u->type != UNIT_SNAPSHOT) {
-                        dbus_set_error(&error, BUS_ERROR_NO_SUCH_UNIT, "Unit %s is not a snapshot.", name);
+                        log_error("Unit %s is not a snapshot.", name);
                         return bus_send_error_reply(connection, message, &error, -ENOENT);
                 }
 
@@ -1253,7 +1252,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                 SELINUX_ACCESS_CHECK(connection, message, "halt");
 
                 if (m->running_as == SYSTEMD_SYSTEM) {
-                        dbus_set_error(&error, BUS_ERROR_NOT_SUPPORTED, "Exit is only supported for user service managers.");
+                        log_error("Exit is only supported for user service managers.");
                         return bus_send_error_reply(connection, message, &error, -ENOTSUP);
                 }
 
@@ -1268,7 +1267,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                 SELINUX_ACCESS_CHECK(connection, message, "reboot");
 
                 if (m->running_as != SYSTEMD_SYSTEM) {
-                        dbus_set_error(&error, BUS_ERROR_NOT_SUPPORTED, "Reboot is only supported for system managers.");
+                        log_error("Reboot is only supported for system managers.");
                         return bus_send_error_reply(connection, message, &error, -ENOTSUP);
                 }
 
@@ -1283,7 +1282,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                 SELINUX_ACCESS_CHECK(connection, message, "halt");
 
                 if (m->running_as != SYSTEMD_SYSTEM) {
-                        dbus_set_error(&error, BUS_ERROR_NOT_SUPPORTED, "Powering off is only supported for system managers.");
+                        log_error("Powering off is only supported for system managers.");
                         return bus_send_error_reply(connection, message, &error, -ENOTSUP);
                 }
 
@@ -1298,7 +1297,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                 SELINUX_ACCESS_CHECK(connection, message, "halt");
 
                 if (m->running_as != SYSTEMD_SYSTEM) {
-                        dbus_set_error(&error, BUS_ERROR_NOT_SUPPORTED, "Halting is only supported for system managers.");
+                        log_error("Halting is only supported for system managers.");
                         return bus_send_error_reply(connection, message, &error, -ENOTSUP);
                 }
 
@@ -1313,7 +1312,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                 SELINUX_ACCESS_CHECK(connection, message, "reboot");
 
                 if (m->running_as != SYSTEMD_SYSTEM) {
-                        dbus_set_error(&error, BUS_ERROR_NOT_SUPPORTED, "kexec is only supported for system managers.");
+                        log_error("kexec is only supported for system managers.");
                         return bus_send_error_reply(connection, message, &error, -ENOTSUP);
                 }
 
@@ -1345,7 +1344,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                         return bus_send_error_reply(connection, message, NULL, -EINVAL);
 
                 if (m->running_as != SYSTEMD_SYSTEM) {
-                        dbus_set_error(&error, BUS_ERROR_NOT_SUPPORTED, "Switching root is only supported for system managers.");
+                        log_error("Switching root is only supported for system managers.");
                         return bus_send_error_reply(connection, message, &error, -ENOTSUP);
                 }
 
@@ -1719,7 +1718,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
 
                 u = manager_get_unit(m, name);
                 if (!u) {
-                        dbus_set_error(&error, BUS_ERROR_NO_SUCH_UNIT, "Unit %s is not loaded.", name);
+                        log_error("Unit %s is not loaded.", name);
                         return bus_send_error_reply(connection, message, &error, -ENOENT);
                 }
 
@@ -1751,13 +1750,13 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                 if (t < 0)
                         return bus_send_error_reply(connection, message, NULL, -EINVAL);
                 if (!unit_vtable[t]->can_transient) {
-                        dbus_set_error(&error, DBUS_ERROR_INVALID_ARGS, "Unit type %s does not support transient units.", unit_type_to_string(t));
+                        log_error("Unit type %s does not support transient units.", unit_type_to_string(t));
                         return bus_send_error_reply(connection, message, &error, -EINVAL);
                 }
 
                 mode = job_mode_from_string(smode);
                 if (mode < 0) {
-                        dbus_set_error(&error, BUS_ERROR_INVALID_JOB_MODE, "Job mode %s is invalid.", smode);
+                        log_error("Job mode %s is invalid.", smode);
                         return bus_send_error_reply(connection, message, &error, -EINVAL);
                 }
 
@@ -1768,7 +1767,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                 SELINUX_UNIT_ACCESS_CHECK(u, connection, message, "start");
 
                 if (u->load_state != UNIT_NOT_FOUND || set_size(u->dependencies[UNIT_REFERENCED_BY]) > 0) {
-                        dbus_set_error(&error, BUS_ERROR_UNIT_EXISTS, "Unit %s already exists.", name);
+                        log_error("Unit %s already exists.", name);
                         return bus_send_error_reply(connection, message, &error, -EEXIST);
                 }
 
@@ -1832,14 +1831,14 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                 if (old_name) {
                         u = manager_get_unit(m, old_name);
                         if (!u || !u->job || u->job->type != JOB_START) {
-                                dbus_set_error(&error, BUS_ERROR_NO_SUCH_JOB, "No job queued for unit %s", old_name);
+                                log_error("No job queued for unit %s", old_name);
                                 return bus_send_error_reply(connection, message, &error, -ENOENT);
                         }
                 }
 
                 mode = job_mode_from_string(smode);
                 if (mode < 0) {
-                        dbus_set_error(&error, BUS_ERROR_INVALID_JOB_MODE, "Job mode %s is invalid.", smode);
+                        log_error("Job mode %s is invalid.", smode);
                         return bus_send_error_reply(connection, message, &error, -EINVAL);
                 }
 

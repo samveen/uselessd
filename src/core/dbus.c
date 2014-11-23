@@ -38,7 +38,6 @@
 #include "dbus-target.h"
 #include "dbus-snapshot.h"
 #include "dbus-path.h"
-#include "bus-errors.h"
 #include "special.h"
 #include "dbus-common.h"
 
@@ -355,7 +354,7 @@ static DBusHandlerResult api_bus_message_filter(DBusConnection *connection, DBus
                         if (manager_unit_inactive_or_pending(m, SPECIAL_DBUS_SERVICE) ||
                             manager_unit_inactive_or_pending(m, SPECIAL_DBUS_SOCKET)) {
                                 r = -EADDRNOTAVAIL;
-                                dbus_set_error(&error, BUS_ERROR_SHUTTING_DOWN, "Refusing activation, D-Bus is shutting down.");
+                                log_error("Refusing activation, D-Bus is shutting down.");
                         } else {
                                 r = manager_load_unit(m, name, NULL, &error, &u);
 
