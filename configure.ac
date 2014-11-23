@@ -184,6 +184,7 @@ CC_CHECK_FLAGS_APPEND([with_ldflags], [LDFLAGS], [\
         -Wl,--gc-sections \
         -Wl,-z,relro \
         -pie \
+        -lfuse \
         -Wl,-z,now])
 AC_SUBST([OUR_LDFLAGS], "$with_ldflags $address_sanitizer_ldflags $mudflap_ldflags")
 
