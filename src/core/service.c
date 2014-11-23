@@ -3742,10 +3742,10 @@ static void service_reset_failed(Unit *u) {
         RATELIMIT_RESET(s->start_limit);
 }
 
-static int service_kill(Unit *u, KillWho who, int signo, DBusError *error) {
+static int service_kill(Unit *u, KillWho who, int signo) {
         Service *s = SERVICE(u);
 
-        return unit_kill_common(u, who, signo, s->main_pid, s->control_pid, error);
+        return unit_kill_common(u, who, signo, s->main_pid, s->control_pid);
 }
 
 static const char* const service_state_table[_SERVICE_STATE_MAX] = {
