@@ -25,7 +25,6 @@
 #include "snapshot.h"
 #include "unit-name.h"
 #include "dbus-snapshot.h"
-#include "bus-errors.h"
 
 static const UnitActiveState state_translation_table[_SNAPSHOT_STATE_MAX] = {
         [SNAPSHOT_DEAD] = UNIT_INACTIVE,
@@ -201,17 +200,17 @@ int snapshot_create(Manager *m, const char *name, bool cleanup, DBusError *e, Sn
 
         if (name) {
                 if (!unit_name_is_valid(name, false)) {
-                        dbus_set_error(e, BUS_ERROR_INVALID_NAME, "Unit name %s is not valid.", name);
+                        log_error("Unit name %s is not valid.", name);
                         return -EINVAL;
                 }
 
                 if (unit_name_to_type(name) != UNIT_SNAPSHOT) {
-                        dbus_set_error(e, BUS_ERROR_UNIT_TYPE_MISMATCH, "Unit name %s lacks snapshot suffix.", name);
+                        log_error("Unit name %s lacks snapshot suffix.", name);
                         return -EINVAL;
                 }
 
                 if (manager_get_unit(m, name)) {
-                        dbus_set_error(e, BUS_ERROR_UNIT_EXISTS, "Snapshot %s exists already.", name);
+                        log_error("Snapshot %s exists already.", name);
                         return -EEXIST;
                 }
 
