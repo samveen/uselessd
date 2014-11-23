@@ -24,7 +24,6 @@
 #include "dbus-unit.h"
 #include "dbus-common.h"
 #include "dbus-cgroup.h"
-#include "selinux-access.h"
 #include "dbus-slice.h"
 
 #define BUS_SLICE_INTERFACE                                             \
@@ -58,8 +57,6 @@ DBusHandlerResult bus_slice_message_handler(Unit *u, DBusConnection *c, DBusMess
                 { "org.freedesktop.systemd1.Slice", bus_cgroup_context_properties, &s->cgroup_context },
                 {}
         };
-
-        SELINUX_UNIT_ACCESS_CHECK(u, c, message, "status");
 
         return bus_default_message_handler(c, message, INTROSPECTION, INTERFACES_LIST, bps);
 }

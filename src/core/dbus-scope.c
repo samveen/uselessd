@@ -25,7 +25,6 @@
 #include "dbus-common.h"
 #include "dbus-cgroup.h"
 #include "dbus-kill.h"
-#include "selinux-access.h"
 #include "dbus-scope.h"
 
 #define BUS_SCOPE_INTERFACE                                             \
@@ -72,8 +71,6 @@ DBusHandlerResult bus_scope_message_handler(Unit *u, DBusConnection *c, DBusMess
                 { "org.freedesktop.systemd1.Scope", bus_kill_context_properties,   &s->kill_context   },
                 {}
         };
-
-        SELINUX_UNIT_ACCESS_CHECK(u, c, message, "status");
 
         return bus_default_message_handler(c, message, INTROSPECTION, INTERFACES_LIST, bps);
 }

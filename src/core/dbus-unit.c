@@ -25,7 +25,6 @@
 #include "log.h"
 #include "dbus-unit.h"
 #include "dbus-common.h"
-#include "selinux-access.h"
 #include "cgroup-util.h"
 #include "strv.h"
 #include "path-util.h"
@@ -435,8 +434,6 @@ static DBusHandlerResult bus_unit_message_dispatch(Unit *u, DBusConnection *conn
                 if (signo <= 0 || signo >= _NSIG)
                         return bus_send_error_reply(connection, message, &error, -EINVAL);
 
-                SELINUX_UNIT_ACCESS_CHECK(u, connection, message, "stop");
-
                 r = unit_kill(u, who, signo, &error);
                 if (r < 0)
                         return bus_send_error_reply(connection, message, &error, r);
@@ -446,8 +443,6 @@ static DBusHandlerResult bus_unit_message_dispatch(Unit *u, DBusConnection *conn
                         goto oom;
 
         } else if (dbus_message_is_method_call(message, "org.freedesktop.systemd1.Unit", "ResetFailed")) {
-
-                SELINUX_UNIT_ACCESS_CHECK(u, connection, message, "reload");
 
                 unit_reset_failed(u);
 
@@ -463,8 +458,6 @@ static DBusHandlerResult bus_unit_message_dispatch(Unit *u, DBusConnection *conn
 
                 if (bus_iter_get_basic_and_next(&iter, DBUS_TYPE_BOOLEAN, &runtime, true) < 0)
                         return bus_send_error_reply(connection, message, NULL, -EINVAL);
-
-                SELINUX_UNIT_ACCESS_CHECK(u, connection, message, "start");
 
                 r = bus_unit_set_properties(u, &iter, runtime ? UNIT_RUNTIME : UNIT_PERSISTENT, true, &error);
                 if (r < 0)
@@ -525,8 +518,6 @@ static DBusHandlerResult bus_unit_message_handler(DBusConnection *connection, DB
 
         if (streq(dbus_message_get_path(message), "/org/freedesktop/systemd1/unit")) {
                 /* Be nice to gdbus and return introspection data for our mid-level paths */
-
-                SELINUX_ACCESS_CHECK(connection, message, "status");
 
                 if (dbus_message_is_method_call(message, "org.freedesktop.DBus.Introspectable", "Introspect")) {
                         char *introspection = NULL;
@@ -774,10 +765,6 @@ DBusHandlerResult bus_unit_queue_job(
                 else if (type == JOB_TRY_RESTART)
                         type = JOB_RELOAD;
         }
-
-        SELINUX_UNIT_ACCESS_CHECK(u, connection, message,
-                                  (type == JOB_START || type == JOB_RESTART || type == JOB_TRY_RESTART) ? "start" :
-                                  type == JOB_STOP ? "stop" : "reload");
 
         if (type == JOB_STOP && (u->load_state == UNIT_NOT_FOUND || u->load_state == UNIT_ERROR) && unit_active_state(u) == UNIT_INACTIVE) {
                 log_error("Unit %s not loaded.", u->id);

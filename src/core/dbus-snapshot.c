@@ -22,7 +22,6 @@
 #include "dbus-unit.h"
 #include "dbus-snapshot.h"
 #include "dbus-common.h"
-#include "selinux-access.h"
 
 #define BUS_SNAPSHOT_INTERFACE                                          \
         " <interface name=\"org.freedesktop.systemd1.Snapshot\">\n"     \
@@ -57,8 +56,6 @@ DBusHandlerResult bus_snapshot_message_handler(Unit *u, DBusConnection *c, DBusM
 
         if (dbus_message_is_method_call(message, "org.freedesktop.systemd1.Snapshot", "Remove")) {
 
-                SELINUX_UNIT_ACCESS_CHECK(u, c, message, "stop");
-
                 reply = dbus_message_new_method_return(message);
                 if (!reply)
                         return DBUS_HANDLER_RESULT_NEED_MEMORY;
@@ -71,8 +68,6 @@ DBusHandlerResult bus_snapshot_message_handler(Unit *u, DBusConnection *c, DBusM
                         { "org.freedesktop.systemd1.Snapshot", bus_snapshot_properties, s },
                         { NULL, }
                 };
-
-                SELINUX_UNIT_ACCESS_CHECK(u, c, message, "status");
 
                 return bus_default_message_handler(c, message, INTROSPECTION, INTERFACES_LIST, bps);
         }

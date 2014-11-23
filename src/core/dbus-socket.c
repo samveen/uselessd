@@ -26,7 +26,6 @@
 #include "dbus-kill.h"
 #include "dbus-cgroup.h"
 #include "dbus-common.h"
-#include "selinux-access.h"
 #include "dbus-socket.h"
 
 #define BUS_SOCKET_INTERFACE                                            \
@@ -213,8 +212,6 @@ DBusHandlerResult bus_socket_message_handler(Unit *u, DBusConnection *c, DBusMes
                 { "org.freedesktop.systemd1.Socket", bus_cgroup_context_properties, &s->cgroup_context },
                 {}
         };
-
-        SELINUX_UNIT_ACCESS_CHECK(u, c, message, "status");
 
         return bus_default_message_handler(c, message, INTROSPECTION, INTERFACES_LIST, bps);
 }
