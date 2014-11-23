@@ -230,7 +230,7 @@ static int delete_one_unmergeable_job(Transaction *tr, Job *j) {
         return -EINVAL;
 }
 
-static int transaction_merge_jobs(Transaction *tr, DBusError *e) {
+static int transaction_merge_jobs(Transaction *tr) {
         Job *j;
         Iterator i;
         int r;
@@ -689,12 +689,12 @@ int transaction_activate(Transaction *tr, Manager *m, JobMode mode, DBusError *e
                 /* Sixth step: let's drop unmergeable entries if
                  * necessary and possible, merge entries we can
                  * merge */
-                r = transaction_merge_jobs(tr, e);
+                r = transaction_merge_jobs(tr);
                 if (r >= 0)
                         break;
 
                 if (r != -EAGAIN) {
-                        log_warning("Requested transaction contains unmergeable jobs: %s", bus_error(e, r));
+                        log_warning("Requested transaction contains unmergeable jobs: %s", strerror(-r));
                         return r;
                 }
 
