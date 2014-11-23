@@ -763,7 +763,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                         return bus_send_error_reply(connection, message, &error, -ENOENT);
                 }
 
-                r = unit_kill(u, who, signo, &error);
+                r = unit_kill(u, who, signo);
                 if (r < 0)
                         return bus_send_error_reply(connection, message, &error, r);
 

@@ -434,7 +434,7 @@ static DBusHandlerResult bus_unit_message_dispatch(Unit *u, DBusConnection *conn
                 if (signo <= 0 || signo >= _NSIG)
                         return bus_send_error_reply(connection, message, &error, -EINVAL);
 
-                r = unit_kill(u, who, signo, &error);
+                r = unit_kill(u, who, signo);
                 if (r < 0)
                         return bus_send_error_reply(connection, message, &error, r);
 
