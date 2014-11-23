@@ -970,7 +970,7 @@ int manager_add_job(Manager *m, JobType type, Unit *unit, JobMode mode, bool ove
 
         r = transaction_add_job_and_dependencies(tr, type, unit, NULL, true, override, false,
                                                  mode == JOB_IGNORE_DEPENDENCIES || mode == JOB_IGNORE_REQUIREMENTS,
-                                                 mode == JOB_IGNORE_DEPENDENCIES, e);
+                                                 mode == JOB_IGNORE_DEPENDENCIES);
         if (r < 0)
                 goto tr_abort;
 
