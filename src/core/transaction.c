@@ -23,7 +23,6 @@
 #include <fcntl.h>
 
 #include "transaction.h"
-#include "bus-errors.h"
 #include "dbus-common.h"
 
 static void transaction_unlink_job(Transaction *tr, Job *j, bool delete_dependencies);
@@ -261,7 +260,7 @@ static int transaction_merge_jobs(Transaction *tr, DBusError *e) {
                                 return -EAGAIN;
 
                         /* We couldn't merge anything. Failure */
-                        dbus_set_error(e, BUS_ERROR_TRANSACTION_JOBS_CONFLICTING, "Transaction contains conflicting jobs '%s' and '%s' for %s. Probably contradicting requirement dependencies configured.",
+                        log_error("Transaction contains conflicting jobs '%s' and '%s' for %s. Probably contradicting requirement dependencies configured.",
                                        job_type_to_string(t), job_type_to_string(k->type), k->unit->id);
                         return r;
                 }
@@ -406,8 +405,8 @@ static int transaction_verify_order_one(Transaction *tr, Job *j, Job *from, unsi
 
                 log_error("Unable to break cycle");
 
-                dbus_set_error(e, BUS_ERROR_TRANSACTION_ORDER_IS_CYCLIC,
-                               "Transaction order is cyclic. See system logs for details.");
+                log_error("Transaction order is cyclic. See system logs for details.");
+
                 return -ENOEXEC;
         }
 
@@ -509,7 +508,7 @@ static int transaction_is_destructive(Transaction *tr, JobMode mode, DBusError *
                 if (j->unit->job && (mode == JOB_FAIL || j->unit->job->irreversible) &&
                     !job_type_is_superset(j->type, j->unit->job->type)) {
 
-                        dbus_set_error(e, BUS_ERROR_TRANSACTION_IS_DESTRUCTIVE, "Transaction is destructive.");
+                        log_error("Transaction is destructive.");
                         return -EEXIST;
                 }
         }
@@ -857,13 +856,12 @@ int transaction_add_job_and_dependencies(
             unit->load_state != UNIT_ERROR &&
             unit->load_state != UNIT_NOT_FOUND &&
             unit->load_state != UNIT_MASKED) {
-                dbus_set_error(e, BUS_ERROR_LOAD_FAILED, "Unit %s is not loaded properly.", unit->id);
+                log_error("Unit %s is not loaded properly.", unit->id);
                 return -EINVAL;
         }
 
         if (type != JOB_STOP && unit->load_state == UNIT_ERROR) {
-                dbus_set_error(e, BUS_ERROR_LOAD_FAILED,
-                               "Unit %s failed to load: %s. "
+               log_error("Unit %s failed to load: %s. "
                                "See system logs and 'systemctl status %s' for details.",
                                unit->id,
                                strerror(-unit->load_error),
@@ -872,20 +870,19 @@ int transaction_add_job_and_dependencies(
         }
 
         if (type != JOB_STOP && unit->load_state == UNIT_NOT_FOUND) {
-                dbus_set_error(e, BUS_ERROR_LOAD_FAILED,
-                               "Unit %s failed to load: %s.",
+                log_error("Unit %s failed to load: %s.",
                                unit->id,
                                strerror(-unit->load_error));
                 return -EINVAL;
         }
 
         if (type != JOB_STOP && unit->load_state == UNIT_MASKED) {
-                dbus_set_error(e, BUS_ERROR_MASKED, "Unit %s is masked.", unit->id);
+                log_error("Unit %s is masked.", unit->id);
                 return -EADDRNOTAVAIL;
         }
 
         if (!unit_job_is_applicable(unit, type)) {
-                dbus_set_error(e, BUS_ERROR_JOB_TYPE_NOT_APPLICABLE, "Job type %s is not applicable for unit %s.", job_type_to_string(type), unit->id);
+                log_error("Job type %s is not applicable for unit %s.", job_type_to_string(type), unit->id);
                 return -EBADR;
         }
 
