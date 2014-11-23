@@ -2496,7 +2496,7 @@ bool unit_active_or_pending(Unit *u) {
         return false;
 }
 
-int unit_kill(Unit *u, KillWho w, int signo, DBusError *error) {
+int unit_kill(Unit *u, KillWho w, int signo) {
         assert(u);
         assert(w >= 0 && w < _KILL_WHO_MAX);
         assert(signo > 0);
@@ -2505,7 +2505,7 @@ int unit_kill(Unit *u, KillWho w, int signo, DBusError *error) {
         if (!UNIT_VTABLE(u)->kill)
                 return -ENOTSUP;
 
-        return UNIT_VTABLE(u)->kill(u, w, signo, error);
+        return UNIT_VTABLE(u)->kill(u, w, signo);
 }
 
 static Set *unit_pid_set(pid_t main_pid, pid_t control_pid) {
@@ -2541,24 +2541,23 @@ int unit_kill_common(
                 KillWho who,
                 int signo,
                 pid_t main_pid,
-                pid_t control_pid,
-                DBusError *error) {
+                pid_t control_pid) {
 
         int r = 0;
 
         if (who == KILL_MAIN && main_pid <= 0) {
                 if (main_pid < 0)
-                        dbus_set_error(error, BUS_ERROR_NO_SUCH_PROCESS, "%s units have no main processes", unit_type_to_string(u->type));
+                        log_error("%s units have no main processes", unit_type_to_string(u->type));
                 else
-                        dbus_set_error(error, BUS_ERROR_NO_SUCH_PROCESS, "No main process to kill");
+                        log_error("No main process to kill");
                 return -ESRCH;
         }
 
         if (who == KILL_CONTROL && control_pid <= 0) {
                 if (control_pid < 0)
-                        dbus_set_error(error, BUS_ERROR_NO_SUCH_PROCESS, "%s units have no control processes", unit_type_to_string(u->type));
+                        log_error("%s units have no control processes", unit_type_to_string(u->type));
                 else
-                        dbus_set_error(error, BUS_ERROR_NO_SUCH_PROCESS, "No control process to kill");
+                        log_error("No control process to kill");
                 return -ESRCH;
         }
 

@@ -322,7 +322,7 @@ struct UnitVTable {
         int (*stop)(Unit *u);
         int (*reload)(Unit *u);
 
-        int (*kill)(Unit *u, KillWho w, int signo, DBusError *error);
+        int (*kill)(Unit *u, KillWho w, int signo);
 
         bool (*can_reload)(Unit *u);
 
@@ -511,8 +511,8 @@ int unit_start(Unit *u);
 int unit_stop(Unit *u);
 int unit_reload(Unit *u);
 
-int unit_kill(Unit *u, KillWho w, int signo, DBusError *error);
-int unit_kill_common(Unit *u, KillWho who, int signo, pid_t main_pid, pid_t control_pid, DBusError *error);
+int unit_kill(Unit *u, KillWho w, int signo);
+int unit_kill_common(Unit *u, KillWho who, int signo, pid_t main_pid, pid_t control_pid);
 
 void unit_notify(Unit *u, UnitActiveState os, UnitActiveState ns, bool reload_success);
 
