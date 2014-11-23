@@ -216,8 +216,8 @@ static int slice_stop(Unit *u) {
         return 0;
 }
 
-static int slice_kill(Unit *u, KillWho who, int signo, DBusError *error) {
-        return unit_kill_common(u, who, signo, -1, -1, error);
+static int slice_kill(Unit *u, KillWho who, int signo) {
+        return unit_kill_common(u, who, signo, -1, -1);
 }
 
 static int slice_serialize(Unit *u, FILE *f, FDSet *fds) {
