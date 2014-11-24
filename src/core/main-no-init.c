@@ -1076,6 +1076,8 @@ finish:
         free(arg_default_unit);
         free_join_controllers();
 
+        unlink_control_fifo();
+
         dbus_shutdown();
         label_finish();
 
