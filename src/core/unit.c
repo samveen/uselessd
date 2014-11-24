@@ -1287,7 +1287,7 @@ static void unit_check_unneeded(Unit *u) {
         log_info_unit(u->id, "Service %s is not needed anymore. Stopping.", u->id);
 
         /* Ok, nobody needs us anymore. Sniff. Then let's commit suicide */
-        manager_add_job(u->manager, JOB_STOP, u, JOB_FAIL, true, NULL, NULL);
+        manager_add_job(u->manager, JOB_STOP, u, JOB_FAIL, true, NULL);
 }
 
 static void retroactively_start_dependencies(Unit *u) {
@@ -1300,30 +1300,30 @@ static void retroactively_start_dependencies(Unit *u) {
         SET_FOREACH(other, u->dependencies[UNIT_REQUIRES], i)
                 if (!set_get(u->dependencies[UNIT_AFTER], other) &&
                     !UNIT_IS_ACTIVE_OR_ACTIVATING(unit_active_state(other)))
-                        manager_add_job(u->manager, JOB_START, other, JOB_REPLACE, true, NULL, NULL);
+                        manager_add_job(u->manager, JOB_START, other, JOB_REPLACE, true, NULL);
 
         SET_FOREACH(other, u->dependencies[UNIT_BINDS_TO], i)
                 if (!set_get(u->dependencies[UNIT_AFTER], other) &&
                     !UNIT_IS_ACTIVE_OR_ACTIVATING(unit_active_state(other)))
-                        manager_add_job(u->manager, JOB_START, other, JOB_REPLACE, true, NULL, NULL);
+                        manager_add_job(u->manager, JOB_START, other, JOB_REPLACE, true, NULL);
 
         SET_FOREACH(other, u->dependencies[UNIT_REQUIRES_OVERRIDABLE], i)
                 if (!set_get(u->dependencies[UNIT_AFTER], other) &&
                     !UNIT_IS_ACTIVE_OR_ACTIVATING(unit_active_state(other)))
-                        manager_add_job(u->manager, JOB_START, other, JOB_FAIL, false, NULL, NULL);
+                        manager_add_job(u->manager, JOB_START, other, JOB_FAIL, false, NULL);
 
         SET_FOREACH(other, u->dependencies[UNIT_WANTS], i)
                 if (!set_get(u->dependencies[UNIT_AFTER], other) &&
                     !UNIT_IS_ACTIVE_OR_ACTIVATING(unit_active_state(other)))
-                        manager_add_job(u->manager, JOB_START, other, JOB_FAIL, false, NULL, NULL);
+                        manager_add_job(u->manager, JOB_START, other, JOB_FAIL, false, NULL);
 
         SET_FOREACH(other, u->dependencies[UNIT_CONFLICTS], i)
                 if (!UNIT_IS_INACTIVE_OR_DEACTIVATING(unit_active_state(other)))
-                        manager_add_job(u->manager, JOB_STOP, other, JOB_REPLACE, true, NULL, NULL);
+                        manager_add_job(u->manager, JOB_STOP, other, JOB_REPLACE, true, NULL);
 
         SET_FOREACH(other, u->dependencies[UNIT_CONFLICTED_BY], i)
                 if (!UNIT_IS_INACTIVE_OR_DEACTIVATING(unit_active_state(other)))
-                        manager_add_job(u->manager, JOB_STOP, other, JOB_REPLACE, true, NULL, NULL);
+                        manager_add_job(u->manager, JOB_STOP, other, JOB_REPLACE, true, NULL);
 }
 
 static void retroactively_stop_dependencies(Unit *u) {
@@ -1336,7 +1336,7 @@ static void retroactively_stop_dependencies(Unit *u) {
         /* Pull down units which are bound to us recursively if enabled */
         SET_FOREACH(other, u->dependencies[UNIT_BOUND_BY], i)
                 if (!UNIT_IS_INACTIVE_OR_DEACTIVATING(unit_active_state(other)))
-                        manager_add_job(u->manager, JOB_STOP, other, JOB_REPLACE, true, NULL, NULL);
+                        manager_add_job(u->manager, JOB_STOP, other, JOB_REPLACE, true, NULL);
 }
 
 static void check_unneeded_dependencies(Unit *u) {
@@ -1381,7 +1381,7 @@ void unit_start_on_failure(Unit *u) {
         SET_FOREACH(other, u->dependencies[UNIT_ON_FAILURE], i) {
                 int r;
 
-                r = manager_add_job(u->manager, JOB_START, other, u->on_failure_isolate ? JOB_ISOLATE : JOB_REPLACE, true, NULL, NULL);
+                r = manager_add_job(u->manager, JOB_START, other, u->on_failure_isolate ? JOB_ISOLATE : JOB_REPLACE, true, NULL);
                 if (r < 0)
                         log_error_unit(u->id, "Failed to enqueue OnFailure= job: %s", strerror(-r));
         }
@@ -2365,7 +2365,7 @@ int unit_coldplug(Unit *u) {
                         return r;
         } else if (u->deserialized_job >= 0) {
                 /* legacy */
-                r = manager_add_job(u->manager, u->deserialized_job, u, JOB_IGNORE_REQUIREMENTS, false, NULL, NULL);
+                r = manager_add_job(u->manager, u->deserialized_job, u, JOB_IGNORE_REQUIREMENTS, false, NULL);
                 if (r < 0)
                         return r;
 

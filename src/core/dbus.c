@@ -362,7 +362,7 @@ static DBusHandlerResult api_bus_message_filter(DBusConnection *connection, DBus
                                         r = -EPERM;
 
                                 if (r >= 0)
-                                        r = manager_add_job(m, JOB_START, u, JOB_REPLACE, true, &error, NULL);
+                                        r = manager_add_job(m, JOB_START, u, JOB_REPLACE, true, NULL);
                         }
 
                         if (r < 0) {

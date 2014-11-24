@@ -939,7 +939,7 @@ int manager_startup(Manager *m, FILE *serialization, FDSet *fds) {
         return r;
 }
 
-int manager_add_job(Manager *m, JobType type, Unit *unit, JobMode mode, bool override, DBusError *e, Job **_ret) {
+int manager_add_job(Manager *m, JobType type, Unit *unit, JobMode mode, bool override, Job **_ret) {
         int r;
         Transaction *tr;
 
@@ -1000,7 +1000,7 @@ tr_abort:
         return r;
 }
 
-int manager_add_job_by_name(Manager *m, JobType type, const char *name, JobMode mode, bool override, DBusError *e, Job **_ret) {
+int manager_add_job_by_name(Manager *m, JobType type, const char *name, JobMode mode, bool override, Job **_ret) {
         Unit *unit;
         int r;
 
@@ -1013,7 +1013,7 @@ int manager_add_job_by_name(Manager *m, JobType type, const char *name, JobMode 
         if (r < 0)
                 return r;
 
-        return manager_add_job(m, type, unit, mode, override, e, _ret);
+        return manager_add_job(m, type, unit, mode, override, _ret);
 }
 
 Job *manager_get_job(Manager *m, uint32_t id) {
@@ -1395,18 +1395,13 @@ static int manager_dispatch_sigchld(Manager *m) {
 
 static int manager_start_target(Manager *m, const char *name, JobMode mode) {
         int r;
-        DBusError error;
-
-        dbus_error_init(&error);
 
         log_debug_unit(name, "Activating special unit %s", name);
 
-        r = manager_add_job_by_name(m, JOB_START, name, mode, true, &error, NULL);
+        r = manager_add_job_by_name(m, JOB_START, name, mode, true, NULL);
         if (r < 0)
                 log_error_unit(name,
-                               "Failed to enqueue %s job: %s", name, bus_error(&error, r));
-
-        dbus_error_free(&error);
+                               "Failed to enqueue %s job: %s", name, strerror(-r));
 
         return r;
 }

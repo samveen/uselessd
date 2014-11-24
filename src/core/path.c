@@ -468,19 +468,16 @@ static void path_enter_dead(Path *p, PathResult f) {
 }
 
 static void path_enter_running(Path *p) {
-        _cleanup_dbus_error_free_ DBusError error;
         int r;
 
         assert(p);
-
-        dbus_error_init(&error);
 
         /* Don't start job if we are supposed to go down */
         if (unit_stop_pending(UNIT(p)))
                 return;
 
         r = manager_add_job(UNIT(p)->manager, JOB_START, UNIT_TRIGGER(UNIT(p)),
-                            JOB_REPLACE, true, &error, NULL);
+                            JOB_REPLACE, true, NULL);
         if (r < 0)
                 goto fail;
 
@@ -495,7 +492,7 @@ static void path_enter_running(Path *p) {
 
 fail:
         log_warning("%s failed to queue unit startup job: %s",
-                    UNIT(p)->id, bus_error(&error, r));
+                    UNIT(p)->id, strerror(-r));
         path_enter_dead(p, PATH_FAILURE_RESOURCES);
 }
 

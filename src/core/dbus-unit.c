@@ -772,7 +772,7 @@ DBusHandlerResult bus_unit_queue_job(
                 return bus_send_error_reply(connection, message, &error, -EPERM);
         }
 
-        r = manager_add_job(u->manager, type, u, mode, true, &error, &j);
+        r = manager_add_job(u->manager, type, u, mode, true, &j);
         if (r < 0)
                 return bus_send_error_reply(connection, message, &error, r);
 

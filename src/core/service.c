@@ -2259,10 +2259,8 @@ fail:
 
 static void service_enter_restart(Service *s) {
         int r;
-        DBusError error;
 
         assert(s);
-        dbus_error_init(&error);
 
         if (UNIT(s)->job && UNIT(s)->job->type == JOB_STOP) {
                 /* Don't restart things if we are going down anyway */
@@ -2280,7 +2278,7 @@ static void service_enter_restart(Service *s) {
          * restarted. We use JOB_RESTART (instead of the more obvious
          * JOB_START) here so that those dependency jobs will be added
          * as well. */
-        r = manager_add_job(UNIT(s)->manager, JOB_RESTART, UNIT(s), JOB_FAIL, false, &error, NULL);
+        r = manager_add_job(UNIT(s)->manager, JOB_RESTART, UNIT(s), JOB_FAIL, false, NULL);
         if (r < 0)
                 goto fail;
 
@@ -2295,10 +2293,8 @@ static void service_enter_restart(Service *s) {
 fail:
         log_warning_unit(UNIT(s)->id,
                          "%s failed to schedule restart job: %s",
-                         UNIT(s)->id, bus_error(&error, -r));
+                         UNIT(s)->id, strerror(-r));
         service_enter_dead(s, SERVICE_FAILURE_RESOURCES, false);
-
-        dbus_error_free(&error);
 }
 
 static void service_enter_reload(Service *s) {
@@ -2435,21 +2431,17 @@ static int service_start_limit_test(Service *s) {
                 break;
 
         case SERVICE_START_LIMIT_REBOOT: {
-                DBusError error;
                 int r;
-
-                dbus_error_init(&error);
 
                 log_warning_unit(UNIT(s)->id,
                                  "%s start request repeated too quickly, rebooting.", UNIT(s)->id);
 
                 r = manager_add_job_by_name(UNIT(s)->manager, JOB_START,
                                             SPECIAL_REBOOT_TARGET, JOB_REPLACE,
-                                            true, &error, NULL);
+                                            true, NULL);
                 if (r < 0) {
                         log_error_unit(UNIT(s)->id,
-                                       "Failed to reboot: %s.", bus_error(&error, r));
-                        dbus_error_free(&error);
+                                       "Failed to reboot: %s.", strerror(-r));
                 }
 
                 break;

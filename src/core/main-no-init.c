@@ -949,11 +949,8 @@ int main(int argc, char *argv[]) {
         }
 
         if (queue_default_job) {
-                DBusError error;
                 Unit *target = NULL;
                 Job *default_unit_job;
-
-                dbus_error_init(&error);
 
                 log_debug("Activating default unit: %s", arg_default_unit);
 
@@ -988,20 +985,17 @@ int main(int argc, char *argv[]) {
                         manager_dump_units(m, stdout, "\t");
                 }
 
-                r = manager_add_job(m, JOB_START, target, JOB_ISOLATE, false, &error, &default_unit_job);
+                r = manager_add_job(m, JOB_START, target, JOB_ISOLATE, false, &default_unit_job);
                 if (r == -EPERM) {
-                        log_debug("Default target could not be isolated, starting instead: %s", bus_error(&error, r));
-                        dbus_error_free(&error);
+                        log_debug("Default target could not be isolated, starting instead: %s", strerror(-r));
 
-                        r = manager_add_job(m, JOB_START, target, JOB_REPLACE, false, &error, &default_unit_job);
+                        r = manager_add_job(m, JOB_START, target, JOB_REPLACE, false, &default_unit_job);
                         if (r < 0) {
-                                log_error("Failed to start default target: %s", bus_error(&error, r));
-                                dbus_error_free(&error);
+                                log_error("Failed to start default target: %s", strerror(-r));
                                 goto finish;
                         }
                 } else if (r < 0) {
-                        log_error("Failed to isolate default target: %s", bus_error(&error, r));
-                        dbus_error_free(&error);
+                        log_error("Failed to isolate default target: %s", strerror(-r));
                         goto finish;
                 }
 
