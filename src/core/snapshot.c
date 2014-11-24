@@ -230,7 +230,7 @@ int snapshot_create(Manager *m, const char *name, bool cleanup, DBusError *e, Sn
                 }
         }
 
-        r = manager_load_unit_prepare(m, name, NULL, e, &u);
+        r = manager_load_unit_prepare(m, name, NULL, &u);
         if (r < 0)
                 goto fail;
 

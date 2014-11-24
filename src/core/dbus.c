@@ -356,7 +356,7 @@ static DBusHandlerResult api_bus_message_filter(DBusConnection *connection, DBus
                                 r = -EADDRNOTAVAIL;
                                 log_error("Refusing activation, D-Bus is shutting down.");
                         } else {
-                                r = manager_load_unit(m, name, NULL, &error, &u);
+                                r = manager_load_unit(m, name, NULL, &u);
 
                                 if (r >= 0 && u->refuse_manual_start)
                                         r = -EPERM;

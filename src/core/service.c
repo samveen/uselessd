@@ -3535,7 +3535,7 @@ static int service_enumerate(Manager *m) {
                                         goto finish;
                                 }
 
-                                r = manager_load_unit_prepare(m, name, NULL, NULL, &service);
+                                r = manager_load_unit_prepare(m, name, NULL, &service);
                                 if (r < 0) {
                                         log_warning("Failed to prepare unit %s: %s", name, strerror(-r));
                                         continue;

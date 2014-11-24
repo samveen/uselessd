@@ -957,10 +957,9 @@ int main(int argc, char *argv[]) {
 
                 log_debug("Activating default unit: %s", arg_default_unit);
 
-                r = manager_load_unit(m, arg_default_unit, NULL, &error, &target);
+                r = manager_load_unit(m, arg_default_unit, NULL, &target);
                 if (r < 0) {
-                        log_error("Failed to load default target: %s", bus_error(&error, r));
-                        dbus_error_free(&error);
+                        log_error("Failed to load default target: %s", strerror(-r));
                 } else if (target->load_state == UNIT_ERROR || target->load_state == UNIT_NOT_FOUND)
                         log_error("Failed to load default target: %s", strerror(-target->load_error));
                 else if (target->load_state == UNIT_MASKED)
@@ -969,10 +968,9 @@ int main(int argc, char *argv[]) {
                 if (!target || target->load_state != UNIT_LOADED) {
                         log_info("Trying to load rescue target...");
 
-                        r = manager_load_unit(m, SPECIAL_RESCUE_TARGET, NULL, &error, &target);
+                        r = manager_load_unit(m, SPECIAL_RESCUE_TARGET, NULL, &target);
                         if (r < 0) {
-                                log_error("Failed to load rescue target: %s", bus_error(&error, r));
-                                dbus_error_free(&error);
+                                log_error("Failed to load rescue target: %s", strerror(-r));
                                 goto finish;
                         } else if (target->load_state == UNIT_ERROR || target->load_state == UNIT_NOT_FOUND) {
                                 log_error("Failed to load rescue target: %s", strerror(-target->load_error));

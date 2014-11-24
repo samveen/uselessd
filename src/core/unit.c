@@ -1913,7 +1913,7 @@ int unit_add_dependency_by_name(Unit *u, UnitDependency d, const char *name, con
         if (!name)
                 return -ENOMEM;
 
-        r = manager_load_unit(u->manager, name, path, NULL, &other);
+        r = manager_load_unit(u->manager, name, path, &other);
         if (r < 0)
                 return r;
 
@@ -1931,7 +1931,7 @@ int unit_add_two_dependencies_by_name(Unit *u, UnitDependency d, UnitDependency 
         if (!(name = resolve_template(u, name, path, &s)))
                 return -ENOMEM;
 
-        if ((r = manager_load_unit(u->manager, name, path, NULL, &other)) < 0)
+        if ((r = manager_load_unit(u->manager, name, path, &other)) < 0)
                 return r;
 
         r = unit_add_two_dependencies(u, d, e, other, add_reference);
@@ -1950,7 +1950,7 @@ int unit_add_dependency_by_name_inverse(Unit *u, UnitDependency d, const char *n
         if (!(name = resolve_template(u, name, path, &s)))
                 return -ENOMEM;
 
-        if ((r = manager_load_unit(u->manager, name, path, NULL, &other)) < 0)
+        if ((r = manager_load_unit(u->manager, name, path, &other)) < 0)
                 return r;
 
         r = unit_add_dependency(other, d, u, add_reference);
@@ -1969,7 +1969,7 @@ int unit_add_two_dependencies_by_name_inverse(Unit *u, UnitDependency d, UnitDep
         if (!(name = resolve_template(u, name, path, &s)))
                 return -ENOMEM;
 
-        if ((r = manager_load_unit(u->manager, name, path, NULL, &other)) < 0)
+        if ((r = manager_load_unit(u->manager, name, path, &other)) < 0)
                 return r;
 
         if ((r = unit_add_two_dependencies(other, d, e, u, add_reference)) < 0)
@@ -2068,7 +2068,7 @@ int unit_add_default_slice(Unit *u) {
                         ? SPECIAL_SYSTEM_SLICE
                         : SPECIAL_ROOT_SLICE;
 
-        r = manager_load_unit(u->manager, slice_name, NULL, NULL, &slice);
+        r = manager_load_unit(u->manager, slice_name, NULL, &slice);
         if (r < 0)
                 return r;
 
@@ -2099,7 +2099,7 @@ int unit_load_related_unit(Unit *u, const char *type, Unit **_found) {
 
         assert(!unit_has_name(u, t));
 
-        r = manager_load_unit(u->manager, t, NULL, NULL, _found);
+        r = manager_load_unit(u->manager, t, NULL, _found);
         assert(r < 0 || *_found != u);
         return r;
 }

@@ -854,7 +854,7 @@ static int bus_unit_set_transient_property(
                 } else {
                         Unit *slice;
 
-                        r = manager_load_unit(u->manager, s, NULL, error, &slice);
+                        r = manager_load_unit(u->manager, s, NULL, &slice);
                         if (r < 0)
                                 return r;
 

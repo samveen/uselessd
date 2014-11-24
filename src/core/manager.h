@@ -263,8 +263,8 @@ Unit *manager_get_unit(Manager *m, const char *name);
 
 int manager_get_unit_by_path(Manager *m, const char *path, const char *suffix, Unit **_found);
 
-int manager_load_unit_prepare(Manager *m, const char *name, const char *path, DBusError *e, Unit **_ret);
-int manager_load_unit(Manager *m, const char *name, const char *path, DBusError *e, Unit **_ret);
+int manager_load_unit_prepare(Manager *m, const char *name, const char *path, Unit **_ret);
+int manager_load_unit(Manager *m, const char *name, const char *path, Unit **_ret);
 
 int manager_add_job(Manager *m, JobType type, Unit *unit, JobMode mode, bool force, DBusError *e, Job **_ret);
 int manager_add_job_by_name(Manager *m, JobType type, const char *name, JobMode mode, bool force, DBusError *e, Job **_ret);

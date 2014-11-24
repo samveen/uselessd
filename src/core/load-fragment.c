@@ -1273,7 +1273,6 @@ int config_parse_socket_service(const char *unit,
 
         Socket *s = data;
         int r;
-        DBusError error;
         Unit *x;
         _cleanup_free_ char *p = NULL;
 
@@ -1281,8 +1280,6 @@ int config_parse_socket_service(const char *unit,
         assert(lvalue);
         assert(rvalue);
         assert(data);
-
-        dbus_error_init(&error);
 
         r = unit_name_printf(UNIT(s), rvalue, &p);
         if (r < 0)
@@ -1295,12 +1292,11 @@ int config_parse_socket_service(const char *unit,
                 return 0;
         }
 
-        r = manager_load_unit(UNIT(s)->manager, p ?: rvalue, NULL, &error, &x);
+        r = manager_load_unit(UNIT(s)->manager, p ?: rvalue, NULL, &x);
         if (r < 0) {
                 log_syntax(unit, LOG_ERR, filename, line, r,
                            "Failed to load unit %s, ignoring: %s",
-                           rvalue, bus_error(&error, r));
-                dbus_error_free(&error);
+                           rvalue, strerror(-r));
                 return 0;
         }
 
@@ -1918,7 +1914,7 @@ int config_parse_unit_slice(
                         return log_oom();
         }
 
-        r = manager_load_unit(u->manager, k, NULL, NULL, &slice);
+        r = manager_load_unit(u->manager, k, NULL, &slice);
         if (r < 0) {
                 log_syntax(unit, LOG_ERR, filename, line, -r,
                            "Failed to load slice unit %s. Ignoring.", k);

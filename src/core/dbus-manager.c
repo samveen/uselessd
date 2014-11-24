@@ -695,7 +695,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                                     DBUS_TYPE_INVALID))
                         return bus_send_error_reply(connection, message, &error, -EINVAL);
 
-                r = manager_load_unit(m, name, NULL, &error, &u);
+                r = manager_load_unit(m, name, NULL, &u);
                 if (r < 0)
                         return bus_send_error_reply(connection, message, &error, r);
 
@@ -1695,7 +1695,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                         return bus_send_error_reply(connection, message, &error, -EINVAL);
                 }
 
-                r = manager_load_unit(m, name, NULL, NULL, &u);
+                r = manager_load_unit(m, name, NULL, &u);
                 if (r < 0)
                         return bus_send_error_reply(connection, message, &error, r);
 
@@ -1773,7 +1773,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                         return bus_send_error_reply(connection, message, &error, -EINVAL);
                 }
 
-                r = manager_load_unit(m, name, NULL, &error, &u);
+                r = manager_load_unit(m, name, NULL, &u);
                 if (r < 0)
                         return bus_send_error_reply(connection, message, &error, r);
 

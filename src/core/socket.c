@@ -177,7 +177,7 @@ static int socket_instantiate_service(Socket *s) {
         if (r < 0)
                 return -ENOMEM;
 
-        r = manager_load_unit(UNIT(s)->manager, name, NULL, NULL, &u);
+        r = manager_load_unit(UNIT(s)->manager, name, NULL, &u);
         free(name);
 
         if (r < 0)

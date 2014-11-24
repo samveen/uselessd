@@ -89,7 +89,7 @@ static int slice_add_parent_slice(Slice *s) {
         else
                 a = (char*) SPECIAL_ROOT_SLICE;
 
-        r = manager_load_unit(UNIT(s)->manager, a, NULL, NULL, &parent);
+        r = manager_load_unit(UNIT(s)->manager, a, NULL, &parent);
         if (r < 0)
                 return r;
 

@@ -1009,7 +1009,7 @@ int manager_add_job_by_name(Manager *m, JobType type, const char *name, JobMode 
         assert(name);
         assert(mode < _JOB_MODE_MAX);
 
-        r = manager_load_unit(m, name, NULL, NULL, &unit);
+        r = manager_load_unit(m, name, NULL, &unit);
         if (r < 0)
                 return r;
 
@@ -1059,7 +1059,6 @@ int manager_load_unit_prepare(
                 Manager *m,
                 const char *name,
                 const char *path,
-                DBusError *e,
                 Unit **_ret) {
 
         Unit *ret;
@@ -1125,7 +1124,6 @@ int manager_load_unit(
                 Manager *m,
                 const char *name,
                 const char *path,
-                DBusError *e,
                 Unit **_ret) {
 
         int r;
@@ -1135,7 +1133,7 @@ int manager_load_unit(
         /* This will load the service information files, but not actually
          * start any services or anything. */
 
-        r = manager_load_unit_prepare(m, name, path, e, _ret);
+        r = manager_load_unit_prepare(m, name, path, _ret);
         if (r != 0)
                 return r;
 
@@ -2214,7 +2212,7 @@ int manager_deserialize(Manager *m, FILE *f, FDSet *fds) {
 
                 char_array_0(name);
 
-                r = manager_load_unit(m, strstrip(name), NULL, NULL, &u);
+                r = manager_load_unit(m, strstrip(name), NULL, &u);
                 if (r < 0)
                         goto finish;
 
