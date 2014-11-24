@@ -188,7 +188,7 @@ _pure_ static const char *snapshot_sub_state_to_string(Unit *u) {
         return snapshot_state_to_string(SNAPSHOT(u)->state);
 }
 
-int snapshot_create(Manager *m, const char *name, bool cleanup, DBusError *e, Snapshot **_s) {
+int snapshot_create(Manager *m, const char *name, bool cleanup, Snapshot **_s) {
         _cleanup_free_ char *n = NULL;
         Unit *other, *u = NULL;
         Iterator i;

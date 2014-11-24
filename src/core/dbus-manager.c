@@ -1084,7 +1084,7 @@ static DBusHandlerResult bus_manager_message_handler(DBusConnection *connection,
                 if (isempty(name))
                         name = NULL;
 
-                r = snapshot_create(m, name, cleanup, &error, &s);
+                r = snapshot_create(m, name, cleanup, &s);
                 if (r < 0)
                         return bus_send_error_reply(connection, message, &error, r);
 
