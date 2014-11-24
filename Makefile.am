@@ -701,8 +701,6 @@ libsystemd_shared_la_SOURCES = \
 	src/shared/spawn-ask-password-agent.h \
 	src/shared/replace-var.c \
 	src/shared/replace-var.h \
-	src/shared/spawn-polkit-agent.c \
-	src/shared/spawn-polkit-agent.h \
 	src/shared/hwclock.c \
 	src/shared/hwclock.h \
 	src/shared/time-dst.c \

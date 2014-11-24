@@ -58,7 +58,6 @@
 #include "build.h"
 #include "unit-name.h"
 #include "spawn-ask-password-agent.h"
-#include "spawn-polkit-agent.h"
 #include "install.h"
 #include "path-util.h"
 #include "socket-util.h"
@@ -5964,7 +5963,6 @@ finish:
         strv_free(arg_properties);
 
         ask_password_agent_close();
-        polkit_agent_close();
 
         return retval;
 }
