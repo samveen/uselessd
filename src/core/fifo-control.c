@@ -59,6 +59,17 @@ static UnitFileScope get_arg_scope(void) {
                 return UNIT_FILE_SYSTEM; /* default */
 }
 
+static const char* get_arg_root(void) {
+        int root;
+        const char *p = NULL;
+
+        root = read_one_line_file("/run/systemd/arg-root", (char **)&p);
+        if (root < 0)
+                return "unknown";
+
+        return p;
+}
+
 static void output_unit_file_list(const UnitFileList *units, unsigned c) {
         unsigned max_id_len, id_cols, state_cols, n_shown = 0;
         const UnitFileList *u;
@@ -236,13 +247,18 @@ void fifo_control_loop(void) {
                 } else if (streq("gdtr", fifobuf)) {
                         int def;
                         UnitFileScope argscope;
+                        const char *argroot;
                         _cleanup_free_ char *default_target = NULL;
+
+                        argroot = get_arg_root();
+                        if (streq("unknown", argroot))
+                                log_error("Failed to get unit file root from /run/systemd/arg-root.");
 
                         argscope = get_arg_scope();
                         if (argscope < 0)
                                 log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
 
-                        def = unit_file_get_default(argscope, "/", &default_target);
+                        def = unit_file_get_default(argscope, (const char *)argroot, &default_target);
                         if (default_target)
                                 log_info("Default target: %s", default_target);
                 } else if (streq("lenv", fifobuf)) {
