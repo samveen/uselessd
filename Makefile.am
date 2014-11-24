@@ -728,9 +728,7 @@ noinst_LTLIBRARIES += \
 
 libsystemd_dbus_la_SOURCES = \
 	src/shared/dbus-common.c \
-	src/shared/dbus-common.h \
-	src/shared/polkit.c \
-	src/shared/polkit.h
+	src/shared/dbus-common.h
 
 libsystemd_dbus_la_CFLAGS = \
 	$(AM_CFLAGS) \
