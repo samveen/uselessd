@@ -127,10 +127,17 @@ static void list_unit_files(void) {
 
 void create_control_fifo(void) {
         int c;
+        int d;
 
         c = mkfifo("/run/systemd/fifoctl", 0644);
         if (c < 0) {
-                log_error("Creation of fifoctl IPC endpoint failed: %s.", strerror(-c));
+                log_error("Creation of fifoctl IPC server endpoint failed: %s.", strerror(-c));
+                return;
+        }
+
+        d = mkfifo("/run/systemd/fifoout", 0644);
+        if (d < 0) {
+                log_error("Creation of fifoout IPC client endpoint failed: %s.", strerror(-d));
                 return;
         }
 
@@ -139,10 +146,17 @@ void create_control_fifo(void) {
 
 void unlink_control_fifo(void) {
         int r;
+        int k;
 
         r = unlink("/run/systemd/fifoctl");
         if (r < 0) {
-                log_error("Unlinking the fifoctl IPC endpoint failed: %s.", strerror(-r));
+                log_error("Unlinking the fifoctl IPC server endpoint failed: %s.", strerror(-r));
+                return;
+        }
+
+        k = unlink("/run/systemd/fifoout");
+        if (k < 0) {
+                log_error("Unlinking the fifoout IPC client endpoint failed: %s.", strerror(-k));
                 return;
         }
 
