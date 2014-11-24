@@ -263,8 +263,6 @@ Unit *manager_get_unit(Manager *m, const char *name);
 
 int manager_get_unit_by_path(Manager *m, const char *path, const char *suffix, Unit **_found);
 
-int manager_get_job_from_dbus_path(Manager *m, const char *s, Job **_j);
-
 int manager_load_unit_prepare(Manager *m, const char *name, const char *path, DBusError *e, Unit **_ret);
 int manager_load_unit(Manager *m, const char *name, const char *path, DBusError *e, Unit **_ret);
 

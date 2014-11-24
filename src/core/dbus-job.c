@@ -182,19 +182,6 @@ static DBusHandlerResult bus_job_message_handler(DBusConnection *connection, DBu
                 return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
         }
 
-        r = manager_get_job_from_dbus_path(m, dbus_message_get_path(message), &j);
-        if (r == -ENOMEM)
-                goto oom;
-        if (r == -ENOENT) {
-                DBusError e;
-
-                dbus_error_init(&e);
-                dbus_set_error_const(&e, DBUS_ERROR_UNKNOWN_OBJECT, "Unknown job");
-                return bus_send_error_reply(connection, message, &e, r);
-        }
-        if (r < 0)
-                return bus_send_error_reply(connection, message, NULL, r);
-
         return bus_job_message_dispatch(j, connection, message);
 
 oom:

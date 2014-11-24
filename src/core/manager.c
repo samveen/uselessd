@@ -1850,31 +1850,6 @@ int manager_loop(Manager *m) {
         return m->exit_code;
 }
 
-int manager_get_job_from_dbus_path(Manager *m, const char *s, Job **_j) {
-        Job *j;
-        unsigned id;
-        int r;
-
-        assert(m);
-        assert(s);
-        assert(_j);
-
-        if (!startswith(s, "/org/freedesktop/systemd1/job/"))
-                return -EINVAL;
-
-        r = safe_atou(s + 30, &id);
-        if (r < 0)
-                return r;
-
-        j = manager_get_job(m, id);
-        if (!j)
-                return -ENOENT;
-
-        *_j = j;
-
-        return 0;
-}
-
 void manager_send_unit_audit(Manager *m, Unit *u, int type, bool success) {
 
 #ifdef HAVE_AUDIT
