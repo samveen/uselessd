@@ -591,12 +591,6 @@ static DBusHandlerResult bus_unit_message_handler(DBusConnection *connection, DB
                 return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
         }
 
-        r = manager_load_unit_from_dbus_path(m, dbus_message_get_path(message), &error, &u);
-        if (r == -ENOMEM)
-                goto oom;
-        if (r < 0)
-                return bus_send_error_reply(connection, message, &error, r);
-
         return bus_unit_message_dispatch(u, connection, message);
 
 oom:
