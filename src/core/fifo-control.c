@@ -41,6 +41,24 @@
 #include "util.h"
 #include "fileio.h"
 
+static UnitFileScope get_arg_scope(void) {
+        int scope;
+        _cleanup_free_ char *p = NULL;
+
+        scope = read_one_line_file("/run/systemd/arg-scope", &p);
+        if (scope < 0)
+                return -1;
+
+        if (streq("system", p))
+                return UNIT_FILE_SYSTEM;
+        else if (streq("global", p))
+                return UNIT_FILE_GLOBAL;
+        else if (streq("user", p))
+                return UNIT_FILE_USER;
+        else
+                return UNIT_FILE_SYSTEM; /* default */
+}
+
 static void output_unit_file_list(const UnitFileList *units, unsigned c) {
         unsigned max_id_len, id_cols, state_cols, n_shown = 0;
         const UnitFileList *u;
@@ -93,12 +111,17 @@ static void list_unit_files(void) {
         unsigned count = 0, n_units = 0;
         Iterator i;
         int r;
+        UnitFileScope argscope;
+
+        argscope = get_arg_scope();
+        if (argscope < 0)
+                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
 
         h = hashmap_new(string_hash_func, string_compare_func);
         if (!h)
                 log_oom();
 
-        r = unit_file_get_list(UNIT_FILE_SYSTEM, NULL, h);
+        r = unit_file_get_list(argscope, NULL, h);
         if (r < 0) {
                 unit_file_list_free(h);
                 log_error("Failed to get unit file list: %s", strerror(-r));
@@ -124,24 +147,6 @@ static void list_unit_files(void) {
         hashmap_free(h);
 
         output_unit_file_list(units, count);
-}
-
-static int get_arg_scope(void) {
-        int scope;
-        _cleanup_free_ char *p = NULL;
-
-        scope = read_one_line_file("/run/systemd/arg-scope", &p);
-        if (scope < 0)
-                return -1;
-
-        if (streq("system", p))
-                return UNIT_FILE_SYSTEM;
-        else if (streq("global", p))
-                return UNIT_FILE_GLOBAL;
-        else if (streq("user", p))
-                return UNIT_FILE_USER;
-        else
-                return -1;
 }
 
 void create_control_fifo(void) {
@@ -229,7 +234,8 @@ void fifo_control_loop(void) {
                                 log_error("kill() failed: %m");
                                 return;
                 } else if (streq("gdtr", fifobuf)) {
-                        int def, argscope;
+                        int def;
+                        UnitFileScope argscope;
                         _cleanup_free_ char *default_target = NULL;
 
                         argscope = get_arg_scope();
