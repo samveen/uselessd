@@ -237,10 +237,10 @@ void fifo_control_loop(void) {
                                 log_error("kill() failed: %m");
                                 return;
                 } else if (streq("exit", fifobuf)) {
-                        /*if (m->running_as == SYSTEMD_SYSTEM)
-                                log_error("Exit is only supported for user service managers.");
+                        if (m->running_as == SYSTEMD_SYSTEM && getpid() == 1)
+                                log_error("Exit is only supported for user service managers and non-PID1 system managers.");
 
-                        m->exit_code = MANAGER_EXIT;*/
+                        /*m->exit_code = MANAGER_EXIT;*/
                         if (kill(getpid(), SIGINT) < 0)
                                 log_error("kill() failed: %m");
                                 return;
