@@ -39,6 +39,7 @@
 #include "path-util.h"
 #include "install.h"
 #include "util.h"
+#include "fileio.h"
 
 static void output_unit_file_list(const UnitFileList *units, unsigned c) {
         unsigned max_id_len, id_cols, state_cols, n_shown = 0;
@@ -123,6 +124,24 @@ static void list_unit_files(void) {
         hashmap_free(h);
 
         output_unit_file_list(units, count);
+}
+
+static int get_arg_scope(void) {
+        int scope;
+        _cleanup_free_ char *p = NULL;
+
+        scope = read_one_line_file("/run/systemd/arg-scope", &p);
+        if (scope < 0)
+                return -1;
+
+        if (streq("system", p))
+                return UNIT_FILE_SYSTEM;
+        else if (streq("global", p))
+                return UNIT_FILE_GLOBAL;
+        else if (streq("user", p))
+                return UNIT_FILE_USER;
+        else
+                return -1;
 }
 
 void create_control_fifo(void) {
@@ -210,10 +229,14 @@ void fifo_control_loop(void) {
                                 log_error("kill() failed: %m");
                                 return;
                 } else if (streq("gdtr", fifobuf)) {
-                        int def;
+                        int def, argscope;
                         _cleanup_free_ char *default_target = NULL;
 
-                        def = unit_file_get_default(UNIT_FILE_SYSTEM, "/", &default_target);
+                        argscope = get_arg_scope();
+                        if (argscope < 0)
+                                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
+
+                        def = unit_file_get_default(argscope, "/", &default_target);
                         if (default_target)
                                 log_info("Default target: %s", default_target);
                 } else if (streq("lenv", fifobuf)) {
