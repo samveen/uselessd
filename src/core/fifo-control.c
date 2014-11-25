@@ -160,6 +160,71 @@ static void list_unit_files(void) {
         output_unit_file_list(units, count);
 }
 
+static void list_jobs_print(struct job_info* jobs, size_t n) {
+        size_t i;
+        struct job_info *j;
+        const char *on, *off;
+        bool shorten = false;
+
+        assert(n == 0 || jobs);
+
+        if (n == 0) {
+                on = ansi_highlight_green();
+                off = ansi_highlight_off();
+
+                printf("%sNo jobs running.%s\n", on, off);
+                return;
+        }
+
+        {
+                /* JOB UNIT TYPE STATE */
+                unsigned l0 = 3, l1 = 4, l2 = 4, l3 = 5;
+
+                for (i = 0, j = jobs; i < n; i++, j++) {
+                        assert(j->name && j->type && j->state);
+                        l0 = MAX(l0, DECIMAL_STR_WIDTH(j->id));
+                        l1 = MAX(l1, strlen(j->name));
+                        l2 = MAX(l2, strlen(j->type));
+                        l3 = MAX(l3, strlen(j->state));
+                }
+
+                if (l0 + 1 + l1 + l2 + 1 + l3 > columns()) {
+                        l1 = MAX(33u, columns() - l0 - l2 - l3 - 3);
+                        shorten = true;
+                }
+
+                if (on_tty())
+                        printf("%*s %-*s %-*s %-*s\n",
+                               l0, "JOB",
+                               l1, "UNIT",
+                               l2, "TYPE",
+                               l3, "STATE");
+
+                for (i = 0, j = jobs; i < n; i++, j++) {
+                        _cleanup_free_ char *e = NULL;
+
+                        if (streq(j->state, "running")) {
+                                on = ansi_highlight();
+                                off = ansi_highlight_off();
+                        } else
+                                on = off = "";
+
+                        e = shorten ? ellipsize(j->name, l1, 33) : NULL;
+                        printf("%*u %s%-*s%s %-*s %s%-*s%s\n",
+                               l0, j->id,
+                               on, l1, e ? e : j->name, off,
+                               l2, j->type,
+                               on, l3, j->state, off);
+                }
+        }
+
+        on = ansi_highlight();
+        off = ansi_highlight_off();
+
+        if (on_tty())
+                printf("\n%s%zu jobs listed%s.\n", on, n, off);
+}
+
 void create_control_fifo(void) {
         int c;
         int d;
@@ -267,6 +332,7 @@ void fifo_control_loop(void) {
                 } else if (streq("lsuf", fifobuf)) {
                         /* currently unsorted */
                         list_unit_files();
+                /* TODO: free jobs */
                 } else if (streq("lsjb", fifobuf)) {
                         Iterator i;
                         Job *j;
@@ -274,7 +340,6 @@ void fifo_control_loop(void) {
                         size_t size = 0, used = 0;
 
                         HASHMAP_FOREACH(j, m->jobs, i) {
-                                char *u_path, *j_path;
                                 const char *name, *state, *type;
                                 uint32_t id;
 
@@ -296,6 +361,8 @@ void fifo_control_loop(void) {
                                 }
 
                         }
+
+                        list_jobs_print(jobs, used);
                 /* These would be better served by isolating to targets.
                  * Be sure to integrate send_shutdownd() utmp record
                  * writing in full versions. */
