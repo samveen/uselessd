@@ -40,6 +40,10 @@
 #include "install.h"
 #include "util.h"
 #include "fileio.h"
+#include "strv.h"
+#include "conf-parser.h"
+#include "path-lookup.h"
+#include "dbus-common.h" /* struct unit_info */
 
 static UnitFileScope get_arg_scope(void) {
         int scope;
@@ -158,6 +162,129 @@ static void list_unit_files(void) {
         hashmap_free(h);
 
         output_unit_file_list(units, count);
+}
+
+static int compare_unit_info(const void *a, const void *b) {
+        const char *d1, *d2;
+        const struct unit_info *u = a, *v = b;
+
+        d1 = strrchr(u->id, '.');
+        d2 = strrchr(v->id, '.');
+
+        if (d1 && d2) {
+                int r;
+
+                r = strcasecmp(d1, d2);
+                if (r != 0)
+                        return r;
+        }
+
+        return strcasecmp(u->id, v->id);
+}
+
+static void output_units_list(const struct unit_info *unit_infos, unsigned c) {
+        unsigned id_len, max_id_len, active_len, sub_len, job_len, desc_len, n_shown = 0;
+        unsigned basic_len;
+        const struct unit_info *u;
+                        const char *on_loaded, *off_loaded, *on = "";
+                const char *on_active, *off_active, *off = "";
+        int job_count = 0;
+
+        max_id_len = sizeof("UNIT")-1;
+        active_len = sizeof("ACTIVE")-1;
+        sub_len = sizeof("SUB")-1;
+        job_len = sizeof("JOB")-1;
+        desc_len = 0;
+
+        for (u = unit_infos; u < unit_infos + c; u++) {
+                max_id_len = MAX(max_id_len, strlen(u->id));
+                active_len = MAX(active_len, strlen(u->active_state));
+                sub_len = MAX(sub_len, strlen(u->sub_state));
+                if (u->job_id != 0) {
+                        job_len = MAX(job_len, strlen(u->job_type));
+                        job_count++;
+                }
+        }
+
+                id_len = MIN(max_id_len, 25u);
+                basic_len = 5 + id_len + 5 + active_len + sub_len;
+                if (job_count)
+                        basic_len += job_len + 1;
+                if (basic_len < (unsigned) columns()) {
+                        unsigned extra_len, incr;
+                        extra_len = columns() - basic_len;
+                        /* Either UNIT already got 25, or is fully satisfied.
+                         * Grant up to 25 to DESC now. */
+                        incr = MIN(extra_len, 25u);
+                        desc_len += incr;
+                        extra_len -= incr;
+                        /* split the remaining space between UNIT and DESC,
+                         * but do not give UNIT more than it needs. */
+                        if (extra_len > 0) {
+                                incr = MIN(extra_len / 2, max_id_len - id_len);
+                                id_len += incr;
+                                desc_len += extra_len - incr;
+                        } else
+                                id_len = max_id_len;
+                }
+
+        for (u = unit_infos; u < unit_infos + c; u++) {
+                _cleanup_free_ char *e = NULL;
+
+                if (!n_shown) {
+                        printf("%-*s %-6s %-*s %-*s ", id_len, "UNIT", "LOAD",
+                               active_len, "ACTIVE", sub_len, "SUB");
+                        if (job_count)
+                                printf("%-*s ", job_len, "JOB");
+                        printf("%s\n", "DESCRIPTION");
+                }
+
+                n_shown++;
+
+                if (streq(u->load_state, "error") ||
+                    streq(u->load_state, "not-found")) {
+                        on_loaded = on = ansi_highlight_red();
+                        off_loaded = off = ansi_highlight_off();
+                } else
+                        on_loaded = off_loaded = "";
+
+                if (streq(u->active_state, "failed")) {
+                        on_active = on = ansi_highlight_red();
+                        off_active = off = ansi_highlight_off();
+                } else
+                        on_active = off_active = "";
+
+                e = ellipsize(u->id, id_len, 33);
+
+                printf("%s%-*s%s %s%-6s%s %s%-*s %-*s%s %-*s",
+                       on, id_len, e ? e : u->id, off,
+                       on_loaded, u->load_state, off_loaded,
+                       on_active, active_len, u->active_state,
+                       sub_len, u->sub_state, off_active,
+                       job_count ? job_len + 1 : 0, u->job_id ? u->job_type : "");
+                if (desc_len > 0)
+                        printf("%.*s\n", desc_len, u->description);
+                else
+                        printf("%s\n", u->description);
+        }
+
+                if (n_shown) {
+                        printf("\nLOAD   = Reflects whether the unit definition was properly loaded.\n"
+                               "ACTIVE = The high-level unit activation state, i.e. generalization of SUB.\n"
+                               "SUB    = The low-level unit activation state, values depend on unit type.\n");
+                        if (job_count)
+                                printf("JOB    = Pending job for the unit.\n");
+                        puts("");
+                        on = ansi_highlight();
+                        off = ansi_highlight_off();
+                } else {
+                        on = ansi_highlight_red();
+                        off = ansi_highlight_off();
+                }
+
+                        printf("%s%u loaded units listed.%s\n"
+                               "To show all installed unit files use 'systemctl list-unit-files'.\n",
+                               on, n_shown, off);
 }
 
 static void list_jobs_print(struct job_info* jobs, size_t n) {
@@ -363,6 +490,48 @@ void fifo_control_loop(void) {
                         }
 
                         list_jobs_print(jobs, used);
+                } else if (streq("lsun", fifobuf)) {
+                        Iterator i;
+                        Unit *u;
+                        const char *k;
+                        _cleanup_free_ struct unit_info *unit_infos = NULL;
+                        unsigned cnt = 0;
+
+                        HASHMAP_FOREACH_KEY(u, k, m->units, i) {
+                                char *u_path, *j_path;
+                                const char *description, *load_state, *active_state, *sub_state, *sjob_type, *following;
+                                uint32_t job_id;
+                                Unit *follow;
+
+                                if (k != u->id)
+                                        continue;
+
+                                description = unit_description(u);
+                                load_state = unit_load_state_to_string(u->load_state);
+                                active_state = unit_active_state_to_string(unit_active_state(u));
+                                sub_state = unit_sub_state_to_string(u);
+
+                                follow = unit_following(u);
+                                following = follow ? follow->id : "";
+
+                                if (u->job) {
+                                        job_id = (uint32_t) u->job->id;
+
+                                        sjob_type = job_type_to_string(u->job->type);
+                                } else {
+                                        job_id = 0;
+                                        j_path = u_path;
+                                        sjob_type = "";
+                                }
+
+                                free(u_path);
+                                if (u->job)
+                                        free(j_path);
+                        }
+
+                        qsort(unit_infos, cnt, sizeof(struct unit_info), compare_unit_info);
+
+                        output_units_list(unit_infos, cnt);
                 /* These would be better served by isolating to targets.
                  * Be sure to integrate send_shutdownd() utmp record
                  * writing in full versions. */
