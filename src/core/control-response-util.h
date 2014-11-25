@@ -19,6 +19,20 @@
   along with uselessd; If not, see <http://www.gnu.org/licenses/>.
 ***/
 
-void create_control_fifo(void);
-void unlink_control_fifo(void);
-void fifo_control_loop(void);
+#include <stdlib.h>
+
+#include "install.h"
+#include "dbus-common.h" /* struct unit_info */
+
+struct job_info {
+        uint32_t id;
+        char *name, *type, *state;
+};
+
+UnitFileScope get_arg_scope(void);
+const char* get_arg_root(void);
+void output_unit_file_list(const UnitFileList *units, unsigned c);
+void list_unit_files(void);
+int compare_unit_info(const void *a, const void *b);
+void output_units_list(const struct unit_info *unit_infos, unsigned c);
+void list_jobs_print(struct job_info* jobs, size_t n);

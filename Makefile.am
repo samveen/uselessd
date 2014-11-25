@@ -290,7 +290,7 @@ dist_systemunit_DATA = \
 	units/kexec.target \
 	units/local-fs.target \
 	units/local-fs-pre.target \
-    units/swap.target \
+	units/swap.target \
 	units/initrd.target \
 	units/initrd-fs.target \
 	units/initrd-root-fs.target \
@@ -665,7 +665,7 @@ libsystemd_shared_la_SOURCES = \
 	src/shared/fdset.h \
 	src/shared/prioq.c \
 	src/shared/prioq.h \
-    src/shared/printf.h \
+	src/shared/printf.h \
 	src/shared/strv.c \
 	src/shared/strv.h \
 	src/shared/env-util.c \
@@ -909,6 +909,8 @@ libsystemd_core_la_SOURCES = \
 	src/core/audit-fd.h \
 	src/core/async.c \
 	src/core/async.h \
+	src/core/control-response-util.c \
+	src/core/control-response-util.h \
 	src/core/fifo-control.h \
 	src/core/fifo-control.c
 
