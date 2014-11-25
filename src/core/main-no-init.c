@@ -57,7 +57,7 @@
 #include "sd-daemon.h"
 #include "sd-messages.h"
 
-#include "fifo-control.h"
+#include "control-request.h"
 #include "mount-setup.h"
 #include "fileio.h"
 

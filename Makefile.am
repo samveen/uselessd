@@ -911,8 +911,8 @@ libsystemd_core_la_SOURCES = \
 	src/core/async.h \
 	src/core/control-response-util.c \
 	src/core/control-response-util.h \
-	src/core/fifo-control.h \
-	src/core/fifo-control.c
+	src/core/control-request.h \
+	src/core/control-request.c
 
 nodist_libsystemd_core_la_SOURCES = \
 	src/core/load-fragment-gperf.c \

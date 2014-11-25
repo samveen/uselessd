@@ -30,12 +30,12 @@
 #include <limits.h>
 #include <stdint.h>
 
-#include "fifo-control.h"
 #include "manager.h"
 #include "util.h"
 #include "strv.h"
 #include "conf-parser.h"
 
+#include "control-request.h"
 #include "control-response-util.h"
 
 void create_control_fifo(void) {

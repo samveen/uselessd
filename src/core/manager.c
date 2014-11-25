@@ -71,7 +71,7 @@
 #include "audit-fd.h"
 #include "boot-timestamps.h"
 #include "env-util.h"
-#include "fifo-control.h"
+#include "control-request.h"
 
 /* As soon as 5s passed since a unit was added to our GC queue, make sure to run a gc sweep */
 #define GC_QUEUE_USEC_MAX (10*USEC_PER_SEC)
