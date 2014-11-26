@@ -390,38 +390,38 @@ static int setup_output(const ExecContext *context, int fileno, int socket_fd, c
 
         switch (o) {
 
-        case EXEC_OUTPUT_NULL:
-                return open_null_as(O_WRONLY, fileno);
+                case EXEC_OUTPUT_NULL:
+                        return open_null_as(O_WRONLY, fileno);
 
-        case EXEC_OUTPUT_TTY:
-                if (is_terminal_input(i))
-                        return dup2(STDIN_FILENO, fileno) < 0 ? -errno : fileno;
+                case EXEC_OUTPUT_TTY:
+                        if (is_terminal_input(i))
+                                return dup2(STDIN_FILENO, fileno) < 0 ? -errno : fileno;
 
-                /* We don't reset the terminal if this is just about output */
-                return open_terminal_as(tty_path(context), O_WRONLY, fileno);
+                        /* We don't reset the terminal if this is just about output */
+                        return open_terminal_as(tty_path(context), O_WRONLY, fileno);
 
-        case EXEC_OUTPUT_SYSLOG:
-        case EXEC_OUTPUT_SYSLOG_AND_CONSOLE:
-        case EXEC_OUTPUT_KMSG:
-        case EXEC_OUTPUT_KMSG_AND_CONSOLE:
-                r = connect_logger_as(context, o, ident, unit_id, fileno);
-                if (r < 0) {
-                        log_struct_unit(LOG_CRIT, unit_id,
-                                "MESSAGE=Failed to connect std%s of %s to the journal socket: %s",
-                                fileno == STDOUT_FILENO ? "out" : "err",
-                                unit_id, strerror(-r),
-                                "ERRNO=%d", -r,
-                                NULL);
-                        r = open_null_as(O_WRONLY, fileno);
-                }
-                return r;
+                case EXEC_OUTPUT_SYSLOG:
+                case EXEC_OUTPUT_SYSLOG_AND_CONSOLE:
+                case EXEC_OUTPUT_KMSG:
+                case EXEC_OUTPUT_KMSG_AND_CONSOLE:
+                        r = connect_logger_as(context, o, ident, unit_id, fileno);
+                        if (r < 0) {
+                                log_struct_unit(LOG_CRIT, unit_id,
+                                        "MESSAGE=Failed to connect std%s of %s to the journal socket: %s",
+                                        fileno == STDOUT_FILENO ? "out" : "err",
+                                        unit_id, strerror(-r),
+                                        "ERRNO=%d", -r,
+                                        NULL);
+                                r = open_null_as(O_WRONLY, fileno);
+                        }
+                        return r;
 
-        case EXEC_OUTPUT_SOCKET:
-                assert(socket_fd >= 0);
-                return dup2(socket_fd, fileno) < 0 ? -errno : fileno;
+                case EXEC_OUTPUT_SOCKET:
+                        assert(socket_fd >= 0);
+                        return dup2(socket_fd, fileno) < 0 ? -errno : fileno;
 
-        default:
-                assert_not_reached("Unknown error type");
+                default:
+                        assert_not_reached("Unknown error type");
         }
 }
 
