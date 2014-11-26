@@ -30,7 +30,12 @@
 
 #include "log.h"
 
-/*TODO: fullpath*/
+struct useless_state {
+        char *rootdir;
+};
+
+#define USELESS_DATA ((struct useless_state *) fuse_get_context()->private_data)
+
 /* Mount on an empty directory and serve as a synthetic reflector. */
 int useless_getattr(const char *path, struct stat *statbuf);
 int useless_open(const char *path, struct fuse_file_info *fi);
@@ -41,9 +46,16 @@ int useless_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t o
 int useless_releasedir(const char *path, struct fuse_file_info *fi);
 int useless_unlink(const char *path);
 
+static void useless_fullpath(char fpath[PATH_MAX], const char *path) {
+        strcpy(fpath, USELESS_DATA->rootdir); /* src is a margin larger than dest, but caveat emptor */
+        strncat(fpath, path, PATH_MAX);
+}
+
 int useless_getattr(const char *path, struct stat *statbuf) {
         int ret = 0;
         char fpath[PATH_MAX];
+
+        useless_fullpath(fpath, path);
 
         ret = lstat(fpath, statbuf);
         if (ret != 0)
@@ -56,6 +68,8 @@ int useless_open(const char *path, struct fuse_file_info *fi) {
         int ret = 0;
         int fd;
         char fpath[PATH_MAX];
+
+        useless_fullpath(fpath, path);
 
         fd = open(fpath, fi->flags);
         if (fd < 0)
@@ -70,6 +84,8 @@ int useless_creat(const char *path, mode_t mode, struct fuse_file_info *fi) {
         int ret = 0;
         char fpath[PATH_MAX];
         int fd;
+
+        useless_fullpath(fpath, path);
 
         fd = creat(fpath, mode);
         if (fd < 0)
@@ -128,6 +144,8 @@ int useless_unlink(const char *path) {
         int ret = 0;
         char fpath[PATH_MAX];
 
+        useless_fullpath(fpath, path);
+
         ret = unlink(fpath);
         if (ret < 0)
                 log_error("uselessfs unlink() failed: %s", strerror(-ret));
@@ -146,6 +164,5 @@ struct fuse_operations fsops = {
 };
 
 int main(int argc, char *argv[]) {
-
         return fuse_main(argc, argv, &fsops, NULL);
 }
