@@ -25,7 +25,6 @@
 #include <errno.h>
 
 #include "hashmap.h"
-#include "dbus-common.h"
 #include "install.h"
 #include "log.h"
 #include "job.h"
