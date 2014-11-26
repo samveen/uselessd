@@ -248,7 +248,6 @@ AM_V_LN_0 = @echo "  LN      " $@;
 
 # ------------------------------------------------------------------------------
 rootbin_PROGRAMS = \
-	systemctl \
 	systemd-notify
 
 bin_PROGRAMS =
@@ -1573,22 +1572,6 @@ systemd_remount_fs_LDADD = \
 	libsystemd-label.la \
 	libsystemd-shared.la
 endif
-
-# ------------------------------------------------------------------------------
-systemctl_SOURCES = \
-	src/systemctl/systemctl.c
-
-systemctl_CFLAGS = \
-	$(AM_CFLAGS) \
-	$(DBUS_CFLAGS)
-
-systemctl_LDADD = \
-	libsystemd-units.la \
-	libsystemd-label.la \
-	libsystemd-shared.la \
-	libsystemd-daemon.la \
-	libsystemd-dbus.la \
-	libsystemd-id128-internal.la
 
 # ------------------------------------------------------------------------------
 systemd_notify_SOURCES = \

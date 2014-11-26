@@ -22,7 +22,6 @@
 #define FUSE_USE_VERSION 26
 
 #include <fuse/fuse.h>
-
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -32,6 +31,7 @@
 #include "log.h"
 
 /*TODO: fullpath*/
+/* Mount on an empty directory and serve as a synthetic reflector. */
 int useless_getattr(const char *path, struct stat *statbuf);
 int useless_open(const char *path, struct fuse_file_info *fi);
 int useless_creat(const char *path, mode_t mode, struct fuse_file_info *fi);
