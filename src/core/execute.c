@@ -1815,7 +1815,7 @@ bool exec_context_may_touch_console(ExecContext *ec) {
                 is_terminal_input(ec->std_input) ||
                 is_terminal_output(ec->std_output) ||
                 is_terminal_output(ec->std_error)) &&
-               tty_may_match_dev_console(tty_path(ec));
+                tty_may_match_dev_console(tty_path(ec));
 }
 
 static void strv_fprintf(FILE *f, char **l) {
