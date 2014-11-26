@@ -190,11 +190,15 @@ _pure_ static inline bool job_type_is_mergeable(JobType a, JobType b) {
 }
 
 _pure_ static inline bool job_type_is_conflicting(JobType a, JobType b) {
-        return !job_type_is_mergeable(a, b);
+        return a != JOB_NOP && b != JOB_NOP && !job_type_is_mergeable(a, b);
 }
 
 _pure_ static inline bool job_type_is_superset(JobType a, JobType b) {
         /* Checks whether operation a is a "superset" of b in its actions */
+        if (b == JOB_NOP)
+                return true;
+        if (a == JOB_NOP)
+                return false;
         return a == job_type_lookup_merge(a, b);
 }
 

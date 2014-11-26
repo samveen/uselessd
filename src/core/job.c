@@ -184,12 +184,12 @@ Job* job_install(Job *j) {
         uj = *pj;
 
         if (uj) {
-                if (j->type != JOB_NOP && job_type_is_conflicting(uj->type, j->type))
+                if (job_type_is_conflicting(uj->type, j->type))
                         job_finish_and_invalidate(uj, JOB_CANCELED, false);
                 else {
                         /* not conflicting, i.e. mergeable */
 
-                        if (j->type == JOB_NOP || uj->state == JOB_WAITING ||
+                        if (uj->state == JOB_WAITING ||
                             (job_type_allows_late_merge(j->type) && job_type_is_superset(uj->type, j->type))) {
                                 job_merge_into_installed(uj, j);
                                 log_debug_unit(uj->unit->id,
@@ -375,6 +375,9 @@ bool job_type_is_redundant(JobType a, UnitActiveState b) {
         case JOB_RESTART:
                 return
                         b == UNIT_ACTIVATING;
+
+        case JOB_NOP:
+                return true;
 
         default:
                 assert_not_reached("Invalid job type");
