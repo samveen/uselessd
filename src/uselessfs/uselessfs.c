@@ -19,6 +19,10 @@
   along with uselessd; If not, see <http://www.gnu.org/licenses/>.
 ***/
 
+#define FUSE_USE_VERSION 26
+
+#include <fuse/fuse.h>
+
 #include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,15 +31,15 @@
 
 #include "log.h"
 
-#define FUSE_USE_VERSION 26
-
-#include <fuse.h>
-
+/*TODO: fullpath*/
 int useless_getattr(const char *path, struct stat *statbuf);
 int useless_open(const char *path, struct fuse_file_info *fi);
+int useless_creat(const char *path, mode_t mode, struct fuse_file_info *fi);
 int useless_read(const char *path, char *buf, size_t size, off_t offset, struct fuse_file_info *fi);
 int useless_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t offset,
                 struct fuse_file_info *fi);
+int useless_releasedir(const char *path, struct fuse_file_info *fi);
+int useless_unlink(const char *path);
 
 int useless_getattr(const char *path, struct stat *statbuf) {
         int ret = 0;
@@ -56,6 +60,20 @@ int useless_open(const char *path, struct fuse_file_info *fi) {
         fd = open(fpath, fi->flags);
         if (fd < 0)
                 ret = log_error("uselessfs open() failed: %s", strerror(-ret));
+
+        fi->fh = fd;
+
+        return ret;
+}
+
+int useless_creat(const char *path, mode_t mode, struct fuse_file_info *fi) {
+        int ret = 0;
+        char fpath[PATH_MAX];
+        int fd;
+
+        fd = creat(fpath, mode);
+        if (fd < 0)
+                log_error("uselessfs creat() failed: %s", strerror(-ret));
 
         fi->fh = fd;
 
@@ -98,10 +116,32 @@ int useless_readdir(const char *path, void *buf, fuse_fill_dir_t filler, off_t o
         return ret;
 }
 
+int useless_releasedir(const char *path, struct fuse_file_info *fi) {
+        int ret = 0;
+
+        closedir((DIR *) (uintptr_t) fi->fh);
+
+        return ret;
+}
+
+int useless_unlink(const char *path) {
+        int ret = 0;
+        char fpath[PATH_MAX];
+
+        ret = unlink(fpath);
+        if (ret < 0)
+                log_error("uselessfs unlink() failed: %s", strerror(-ret));
+
+        return ret;
+}
+
 struct fuse_operations fsops = {
 	.read = useless_read,
         .readdir = useless_readdir,
+        .releasedir = useless_releasedir,
 	.open = useless_open,
+        .create = useless_creat,
+        .unlink = useless_unlink,
 	.getattr = useless_getattr
 };
 
