@@ -318,7 +318,6 @@ dist_systemunit_DATA = \
 	units/system.slice \
 	units/x-.slice \
 	units/systemd-shutdownd.socket \
-	units/syslog.socket \
 	units/printer.target \
 	units/sound.target \
 	units/bluetooth.target \
