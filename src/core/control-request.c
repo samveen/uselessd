@@ -34,6 +34,7 @@
 #include "util.h"
 #include "strv.h"
 #include "conf-parser.h"
+#include "fileio.h"
 
 #include "control-request.h"
 #include "control-response-util.h"
@@ -256,7 +257,39 @@ void fifo_control_loop(void) {
                 } else if (streq("link", fifobuf)) {
                         break;
                 } else if (streq("sdtr", fifobuf)) {
-                        break;
+                        int setdef;
+                        const char *argroot;
+                        UnitFileScope argscope;
+                        int targetname;
+                        const char *p = NULL;
+
+                        UnitFileChange *changes;
+                        unsigned n_changes = 0, ic;
+
+                        argroot = get_arg_root();
+                        if (streq("unknown", argroot))
+                                log_error("Failed to get unit file root from /run/systemd/arg-root.");
+
+                        argscope = get_arg_scope();
+                        if (argscope < 0)
+                                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
+
+                        targetname = read_one_line_file("/run/systemd/manager/set-default-target", (char **)&p);
+                        if (targetname < 0)
+                                log_error("Failed to get default target to set: %s.", strerror(-r));
+
+                        setdef = unit_file_set_default(argscope, argroot, (char *)p, &changes, &n_changes);
+                        if (setdef < 0)
+                                log_error("Setting default target failed: %s.", strerror(-r));
+
+                        for (ic = 0; ic < n_changes; ic++) {
+                                if (changes[ic].type == UNIT_FILE_SYMLINK)
+                                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
+                                else
+                                        log_info("rm '%s'", changes[ic].path);
+                        }
+
+
                 }
 
         }
