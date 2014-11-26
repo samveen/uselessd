@@ -76,9 +76,7 @@ void unlink_control_fifo(void) {
         return;
 }
 
-/* TODO: make things like arg_root, arg_scope, etc.
- * user-configurable from systemctl... much of this functionality
- * should probably be moved later on. Perhaps store values in files. */
+/* Much of this should likely be moved and refactored later on. */
 void fifo_control_loop(void) {
         int f, r, d;
         char fifobuf[BUFSIZ];
@@ -241,6 +239,24 @@ void fifo_control_loop(void) {
                         break;
                 } else if (streq("refa", fifobuf)) {
                         manager_reset_failed(m);
+                } else if (streq("enab", fifobuf)) {
+                        break;
+                } else if (streq("disa", fifobuf)) {
+                        break;
+                } else if (streq("isen", fifobuf)) {
+                        break;
+                } else if (streq("reen", fifobuf)) {
+                        break;
+                } else if (streq("prst", fifobuf)) {
+                        break;
+                } else if (streq("mask", fifobuf)) {
+                        break;
+                } else if (streq("umsk", fifobuf)) {
+                        break;
+                } else if (streq("link", fifobuf)) {
+                        break;
+                } else if (streq("sdtr", fifobuf)) {
+                        break;
                 }
 
         }
