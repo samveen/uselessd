@@ -65,6 +65,17 @@ const char* get_arg_root(void) {
         return p;
 }
 
+bool test_is_runtime(void) {
+        int r;
+        _cleanup_free_ char *p = NULL;
+
+        r = read_one_line_file("/run/systemd/arg-runtime", &p);
+        if (r < 0)
+                return false;
+
+        return parse_boolean(p) > 0;
+}
+
 void output_unit_file_list(const UnitFileList *units, unsigned c) {
         unsigned max_id_len, id_cols, state_cols, n_shown = 0;
         const UnitFileList *u;
