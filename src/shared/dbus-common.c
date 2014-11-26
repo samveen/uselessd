@@ -36,6 +36,8 @@
 #include "def.h"
 #include "strv.h"
 
+#include "control-response-util.h"
+
 int bus_check_peercred(DBusConnection *c) {
         int fd;
         struct ucred ucred;

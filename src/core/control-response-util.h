@@ -22,7 +22,19 @@
 #include <stdlib.h>
 
 #include "install.h"
-#include "dbus-common.h" /* struct unit_info */
+
+struct unit_info {
+        const char *id;
+        const char *description;
+        const char *load_state;
+        const char *active_state;
+        const char *sub_state;
+        const char *following;
+        const char *unit_path;
+        uint32_t job_id;
+        const char *job_type;
+        const char *job_path;
+};
 
 struct job_info {
         uint32_t id;

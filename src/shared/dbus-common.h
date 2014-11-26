@@ -116,6 +116,8 @@ typedef struct BusBoundProperties {
         const void *const base;          /* base pointer to which the offset must be added to reach data */
 } BusBoundProperties;
 
+struct unit_info;
+
 dbus_bool_t bus_maybe_send_reply (DBusConnection   *c,
                                   DBusMessage *message,
                                   DBusMessage *reply);
@@ -200,19 +202,6 @@ unsigned bus_events_to_flags(uint32_t events) _const_;
 int bus_parse_strv(DBusMessage *m, char ***_l);
 int bus_parse_strv_iter(DBusMessageIter *iter, char ***_l);
 int bus_parse_strv_pairs_iter(DBusMessageIter *iter, char ***_l);
-
-struct unit_info {
-        const char *id;
-        const char *description;
-        const char *load_state;
-        const char *active_state;
-        const char *sub_state;
-        const char *following;
-        const char *unit_path;
-        uint32_t job_id;
-        const char *job_type;
-        const char *job_path;
-};
 
 int bus_parse_unit_info(DBusMessageIter *iter, struct unit_info *u);
 
