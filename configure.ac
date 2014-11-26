@@ -184,7 +184,6 @@ CC_CHECK_FLAGS_APPEND([with_ldflags], [LDFLAGS], [\
         -Wl,--gc-sections \
         -Wl,-z,relro \
         -pie \
-        -lfuse \
         -Wl,-z,now])
 AC_SUBST([OUR_LDFLAGS], "$with_ldflags $address_sanitizer_ldflags $mudflap_ldflags")
 
@@ -252,6 +251,8 @@ AC_CHECK_DECLS([gettid, pivot_root, name_to_handle_at], [], [], [[#include <sys/
 m4_pattern_forbid([^_?PKG_[A-Z_]+$],[*** pkg.m4 missing, please install pkg-config])
 
 PKG_CHECK_MODULES(DBUS, [dbus-1 >= 1.3.2])
+
+PKG_CHECK_MODULES(FUSE, fuse)
 
 # ------------------------------------------------------------------------------
 have_coverage=no
