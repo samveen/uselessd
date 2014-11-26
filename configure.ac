@@ -66,9 +66,6 @@ AC_PROG_GCC_TRADITIONAL
 AC_PATH_PROG([M4], [m4])
 AC_PATH_PROG([XSLTPROC], [xsltproc])
 
-AC_PATH_PROG([QUOTAON], [quotaon], [/usr/sbin/quotaon])
-AC_PATH_PROG([QUOTACHECK], [quotacheck], [/usr/sbin/quotacheck])
-
 AC_PATH_PROG([SETCAP], [setcap], [/usr/sbin/setcap])
 
 AC_PATH_PROG([KILL], [kill], [/usr/bin/kill])
