@@ -94,7 +94,6 @@
                 <filename>sound.target</filename>,
                 <filename>suspend.target</filename>,
                 <filename>sysinit.target</filename>,
-                <filename>syslog.socket</filename>,
                 <filename>time-sync.target</filename>,
                 <filename>umount.target</filename>,
                 <filename>-.slice</filename>,
@@ -634,22 +633,6 @@
                                 <listitem>
                                         <para>A special target unit
                                         covering early boot-up scripts.</para>
-                                </listitem>
-                        </varlistentry>
-                        <varlistentry>
-                                <term><filename>syslog.socket</filename></term>
-                                <listitem>
-                                        <para>The socket unit
-                                        syslog implementations should
-                                        listen on. All userspace log
-                                        messages will be made
-                                        available on this socket. For
-                                        more information about syslog
-                                        integration, please consult
-                                        the <ulink
-                                        url="http://www.freedesktop.org/wiki/Software/systemd/syslog">Syslog
-                                        Interface</ulink>
-                                        document.</para>
                                 </listitem>
                         </varlistentry>
                         <varlistentry>
