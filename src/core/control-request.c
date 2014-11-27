@@ -301,7 +301,6 @@ void fifo_control_loop(void) {
                                 log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
 
                         state = unit_file_get_state(argscope, argroot, n);
-
                         if (state < 0)
                                 break;
 
@@ -331,7 +330,7 @@ void fifo_control_loop(void) {
 
                         unit_to_preset = read_one_line_file("/run/systemd/manager/preset", (char **)&p);
                         if (unit_to_preset < 0)
-                                log_error("Failed to apply unit file preset policy: %s.", strerror(-r));
+                                log_error("Failed to apply unit file preset policy: %s.", strerror(-unit_to_preset));
 
                         preset = unit_file_preset(argscope, argruntime, argroot, (char **)p, NULL, &changes, &n_changes);
 
@@ -365,7 +364,7 @@ void fifo_control_loop(void) {
 
                         unit_to_mask = read_one_line_file("/run/systemd/manager/mask", (char **)&p);
                         if (unit_to_mask < 0)
-                                log_error("Failed to mask unit file: %s.", strerror(-r));
+                                log_error("Failed to mask unit file: %s.", strerror(-unit_to_mask));
 
                         mask = unit_file_mask(argscope, argruntime, argroot, (char **)p, NULL, &changes, &n_changes);
 
@@ -399,7 +398,7 @@ void fifo_control_loop(void) {
 
                         unit_to_unmask = read_one_line_file("/run/systemd/manager/unmask", (char **)&p);
                         if (unit_to_unmask < 0)
-                                log_error("Failed to unmask unit file: %s.", strerror(-r));
+                                log_error("Failed to unmask unit file: %s.", strerror(-unit_to_unmask));
 
                         unmask = unit_file_unmask(argscope, argruntime, argroot, (char **)p, &changes, &n_changes);
 
@@ -433,7 +432,7 @@ void fifo_control_loop(void) {
 
                         unit_to_link = read_one_line_file("/run/systemd/manager/link", (char **)&p);
                         if (unit_to_link < 0)
-                                log_error("Failed to link unit file: %s.", strerror(-r));
+                                log_error("Failed to link unit file: %s.", strerror(-unit_to_link));
 
                         link = unit_file_link(argscope, argruntime, argroot, (char **)p, NULL, &changes, &n_changes);
 
@@ -464,11 +463,11 @@ void fifo_control_loop(void) {
 
                         targetname = read_one_line_file("/run/systemd/manager/set-default-target", (char **)&p);
                         if (targetname < 0)
-                                log_error("Failed to get default target to set: %s.", strerror(-r));
+                                log_error("Failed to get default target to set: %s.", strerror(-targetname));
 
                         setdef = unit_file_set_default(argscope, argroot, (char *)p, &changes, &n_changes);
                         if (setdef < 0)
-                                log_error("Setting default target failed: %s.", strerror(-r));
+                                log_error("Setting default target failed: %s.", strerror(-setdef));
 
                         for (ic = 0; ic < n_changes; ic++) {
                                 if (changes[ic].type == UNIT_FILE_SYMLINK)
