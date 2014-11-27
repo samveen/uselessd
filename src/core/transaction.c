@@ -506,7 +506,7 @@ static int transaction_is_destructive(Transaction *tr, JobMode mode) {
                 assert(!j->transaction_next);
 
                 if (j->unit->job && (mode == JOB_FAIL || j->unit->job->irreversible) &&
-                    !job_type_is_superset(j->unit->job->type, j->type)) {
+                    job_type_is_conflicting(j->unit->job->type, j->type)) {
 
                         log_error("Transaction is destructive.");
                         return -EEXIST;
