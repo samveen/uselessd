@@ -244,9 +244,44 @@ void fifo_control_loop(void) {
                 /* TODO: arg-force and carries_install_info.
                  * Fix encoding in UnitFileChange logging,
                  * or remove entirely. Put stuff into
-                 * functions in control-response-util. */
+                 * functions in control-response-util.
+                 * enable_sysv_units()... */
                 } else if (streq("enab", fifobuf)) {
-                        break;
+                        int enable;
+                        int unit_to_enable;
+                        const char *argroot;
+                        UnitFileScope argscope;
+                        bool argruntime;
+                        const char *p = NULL;
+
+                        UnitFileChange *changes;
+                        unsigned n_changes = 0, ic;
+
+                        argroot = get_arg_root();
+                        if (streq("unknown", argroot))
+                                log_error("Failed to get unit file root from /run/systemd/arg-root.");
+
+                        argruntime = test_is_runtime();
+
+                        argscope = get_arg_scope();
+                        if (argscope < 0)
+                                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
+
+                        unit_to_enable = read_one_line_file("/run/systemd/manager/enable", (char **)&p);
+                        if (unit_to_enable < 0)
+                                log_error("Failed to get unit file to enable: %s.", strerror(-unit_to_enable));
+
+                        enable = unit_file_enable(argscope, argruntime, argroot, (char **)p, NULL, &changes, &n_changes);
+                        if (enable < 0)
+                                log_error("Failed to enable unit file: %s.", strerror(-enable));
+
+                        for (ic = 0; ic < n_changes; ic++) {
+                                if (changes[ic].type == UNIT_FILE_SYMLINK)
+                                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
+                                else
+                                        log_info("rm '%s'", changes[ic].path);
+                        }
+
                 } else if (streq("disa", fifobuf)) {
                         int disable;
                         int unit_to_disable;
