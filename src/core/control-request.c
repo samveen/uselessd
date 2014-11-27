@@ -240,6 +240,10 @@ void fifo_control_loop(void) {
                         break;
                 } else if (streq("refa", fifobuf)) {
                         manager_reset_failed(m);
+
+                /* TODO: arg-force and carries_install_info.
+                 * Fix encoding in UnitFileChange logging,
+                 * or remove entirely. */
                 } else if (streq("enab", fifobuf)) {
                         break;
                 } else if (streq("disa", fifobuf)) {
@@ -249,7 +253,39 @@ void fifo_control_loop(void) {
                 } else if (streq("reen", fifobuf)) {
                         break;
                 } else if (streq("prst", fifobuf)) {
-                        break;
+                        int preset;
+                        int unit_to_preset;
+                        const char *argroot;
+                        UnitFileScope argscope;
+                        bool argruntime;
+                        const char *p = NULL;
+
+                        UnitFileChange *changes;
+                        unsigned n_changes = 0, ic;
+
+                        argroot = get_arg_root();
+                        if (streq("unknown", argroot))
+                                log_error("Failed to get unit file root from /run/systemd/arg-root.");
+
+                        argruntime = test_is_runtime();
+
+                        argscope = get_arg_scope();
+                        if (argscope < 0)
+                                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
+
+                        unit_to_preset = read_one_line_file("/run/systemd/manager/preset", (char **)&p);
+                        if (unit_to_preset < 0)
+                                log_error("Failed to apply unit file preset policy: %s.", strerror(-r));
+
+                        preset = unit_file_preset(argscope, argruntime, argroot, (char **)p, NULL, &changes, &n_changes);
+
+                        for (ic = 0; ic < n_changes; ic++) {
+                                if (changes[ic].type == UNIT_FILE_SYMLINK)
+                                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
+                                else
+                                        log_info("rm '%s'", changes[ic].path);
+                        }
+
                 } else if (streq("mask", fifobuf)) {
                         int mask;
                         int unit_to_mask;
@@ -274,7 +310,7 @@ void fifo_control_loop(void) {
                         unit_to_mask = read_one_line_file("/run/systemd/manager/mask", (char **)&p);
                         if (unit_to_mask < 0)
                                 log_error("Failed to mask unit file: %s.", strerror(-r));
-                        /*TODO: arg-force */
+
                         mask = unit_file_mask(argscope, argruntime, argroot, (char **)p, NULL, &changes, &n_changes);
 
                         for (ic = 0; ic < n_changes; ic++) {
