@@ -137,7 +137,7 @@ void fifo_control_loop(void) {
 
                         def = unit_file_get_default(argscope, (const char *)argroot, &default_target);
                         if (default_target)
-                                log_info("Default target: %s", default_target);
+                                log_info("%s", default_target);
                 } else if (streq("lenv", fifobuf)) {
                         /* UB */
                         log_info("%s", (char *)m->environment);
