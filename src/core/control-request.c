@@ -249,7 +249,30 @@ void fifo_control_loop(void) {
                 } else if (streq("disa", fifobuf)) {
                         break;
                 } else if (streq("isen", fifobuf)) {
-                        break;
+                        UnitFileState state;
+                        UnitFileScope argscope;
+                        const char *argroot;
+                        int isen;
+                        const char *n = NULL;
+
+                        isen = read_one_line_file("/run/systemd/manager/is-enabled", (char **)&n);
+                        if (isen < 0)
+                                log_error("Failed to get unit file state: %s.", strerror(-isen));
+
+                        argroot = get_arg_root();
+                        if (streq("unknown", argroot))
+                                log_error("Failed to get unit file root from /run/systemd/arg-root.");
+
+                        argscope = get_arg_scope();
+                        if (argscope < 0)
+                                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
+
+                        state = unit_file_get_state(argscope, argroot, n);
+
+                        if (state < 0)
+                                break;
+
+                        puts(unit_file_state_to_string(state));
                 } else if (streq("reen", fifobuf)) {
                         break;
                 } else if (streq("prst", fifobuf)) {
