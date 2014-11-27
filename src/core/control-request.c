@@ -355,7 +355,39 @@ void fifo_control_loop(void) {
                         }
 
                 } else if (streq("link", fifobuf)) {
-                        break;
+                        int link;
+                        int unit_to_link;
+                        const char *argroot;
+                        UnitFileScope argscope;
+                        bool argruntime;
+                        const char *p = NULL;
+
+                        UnitFileChange *changes;
+                        unsigned n_changes = 0, ic;
+
+                        argroot = get_arg_root();
+                        if (streq("unknown", argroot))
+                                log_error("Failed to get unit file root from /run/systemd/arg-root.");
+
+                        argruntime = test_is_runtime();
+
+                        argscope = get_arg_scope();
+                        if (argscope < 0)
+                                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
+
+                        unit_to_link = read_one_line_file("/run/systemd/manager/link", (char **)&p);
+                        if (unit_to_link < 0)
+                                log_error("Failed to link unit file: %s.", strerror(-r));
+
+                        link = unit_file_link(argscope, argruntime, argroot, (char **)p, NULL, &changes, &n_changes);
+
+                        for (ic = 0; ic < n_changes; ic++) {
+                                if (changes[ic].type == UNIT_FILE_SYMLINK)
+                                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
+                                else
+                                        log_info("rm '%s'", changes[ic].path);
+                        }
+
                 } else if (streq("sdtr", fifobuf)) {
                         int setdef;
                         const char *argroot;
