@@ -44,7 +44,8 @@ struct job_info {
 
 UnitFileScope get_arg_scope(void);
 const char* get_arg_root(void);
-bool test_is_runtime(void);
+bool test_runtime(void);
+bool test_force(void);
 void output_unit_file_list(const UnitFileList *units, unsigned c);
 void list_unit_files(void);
 int compare_unit_info(const void *a, const void *b);

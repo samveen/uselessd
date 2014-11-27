@@ -261,7 +261,7 @@ void fifo_control_loop(void) {
                         if (streq("unknown", argroot))
                                 log_error("Failed to get unit file root from /run/systemd/arg-root.");
 
-                        argruntime = test_is_runtime();
+                        argruntime = test_runtime();
 
                         argscope = get_arg_scope();
                         if (argscope < 0)
@@ -297,7 +297,7 @@ void fifo_control_loop(void) {
                         if (streq("unknown", argroot))
                                 log_error("Failed to get unit file root from /run/systemd/arg-root.");
 
-                        argruntime = test_is_runtime();
+                        argruntime = test_runtime();
 
                         argscope = get_arg_scope();
                         if (argscope < 0)
@@ -357,7 +357,7 @@ void fifo_control_loop(void) {
                         if (streq("unknown", argroot))
                                 log_error("Failed to get unit file root from /run/systemd/arg-root.");
 
-                        argruntime = test_is_runtime();
+                        argruntime = test_runtime();
 
                         argscope = get_arg_scope();
                         if (argscope < 0)
@@ -393,7 +393,7 @@ void fifo_control_loop(void) {
                         if (streq("unknown", argroot))
                                 log_error("Failed to get unit file root from /run/systemd/arg-root.");
 
-                        argruntime = test_is_runtime();
+                        argruntime = test_runtime();
 
                         argscope = get_arg_scope();
                         if (argscope < 0)
@@ -429,7 +429,7 @@ void fifo_control_loop(void) {
                         if (streq("unknown", argroot))
                                 log_error("Failed to get unit file root from /run/systemd/arg-root.");
 
-                        argruntime = test_is_runtime();
+                        argruntime = test_runtime();
 
                         argscope = get_arg_scope();
                         if (argscope < 0)
@@ -465,7 +465,7 @@ void fifo_control_loop(void) {
                         if (streq("unknown", argroot))
                                 log_error("Failed to get unit file root from /run/systemd/arg-root.");
 
-                        argruntime = test_is_runtime();
+                        argruntime = test_runtime();
 
                         argscope = get_arg_scope();
                         if (argscope < 0)
@@ -501,7 +501,7 @@ void fifo_control_loop(void) {
                         if (streq("unknown", argroot))
                                 log_error("Failed to get unit file root from /run/systemd/arg-root.");
 
-                        argruntime = test_is_runtime();
+                        argruntime = test_runtime();
 
                         argscope = get_arg_scope();
                         if (argscope < 0)

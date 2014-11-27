@@ -65,11 +65,22 @@ const char* get_arg_root(void) {
         return p;
 }
 
-bool test_is_runtime(void) {
+bool test_runtime(void) {
         int r;
         _cleanup_free_ char *p = NULL;
 
         r = read_one_line_file("/run/systemd/arg-runtime", &p);
+        if (r < 0)
+                return false;
+
+        return parse_boolean(p) > 0;
+}
+
+bool test_force(void) {
+        int r;
+        _cleanup_free_ char *p = NULL;
+
+        r = read_one_line_file("/run/systemd/arg-force", &p);
         if (r < 0)
                 return false;
 
