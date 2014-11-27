@@ -270,9 +270,11 @@ void fifo_control_loop(void) {
 
                         unit_to_disable = read_one_line_file("/run/systemd/manager/disable", (char **)&p);
                         if (unit_to_disable < 0)
-                                log_error("Failed to disable unit file: %s.", strerror(-unit_to_disable));
+                                log_error("Failed to get unit file to disable: %s.", strerror(-unit_to_disable));
 
                         disable = unit_file_disable(argscope, argruntime, argroot, (char **)p, &changes, &n_changes);
+                        if (disable < 0)
+                                log_error("Failed to disable unit file: %s.", strerror(-disable));
 
                         for (ic = 0; ic < n_changes; ic++) {
                                 if (changes[ic].type == UNIT_FILE_SYMLINK)
@@ -330,9 +332,11 @@ void fifo_control_loop(void) {
 
                         unit_to_preset = read_one_line_file("/run/systemd/manager/preset", (char **)&p);
                         if (unit_to_preset < 0)
-                                log_error("Failed to apply unit file preset policy: %s.", strerror(-unit_to_preset));
+                                log_error("Failed to get unit file preset policy: %s.", strerror(-unit_to_preset));
 
                         preset = unit_file_preset(argscope, argruntime, argroot, (char **)p, NULL, &changes, &n_changes);
+                        if (preset < 0)
+                                log_error("Failed to apply unit file preset policy: %s.", strerror(-preset));
 
                         for (ic = 0; ic < n_changes; ic++) {
                                 if (changes[ic].type == UNIT_FILE_SYMLINK)
@@ -364,9 +368,11 @@ void fifo_control_loop(void) {
 
                         unit_to_mask = read_one_line_file("/run/systemd/manager/mask", (char **)&p);
                         if (unit_to_mask < 0)
-                                log_error("Failed to mask unit file: %s.", strerror(-unit_to_mask));
+                                log_error("Failed to get unit file to mask: %s.", strerror(-unit_to_mask));
 
                         mask = unit_file_mask(argscope, argruntime, argroot, (char **)p, NULL, &changes, &n_changes);
+                        if (mask < 0)
+                                log_error("Failed to mask unit file: %s.", strerror(-mask));
 
                         for (ic = 0; ic < n_changes; ic++) {
                                 if (changes[ic].type == UNIT_FILE_SYMLINK)
@@ -398,9 +404,11 @@ void fifo_control_loop(void) {
 
                         unit_to_unmask = read_one_line_file("/run/systemd/manager/unmask", (char **)&p);
                         if (unit_to_unmask < 0)
-                                log_error("Failed to unmask unit file: %s.", strerror(-unit_to_unmask));
+                                log_error("Failed to get unit file to unmask: %s.", strerror(-unit_to_unmask));
 
                         unmask = unit_file_unmask(argscope, argruntime, argroot, (char **)p, &changes, &n_changes);
+                        if (unmask < 0)
+                                log_error("Failed to unmask unit file: %s.", strerror(-unmask));
 
                         for (ic = 0; ic < n_changes; ic++) {
                                 if (changes[ic].type == UNIT_FILE_SYMLINK)
@@ -432,9 +440,11 @@ void fifo_control_loop(void) {
 
                         unit_to_link = read_one_line_file("/run/systemd/manager/link", (char **)&p);
                         if (unit_to_link < 0)
-                                log_error("Failed to link unit file: %s.", strerror(-unit_to_link));
+                                log_error("Failed to get unit file to link: %s.", strerror(-unit_to_link));
 
                         link = unit_file_link(argscope, argruntime, argroot, (char **)p, NULL, &changes, &n_changes);
+                        if (link < 0)
+                                log_error("Failed to link unit file: %s.", strerror(-link));
 
                         for (ic = 0; ic < n_changes; ic++) {
                                 if (changes[ic].type == UNIT_FILE_SYMLINK)
