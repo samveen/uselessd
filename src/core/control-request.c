@@ -343,7 +343,41 @@ void fifo_control_loop(void) {
 
                         puts(unit_file_state_to_string(state));
                 } else if (streq("reen", fifobuf)) {
-                        break;
+                        int reenable;
+                        int unit_to_reenable;
+                        const char *argroot;
+                        UnitFileScope argscope;
+                        bool argruntime;
+                        const char *p = NULL;
+
+                        UnitFileChange *changes;
+                        unsigned n_changes = 0, ic;
+
+                        argroot = get_arg_root();
+                        if (streq("unknown", argroot))
+                                log_error("Failed to get unit file root from /run/systemd/arg-root.");
+
+                        argruntime = test_is_runtime();
+
+                        argscope = get_arg_scope();
+                        if (argscope < 0)
+                                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
+
+                        unit_to_reenable = read_one_line_file("/run/systemd/manager/reenable", (char **)&p);
+                        if (unit_to_reenable < 0)
+                                log_error("Failed to get unit file to reenable: %s.", strerror(-unit_to_reenable));
+
+                        reenable = unit_file_reenable(argscope, argruntime, argroot, (char **)p, NULL, &changes, &n_changes);
+                        if (reenable < 0)
+                                log_error("Failed to reenable unit file: %s.", strerror(-reenable));
+
+                        for (ic = 0; ic < n_changes; ic++) {
+                                if (changes[ic].type == UNIT_FILE_SYMLINK)
+                                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
+                                else
+                                        log_info("rm '%s'", changes[ic].path);
+                        }
+
                 } else if (streq("prst", fifobuf)) {
                         int preset;
                         int unit_to_preset;
@@ -512,7 +546,7 @@ void fifo_control_loop(void) {
 
                         setdef = unit_file_set_default(argscope, argroot, (char *)p, &changes, &n_changes);
                         if (setdef < 0)
-                                log_error("Setting default target failed: %s.", strerror(-setdef));
+                                log_error("Failed to set default target: %s.", strerror(-setdef));
 
                         for (ic = 0; ic < n_changes; ic++) {
                                 if (changes[ic].type == UNIT_FILE_SYMLINK)
