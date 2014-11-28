@@ -115,3 +115,9 @@
 #define SPECIAL_USER_SLICE "user.slice"
 #define SPECIAL_MACHINE_SLICE "machine.slice"
 #define SPECIAL_ROOT_SLICE "-.slice"
+
+/* Our Manager IPC files. */
+#define SPECIAL_ARG_SCOPE "/run/systemd/arg-scope"
+#define SPECIAL_ARG_ROOT "/run/systemd/arg-root"
+#define SPECIAL_ARG_RUNTIME "/run/systemd/arg-runtime"
+#define SPECIAL_ARG_FORCE "/run/systemd/arg-force"

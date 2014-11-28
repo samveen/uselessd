@@ -33,6 +33,7 @@
 #include "path-util.h"
 #include "util.h"
 #include "fileio.h"
+#include "special.h"
 
 #include "control-response-util.h"
 
@@ -40,7 +41,7 @@ UnitFileScope get_arg_scope(void) {
         int scope;
         _cleanup_free_ char *p = NULL;
 
-        scope = read_one_line_file("/run/systemd/arg-scope", &p);
+        scope = read_one_line_file(SPECIAL_ARG_SCOPE, &p);
         if (scope < 0)
                 return -1;
 
@@ -58,7 +59,7 @@ const char* get_arg_root(void) {
         int root;
         const char *p = NULL;
 
-        root = read_one_line_file("/run/systemd/arg-root", (char **)&p);
+        root = read_one_line_file(SPECIAL_ARG_ROOT, (char **)&p);
         if (root < 0)
                 return "unknown";
 
@@ -69,7 +70,7 @@ bool test_runtime(void) {
         int r;
         _cleanup_free_ char *p = NULL;
 
-        r = read_one_line_file("/run/systemd/arg-runtime", &p);
+        r = read_one_line_file(SPECIAL_ARG_RUNTIME, &p);
         if (r < 0)
                 return false;
 
@@ -80,7 +81,7 @@ bool test_force(void) {
         int r;
         _cleanup_free_ char *p = NULL;
 
-        r = read_one_line_file("/run/systemd/arg-force", &p);
+        r = read_one_line_file(SPECIAL_ARG_FORCE, &p);
         if (r < 0)
                 return false;
 
