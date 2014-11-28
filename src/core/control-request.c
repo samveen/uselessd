@@ -260,9 +260,27 @@ void fifo_control_loop(void) {
                         if (r < 0)
                                 log_error("Snapshot creation failed.");
 
-                } else if (streq("dsnp", fifobuf)) {
-                }
+                } else if (streq("rsnp", fifobuf)) {
+                        /* ltrace shows only file read. */
+                        int name;
+                        Unit *u;
+                        _cleanup_free_ char *p = NULL;
 
+                        name = read_one_line_file("/run/systemd/manager/remove-snapshot", &p);
+                        if (name < 0)
+                                log_error("Failed to get snapshot name to remove.");
+
+                        u = manager_get_unit(m, p);
+                        if (!u) {
+                                log_error("Unit %s does not exist.", p);
+                        }
+
+                        if (u->type != UNIT_SNAPSHOT) {
+                                log_error("Unit %s is not a snapshot.", p);
+                        }
+
+                        snapshot_remove(SNAPSHOT(u));
+                }
 
         }
 finish:
