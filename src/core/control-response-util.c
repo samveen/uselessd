@@ -92,340 +92,22 @@ bool test_force(void) {
 * Fix encoding in UnitFileChange logging,
 * or remove entirely.
 * enable_sysv_units()...
-* Don't repeat yourself! */
-void get_default_target_tango(void) {
-        int def;
-        UnitFileScope argscope;
-        const char *argroot;
-        _cleanup_free_ char *default_target = NULL;
-
-        argroot = get_arg_root();
-        if (streq("unknown", argroot))
-                log_error("Failed to get unit file root from /run/systemd/arg-root.");
-
-        argscope = get_arg_scope();
-        if (argscope < 0)
-                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
-
-        def = unit_file_get_default(argscope, (const char *)argroot, &default_target);
-
-        if (default_target)
-                log_info("%s", default_target);
-}
-
-void set_default_target_tango(void) {
-        int setdef;
-        const char *argroot;
-        UnitFileScope argscope;
-        int targetname;
-        const char *p = NULL;
-
-        UnitFileChange *changes;
-        unsigned n_changes = 0, ic;
-
-        argroot = get_arg_root();
-        if (streq("unknown", argroot))
-                log_error("Failed to get unit file root from /run/systemd/arg-root.");
-
-        argscope = get_arg_scope();
-        if (argscope < 0)
-                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
-
-        targetname = read_one_line_file("/run/systemd/manager/set-default-target", (char **)&p);
-        if (targetname < 0)
-                log_error("Failed to get default target to set: %s.", strerror(-targetname));
-
-        setdef = unit_file_set_default(argscope, argroot, (char *)p, &changes, &n_changes);
-        if (setdef < 0)
-                log_error("Failed to set default target: %s.", strerror(-setdef));
-
-        for (ic = 0; ic < n_changes; ic++) {
-                if (changes[ic].type == UNIT_FILE_SYMLINK)
-                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
-                else
-                        log_info("rm '%s'", changes[ic].path);
-        }
-}
-
-void enable_unit_file_tango(void) {
-        int enable;
-        int unit_to_enable;
+*/
+void unit_file_operation_tango(const char *param) {
         const char *argroot;
         UnitFileScope argscope;
         bool argruntime;
         bool argforce;
-        const char *p = NULL;
-
-        UnitFileChange *changes;
-        unsigned n_changes = 0, ic;
-
-        argroot = get_arg_root();
-        if (streq("unknown", argroot))
-                log_error("Failed to get unit file root from /run/systemd/arg-root.");
-
-        argruntime = test_runtime();
-        argforce = test_force();
-
-        argscope = get_arg_scope();
-        if (argscope < 0)
-                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
-
-        unit_to_enable = read_one_line_file("/run/systemd/manager/enable", (char **)&p);
-        if (unit_to_enable < 0)
-                log_error("Failed to get unit file to enable: %s.", strerror(-unit_to_enable));
-
-        enable = unit_file_enable(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
-        if (enable < 0)
-                log_error("Failed to enable unit file: %s.", strerror(-enable));
-
-        for (ic = 0; ic < n_changes; ic++) {
-                if (changes[ic].type == UNIT_FILE_SYMLINK)
-                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
-                else
-                        log_info("rm '%s'", changes[ic].path);
-        }
-}
-
-void reenable_unit_file_tango(void) {
-        int reenable;
-        int unit_to_reenable;
-        const char *argroot;
-        UnitFileScope argscope;
-        bool argruntime;
-        bool argforce;
-        const char *p = NULL;
-
-        UnitFileChange *changes;
-        unsigned n_changes = 0, ic;
-
-        argroot = get_arg_root();
-        if (streq("unknown", argroot))
-                log_error("Failed to get unit file root from /run/systemd/arg-root.");
-
-        argruntime = test_runtime();
-        argforce = test_force();
-
-        argscope = get_arg_scope();
-        if (argscope < 0)
-                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
-
-        unit_to_reenable = read_one_line_file("/run/systemd/manager/reenable", (char **)&p);
-        if (unit_to_reenable < 0)
-                log_error("Failed to get unit file to reenable: %s.", strerror(-unit_to_reenable));
-
-        reenable = unit_file_reenable(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
-        if (reenable < 0)
-                log_error("Failed to reenable unit file: %s.", strerror(-reenable));
-
-        for (ic = 0; ic < n_changes; ic++) {
-                if (changes[ic].type == UNIT_FILE_SYMLINK)
-                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
-                else
-                        log_info("rm '%s'", changes[ic].path);
-        }
-}
-
-void disable_unit_file_tango(void) {
-        int disable;
-        int unit_to_disable;
-        const char *argroot;
-        UnitFileScope argscope;
-        bool argruntime;
-        const char *p = NULL;
-
-        UnitFileChange *changes;
-        unsigned n_changes = 0, ic;
-
-        argroot = get_arg_root();
-        if (streq("unknown", argroot))
-                log_error("Failed to get unit file root from /run/systemd/arg-root.");
-
-        argruntime = test_runtime();
-
-        argscope = get_arg_scope();
-        if (argscope < 0)
-                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
-
-        unit_to_disable = read_one_line_file("/run/systemd/manager/disable", (char **)&p);
-        if (unit_to_disable < 0)
-                log_error("Failed to get unit file to disable: %s.", strerror(-unit_to_disable));
-
-        disable = unit_file_disable(argscope, argruntime, argroot, (char **)p, &changes, &n_changes);
-        if (disable < 0)
-                log_error("Failed to disable unit file: %s.", strerror(-disable));
-
-        for (ic = 0; ic < n_changes; ic++) {
-                if (changes[ic].type == UNIT_FILE_SYMLINK)
-                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
-                else
-                        log_info("rm '%s'", changes[ic].path);
-        }
-}
-
-void preset_unit_file_tango(void) {
-        int preset;
-        int unit_to_preset;
-        const char *argroot;
-        UnitFileScope argscope;
-        bool argruntime;
-        bool argforce;
-        const char *p = NULL;
-
-        UnitFileChange *changes;
-        unsigned n_changes = 0, ic;
-
-        argroot = get_arg_root();
-        if (streq("unknown", argroot))
-                log_error("Failed to get unit file root from /run/systemd/arg-root.");
-
-        argruntime = test_runtime();
-        argforce = test_force();
-
-        argscope = get_arg_scope();
-        if (argscope < 0)
-                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
-
-        unit_to_preset = read_one_line_file("/run/systemd/manager/preset", (char **)&p);
-        if (unit_to_preset < 0)
-                log_error("Failed to get unit file preset policy: %s.", strerror(-unit_to_preset));
-
-        preset = unit_file_preset(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
-        if (preset < 0)
-                log_error("Failed to apply unit file preset policy: %s.", strerror(-preset));
-
-        for (ic = 0; ic < n_changes; ic++) {
-                if (changes[ic].type == UNIT_FILE_SYMLINK)
-                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
-                else
-                        log_info("rm '%s'", changes[ic].path);
-        }
-}
-
-void mask_unit_file_tango(void) {
-        int mask;
-        int unit_to_mask;
-        const char *argroot;
-        UnitFileScope argscope;
-        bool argruntime;
-        bool argforce;
-        const char *p = NULL;
-
-        UnitFileChange *changes;
-        unsigned n_changes = 0, ic;
-
-        argroot = get_arg_root();
-        if (streq("unknown", argroot))
-                log_error("Failed to get unit file root from /run/systemd/arg-root.");
-
-        argruntime = test_runtime();
-        argforce = test_force();
-
-        argscope = get_arg_scope();
-        if (argscope < 0)
-                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
-
-        unit_to_mask = read_one_line_file("/run/systemd/manager/mask", (char **)&p);
-        if (unit_to_mask < 0)
-                log_error("Failed to get unit file to mask: %s.", strerror(-unit_to_mask));
-
-        mask = unit_file_mask(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
-        if (mask < 0)
-                log_error("Failed to mask unit file: %s.", strerror(-mask));
-
-        for (ic = 0; ic < n_changes; ic++) {
-                if (changes[ic].type == UNIT_FILE_SYMLINK)
-                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
-                else
-                        log_info("rm '%s'", changes[ic].path);
-        }
-}
-
-void unmask_unit_file_tango(void) {
-        int unmask;
-        int unit_to_unmask;
-        const char *argroot;
-        UnitFileScope argscope;
-        bool argruntime;
-        const char *p = NULL;
-
-        UnitFileChange *changes;
-        unsigned n_changes = 0, ic;
-
-        argroot = get_arg_root();
-        if (streq("unknown", argroot))
-                log_error("Failed to get unit file root from /run/systemd/arg-root.");
-
-        argruntime = test_runtime();
-
-        argscope = get_arg_scope();
-        if (argscope < 0)
-                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
-
-        unit_to_unmask = read_one_line_file("/run/systemd/manager/unmask", (char **)&p);
-        if (unit_to_unmask < 0)
-                log_error("Failed to get unit file to unmask: %s.", strerror(-unit_to_unmask));
-
-        unmask = unit_file_unmask(argscope, argruntime, argroot, (char **)p, &changes, &n_changes);
-        if (unmask < 0)
-                log_error("Failed to unmask unit file: %s.", strerror(-unmask));
-
-        for (ic = 0; ic < n_changes; ic++) {
-                if (changes[ic].type == UNIT_FILE_SYMLINK)
-                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
-                else
-                        log_info("rm '%s'", changes[ic].path);
-        }
-}
-
-void link_unit_file_tango(void) {
-        int link;
-        int unit_to_link;
-        const char *argroot;
-        UnitFileScope argscope;
-        bool argruntime;
-        bool argforce;
-        const char *p = NULL;
-
-        UnitFileChange *changes;
-        unsigned n_changes = 0, ic;
-
-        argroot = get_arg_root();
-        if (streq("unknown", argroot))
-                log_error("Failed to get unit file root from /run/systemd/arg-root.");
-
-        argruntime = test_runtime();
-        argforce = test_force();
-
-        argscope = get_arg_scope();
-        if (argscope < 0)
-                log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
-
-        unit_to_link = read_one_line_file("/run/systemd/manager/link", (char **)&p);
-        if (unit_to_link < 0)
-                log_error("Failed to get unit file to link: %s.", strerror(-unit_to_link));
-
-        link = unit_file_link(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
-        if (link < 0)
-                log_error("Failed to link unit file: %s.", strerror(-link));
-
-        for (ic = 0; ic < n_changes; ic++) {
-                if (changes[ic].type == UNIT_FILE_SYMLINK)
-                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
-                else
-                        log_info("rm '%s'", changes[ic].path);
-        }
-}
-
-void is_unit_file_enabled(void) {
         UnitFileState state;
-        UnitFileScope argscope;
-        const char *argroot;
-        int isen;
-        const char *n = NULL;
+        UnitFileChange *changes;
+        unsigned n_changes = 0, ic;
 
-        isen = read_one_line_file("/run/systemd/manager/is-enabled", (char **)&n);
-        if (isen < 0)
-                log_error("Failed to get unit file state: %s.", strerror(-isen));
+        const char *p = NULL;
+        int r;
+        int k;
+
+        argruntime = test_runtime();
+        argforce = test_force();
 
         argroot = get_arg_root();
         if (streq("unknown", argroot))
@@ -435,11 +117,106 @@ void is_unit_file_enabled(void) {
         if (argscope < 0)
                 log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
 
-        state = unit_file_get_state(argscope, argroot, n);
-        if (state < 0)
-                log_error("Failed to get state for unit file.");
+        if (streq("get-default-target", param)) {
+                char *default_target = NULL;
 
-        puts(unit_file_state_to_string(state));
+                r = unit_file_get_default(argscope, (const char *)argroot, &default_target);
+                if (default_target)
+                        log_info("%s", default_target);
+
+        } else if (streq("set-default-target", param)) {
+                k = read_one_line_file("/run/systemd/manager/set-default-target", (char **)&p);
+                if (k < 0)
+                        log_error("Failed to get default target to set: %s.", strerror(-k));
+
+                r = unit_file_set_default(argscope, argroot, (char *)p, &changes, &n_changes);
+                if (r < 0)
+                        log_error("Failed to set default target: %s.", strerror(-r));
+
+        } else if (streq("enable", param)) {
+                k = read_one_line_file("/run/systemd/manager/enable", (char **)&p);
+                if (k < 0)
+                        log_error("Failed to get unit file to enable: %s.", strerror(-k));
+
+                r = unit_file_enable(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
+                if (r < 0)
+                        log_error("Failed to enable unit file: %s.", strerror(-r));
+
+        } else if (streq("reenable", param)) {
+                k = read_one_line_file("/run/systemd/manager/reenable", (char **)&p);
+                if (k < 0)
+                        log_error("Failed to get unit file to reenable: %s.", strerror(-k));
+
+                r = unit_file_reenable(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
+                if (r < 0)
+                        log_error("Failed to reenable unit file: %s.", strerror(-r));
+
+        } else if (streq("disable", param)) {
+                k = read_one_line_file("/run/systemd/manager/disable", (char **)&p);
+                if (k < 0)
+                        log_error("Failed to get unit file to disable: %s.", strerror(-k));
+
+                r = unit_file_disable(argscope, argruntime, argroot, (char **)p, &changes, &n_changes);
+                if (r < 0)
+                        log_error("Failed to disable unit file: %s.", strerror(-r));
+
+        } else if (streq("preset", param)) {
+                k = read_one_line_file("/run/systemd/manager/preset", (char **)&p);
+                if (k < 0)
+                        log_error("Failed to get unit file preset policy: %s.", strerror(-k));
+
+                r = unit_file_preset(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
+                if (r < 0)
+                        log_error("Failed to enable unit file preset policy: %s.", strerror(-r));
+
+        } else if (streq("mask", param)) {
+                k = read_one_line_file("/run/systemd/manager/mask", (char **)&p);
+                if (k < 0)
+                        log_error("Failed to get unit file to mask: %s.", strerror(-k));
+
+                r = unit_file_mask(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
+                if (r < 0)
+                        log_error("Failed to mask unit file: %s.", strerror(-r));
+
+        } else if (streq("unmask", param)) {
+                k = read_one_line_file("/run/systemd/manager/unmask", (char **)&p);
+                if (k < 0)
+                        log_error("Failed to get unit file to unmask: %s.", strerror(-k));
+
+                r = unit_file_unmask(argscope, argruntime, argroot, (char **)p, &changes, &n_changes);
+                if (r < 0)
+                        log_error("Failed to unmask unit file: %s.", strerror(-r));
+
+        } else if (streq("link", param)) {
+                k = read_one_line_file("/run/systemd/manager/link", (char **)&p);
+                if (k < 0)
+                        log_error("Failed to get unit file to link: %s.", strerror(-k));
+
+                r = unit_file_link(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
+                if (r < 0)
+                        log_error("Failed to link unit file: %s.", strerror(-r));
+
+        } else if (streq("is-enabled", param)) {
+                k = read_one_line_file("/run/systemd/manager/is-enabled", (char **)&p);
+                if (k < 0)
+                        log_error("Failed to get unit file to check state on: %s.", strerror(-k));
+
+                state = unit_file_get_state(argscope, argroot, p);
+                if (state < 0)
+                        log_error("Failed to get state for unit file.");
+
+                puts(unit_file_state_to_string(state));
+
+        } else {
+                log_error("Unknown parameter.");
+        }
+
+        for (ic = 0; ic < n_changes; ic++) {
+                if (changes[ic].type == UNIT_FILE_SYMLINK)
+                        log_info("ln -s '%s' '%s'", changes[ic].source, changes[ic].path);
+                else
+                        log_info("rm '%s'", changes[ic].path);
+        }
 }
 
 void output_unit_file_list(const UnitFileList *units, unsigned c) {

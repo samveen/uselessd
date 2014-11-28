@@ -125,7 +125,7 @@ void fifo_control_loop(void) {
                                 log_error("kill() failed: %m");
                                 return;
                 } else if (streq("gdtr", fifobuf)) {
-                        get_default_target_tango();
+                        unit_file_operation_tango("get-default-target");
                 } else if (streq("lenv", fifobuf)) {
                         /* UB */
                         log_info("%u", offsetof(Manager, environment));
@@ -229,23 +229,23 @@ void fifo_control_loop(void) {
                 } else if (streq("refa", fifobuf)) {
                         manager_reset_failed(m);
                 } else if (streq("enab", fifobuf)) {
-                        enable_unit_file_tango();
+                        unit_file_operation_tango("enable");
                 } else if (streq("disa", fifobuf)) {
-                        disable_unit_file_tango();
+                        unit_file_operation_tango("disable");
                 } else if (streq("isen", fifobuf)) {
-                        is_unit_file_enabled();
+                        unit_file_operation_tango("is-enabled");
                 } else if (streq("reen", fifobuf)) {
-                        reenable_unit_file_tango();
+                        unit_file_operation_tango("reenable");
                 } else if (streq("prst", fifobuf)) {
-                        preset_unit_file_tango();
+                        unit_file_operation_tango("preset");
                 } else if (streq("mask", fifobuf)) {
-                        mask_unit_file_tango();
+                        unit_file_operation_tango("mask");
                 } else if (streq("umsk", fifobuf)) {
-                        unmask_unit_file_tango();
+                        unit_file_operation_tango("unmask");
                 } else if (streq("link", fifobuf)) {
-                        link_unit_file_tango();
+                        unit_file_operation_tango("link");
                 } else if (streq("sdtr", fifobuf)) {
-                        set_default_target_tango();
+                        unit_file_operation_tango("set-default-target");
                 } else if (streq("snap", fifobuf)) {
                         int name;
                         _cleanup_free_ char *p = NULL;
