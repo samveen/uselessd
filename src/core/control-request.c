@@ -34,6 +34,7 @@
 #include "snapshot.h"
 #include "util.h"
 #include "strv.h"
+#include "job.h"
 #include "conf-parser.h"
 #include "fileio.h"
 
@@ -163,6 +164,23 @@ void fifo_control_loop(void) {
                         }
 
                         list_jobs_print(jobs, used);
+                } else if (streq("canj", fifobuf)) {
+                        /* TODO: add overflow/errno checks */
+                        Job *j;
+                        unsigned jobfile;
+                        char *endptr;
+                        unsigned long val;
+                        char *p = NULL;
+
+                        jobfile = read_one_line_file("/run/systemd/manager/cancel-job-id", &p);
+                        val = strtoul(p, &endptr, 0);
+
+                        j = manager_get_job(m, (uint32_t)val);
+                        if (!j) {
+                                log_error("Job %u does not exist.", (unsigned)val);
+                        }
+
+                        job_finish_and_invalidate(j, JOB_CANCELED, true);
                 } else if (streq("lsun", fifobuf)) {
                         Iterator i;
                         Unit *u;
@@ -264,7 +282,7 @@ void fifo_control_loop(void) {
                         /* ltrace shows only file read. */
                         int name;
                         Unit *u;
-                        _cleanup_free_ char *p = NULL;
+                        char *p = NULL;
 
                         name = read_one_line_file("/run/systemd/manager/remove-snapshot", &p);
                         if (name < 0)
