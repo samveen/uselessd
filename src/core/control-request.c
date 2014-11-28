@@ -167,17 +167,17 @@ void fifo_control_loop(void) {
                 } else if (streq("canj", fifobuf)) {
                         /* TODO: add overflow/errno checks */
                         Job *j;
-                        unsigned jobfile;
-                        char *endptr;
-                        unsigned long val;
-                        char *p = NULL;
+                        int jobfile;
+                        uint32_t id;
+                        int l;
+                        const char *p = "68";
 
-                        jobfile = read_one_line_file("/run/systemd/manager/cancel-job-id", &p);
-                        val = strtoul(p, &endptr, 0);
+                        //jobfile = read_one_line_file("/run/systemd/manager/cancel-job-id", (char **)&p);
+                        l = safe_atou32(p, &id);
 
-                        j = manager_get_job(m, (uint32_t)val);
+                        j = manager_get_job(m, l);
                         if (!j) {
-                                log_error("Job %u does not exist.", (unsigned)val);
+                                log_error("Job %u does not exist.", (unsigned) id);
                         }
 
                         job_finish_and_invalidate(j, JOB_CANCELED, true);
