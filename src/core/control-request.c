@@ -181,6 +181,8 @@ void fifo_control_loop(void) {
                         }
 
                         job_finish_and_invalidate(j, JOB_CANCELED, true);
+                } else if (streq("clrjb", fifobuf)) {
+                        manager_clear_jobs(m);
                 } else if (streq("lsuni", fifobuf)) {
                         Iterator i;
                         Unit *u;
