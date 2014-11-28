@@ -31,6 +31,7 @@
 #include <stdint.h>
 
 #include "manager.h"
+#include "snapshot.h"
 #include "util.h"
 #include "strv.h"
 #include "conf-parser.h"
@@ -245,8 +246,23 @@ void fifo_control_loop(void) {
                         link_unit_file_tango();
                 } else if (streq("sdtr", fifobuf)) {
                         set_default_target_tango();
+                } else if (streq("snap", fifobuf)) {
+                        int name;
+                        _cleanup_free_ char *p = NULL;
+                        bool cleanup = true;
+                        Snapshot *s;
 
+                        name = read_one_line_file("/run/systemd/manager/create-snapshot", &p);
+                        if (name < 0)
+                                log_error("Failed to get snapshot file name.");
+
+                        r = snapshot_create(m, p, cleanup, &s);
+                        if (r < 0)
+                                log_error("Snapshot creation failed.");
+
+                } else if (streq("dsnp", fifobuf)) {
                 }
+
 
         }
 finish:
