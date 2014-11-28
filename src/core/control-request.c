@@ -105,19 +105,19 @@ void fifo_control_loop(void) {
                         log_error("Failed to read from fifoctl IPC endpoint: %s.", strerror(-r));
                 }
 
-                if (streq("test", fifobuf)) {
+                if (streq("foobr", fifobuf)) {
                         log_info("Badabing.\n");
-                } else if (streq("reld", fifobuf)) {
+                } else if (streq("rload", fifobuf)) {
                         /*m->exit_code = MANAGER_RELOAD;*/
                         if (kill(getpid(), SIGHUP) < 0)
                                 log_error("kill() failed: %m");
                                 return;
-                } else if (streq("rexc", fifobuf)) {
+                } else if (streq("rexec", fifobuf)) {
                         /*m->exit_code = MANAGER_REEXECUTE;*/
                         if (kill(getpid(), SIGTERM) < 0)
                                 log_error("kill() failed: %m");
                                 return;
-                } else if (streq("exit", fifobuf)) {
+                } else if (streq("mexit", fifobuf)) {
                         if (m->running_as == SYSTEMD_SYSTEM && getpid() == 1)
                                 log_error("Exit is only supported for user service managers and non-PID1 system managers.");
 
@@ -125,16 +125,16 @@ void fifo_control_loop(void) {
                         if (kill(getpid(), SIGINT) < 0)
                                 log_error("kill() failed: %m");
                                 return;
-                } else if (streq("gdtr", fifobuf)) {
+                } else if (streq("getdt", fifobuf)) {
                         unit_file_operation_tango("get-default-target");
-                } else if (streq("lenv", fifobuf)) {
+                } else if (streq("lsenv", fifobuf)) {
                         /* UB */
                         log_info("%u", offsetof(Manager, environment));
-                } else if (streq("lsuf", fifobuf)) {
+                } else if (streq("lsunf", fifobuf)) {
                         /* currently unsorted */
                         list_unit_files();
                 /* TODO: free jobs */
-                } else if (streq("lsjb", fifobuf)) {
+                } else if (streq("lsjob", fifobuf)) {
                         Iterator i;
                         Job *j;
                         struct job_info *jobs = NULL;
@@ -164,7 +164,7 @@ void fifo_control_loop(void) {
                         }
 
                         list_jobs_print(jobs, used);
-                } else if (streq("canj", fifobuf)) {
+                } else if (streq("cnjob", fifobuf)) {
                         /* TODO: add overflow/errno checks */
                         Job *j;
                         int jobfile;
@@ -181,7 +181,7 @@ void fifo_control_loop(void) {
                         }
 
                         job_finish_and_invalidate(j, JOB_CANCELED, true);
-                } else if (streq("lsun", fifobuf)) {
+                } else if (streq("lsuni", fifobuf)) {
                         Iterator i;
                         Unit *u;
                         const char *k;
@@ -226,45 +226,45 @@ void fifo_control_loop(void) {
                 /* These would be better served by isolating to targets.
                  * Be sure to integrate send_shutdownd() utmp record
                  * writing in full versions. */
-                } else if (streq("poff", fifobuf)) {
+                } else if (streq("powff", fifobuf)) {
                         reboot(RB_ENABLE_CAD);
                         log_info("Powering off.");
                         reboot(RB_POWER_OFF);
                         goto finish;
-                } else if (streq("rebt", fifobuf)) {
+                } else if (streq("rboot", fifobuf)) {
                         reboot(RB_ENABLE_CAD);
                         log_info("Rebooting.");
                         reboot(RB_AUTOBOOT);
                         goto finish;
-                } else if (streq("halt", fifobuf)) {
+                } else if (streq("halts", fifobuf)) {
                         reboot(RB_ENABLE_CAD);
                         log_info("Halting.");
                         reboot(RB_HALT_SYSTEM);
                         goto finish;
-                } else if (streq("kxec", fifobuf)) {
+                } else if (streq("kexec", fifobuf)) {
                         /* todo */
                         break;
-                } else if (streq("refa", fifobuf)) {
+                } else if (streq("resfa", fifobuf)) {
                         manager_reset_failed(m);
-                } else if (streq("enab", fifobuf)) {
+                } else if (streq("enabl", fifobuf)) {
                         unit_file_operation_tango("enable");
-                } else if (streq("disa", fifobuf)) {
+                } else if (streq("disab", fifobuf)) {
                         unit_file_operation_tango("disable");
-                } else if (streq("isen", fifobuf)) {
+                } else if (streq("isena", fifobuf)) {
                         unit_file_operation_tango("is-enabled");
-                } else if (streq("reen", fifobuf)) {
+                } else if (streq("reena", fifobuf)) {
                         unit_file_operation_tango("reenable");
-                } else if (streq("prst", fifobuf)) {
+                } else if (streq("prset", fifobuf)) {
                         unit_file_operation_tango("preset");
-                } else if (streq("mask", fifobuf)) {
+                } else if (streq("maskf", fifobuf)) {
                         unit_file_operation_tango("mask");
-                } else if (streq("umsk", fifobuf)) {
+                } else if (streq("umskf", fifobuf)) {
                         unit_file_operation_tango("unmask");
-                } else if (streq("link", fifobuf)) {
+                } else if (streq("linkf", fifobuf)) {
                         unit_file_operation_tango("link");
-                } else if (streq("sdtr", fifobuf)) {
+                } else if (streq("setdt", fifobuf)) {
                         unit_file_operation_tango("set-default-target");
-                } else if (streq("snap", fifobuf)) {
+                } else if (streq("mksnp", fifobuf)) {
                         int name;
                         _cleanup_free_ char *p = NULL;
                         bool cleanup = true;
@@ -278,7 +278,7 @@ void fifo_control_loop(void) {
                         if (r < 0)
                                 log_error("Snapshot creation failed.");
 
-                } else if (streq("rsnp", fifobuf)) {
+                } else if (streq("rmsnp", fifobuf)) {
                         /* ltrace shows only file read. */
                         int name;
                         Unit *u;
