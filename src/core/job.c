@@ -1121,7 +1121,7 @@ static const char* const job_type_table[_JOB_TYPE_MAX] = {
         [JOB_RELOAD_OR_START] = "reload-or-start",
         [JOB_RESTART] = "restart",
         [JOB_TRY_RESTART] = "try-restart",
-        [JOB_NOP] = "nop",
+        [JOB_NOP] = "nop"
 };
 
 DEFINE_STRING_TABLE_LOOKUP(job_type, JobType);
