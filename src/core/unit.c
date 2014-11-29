@@ -1126,10 +1126,10 @@ int unit_start(Unit *u) {
          * but we don't want to recheck the condition in that case. */
         if (state != UNIT_ACTIVATING &&
             !unit_condition_test(u)) {
-				if (test_job_failure_mode() > 0) {
-					log_warning_unit(u->id, "Starting of %s requested but condition failed with /run/systemd/condition-job-failure mode set.", u->id);
-					return -1;
-				}
+                if (test_job_failure_mode() > 0) {
+                        log_warning_unit(u->id, "Starting of %s requested but condition failed with /run/systemd/condition-job-failure mode set.", u->id);
+                        return -1;
+                }
                 log_debug_unit(u->id, "Starting of %s requested but condition failed. Ignoring.", u->id);
                 return -EALREADY;
         }
