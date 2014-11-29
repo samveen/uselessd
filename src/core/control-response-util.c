@@ -66,6 +66,30 @@ const char* get_arg_root(void) {
         return p;
 }
 
+JobMode get_arg_job_mode(void) {
+        int mode;
+        _cleanup_free_ char *p = NULL;
+
+        mode = read_one_line_file(SPECIAL_ARG_JOB_MODE, &p);
+        if (mode < 0)
+                return -1;
+
+        if (streq("fail", p))
+                return JOB_FAIL;
+        else if (streq("replace", p))
+                return JOB_REPLACE;
+        else if (streq("replace-irreversibly", p))
+                return JOB_REPLACE_IRREVERSIBLY;
+        else if (streq("isolate", p))
+                return JOB_ISOLATE;
+        else if (streq("ignore-dependencies", p))
+                return JOB_IGNORE_DEPENDENCIES;
+        else if (streq("ignore-requirements", p))
+                return JOB_IGNORE_REQUIREMENTS;
+        else
+                return JOB_REPLACE; /* default */
+}
+
 bool test_runtime(void) {
         int r;
         _cleanup_free_ char *p = NULL;
