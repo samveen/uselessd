@@ -1357,10 +1357,8 @@ fail:
 
 static void socket_enter_running(Socket *s, int cfd) {
         int r;
-        DBusError error;
 
         assert(s);
-        dbus_error_init(&error);
 
         /* We don't take connections anymore if we are supposed to
          * shut down anyway */
@@ -1487,13 +1485,11 @@ fail:
                          "%s failed to queue service startup job (Maybe the service file is missing or not a %s unit?): %s",
                          UNIT(s)->id,
                          cfd >= 0 ? "template" : "non-template",
-                         bus_error(&error, r));
+                         strerror(-r));
         socket_enter_stop_pre(s, SOCKET_FAILURE_RESOURCES);
 
         if (cfd >= 0)
                 close_nointr_nofail(cfd);
-
-        dbus_error_free(&error);
 }
 
 static void socket_run_next(Socket *s) {
