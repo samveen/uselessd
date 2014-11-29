@@ -146,6 +146,19 @@ void fifo_control_loop(void) {
 
                         strv_free(m->environment);
                         m->environment = w;
+                } else if (streq("usenv", fifobuf)) {
+                        /* TODO: strv env is valid check */
+                        int j;
+                        char **w = NULL;
+                        char *e = NULL;
+
+                        j = read_one_line_file("/run/systemd/manager/unset-environment", &e);
+                        if (j < 0)
+                                log_error("Failed to get environment variable to set.");
+
+                        w = strv_env_unset(m->environment, e);
+                        if (!w)
+                                log_oom();
                 } else if (streq("lsunf", fifobuf)) {
                         /* currently unsorted */
                         list_unit_files();
