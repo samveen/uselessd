@@ -2474,7 +2474,7 @@ void manager_check_finished(Manager *m) {
 }
 
 static int create_generator_dir(Manager *m, char **generator, const char *name) {
-	    char *p;
+        char *p;
         int r;
 
 #ifndef ENABLE_INIT
@@ -2537,7 +2537,7 @@ static void trim_generator_dir(Manager *m, char **generator) {
 }
 
 void manager_run_generators(Manager *m) {
-	    const char *generator_path;
+        const char *generator_path;
         const char *argv[5];
         int r;
         DIR *d = NULL;
