@@ -46,6 +46,7 @@ struct job_info {
 UnitFileScope get_arg_scope(void);
 const char* get_arg_root(void);
 JobMode get_arg_job_mode(void);
+JobType get_arg_job_type(void);
 bool test_runtime(void);
 bool test_force(void);
 void unit_file_operation_tango(const char *param);

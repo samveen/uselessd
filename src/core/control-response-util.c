@@ -90,6 +90,31 @@ JobMode get_arg_job_mode(void) {
                 return JOB_REPLACE; /* default */
 }
 
+JobType get_arg_job_type(void) {
+        int type;
+        _cleanup_free_ char *p = NULL;
+
+        type = read_one_line_file(SPECIAL_ARG_JOB_TYPE, &p);
+        if (type < 0)
+                return -1;
+
+        if (streq("start", p))
+                return JOB_START;
+        else if (streq("stop", p))
+                return JOB_STOP;
+        else if (streq("restart", p))
+                return JOB_RESTART;
+        else if (streq("reload", p))
+                return JOB_RELOAD;
+        else if (streq("reload-or-start", p))
+                return JOB_RELOAD_OR_START;
+        else if (streq("try-restart", p))
+                return JOB_TRY_RESTART;
+        else if (streq("verify-active", p))
+                return JOB_VERIFY_ACTIVE;
+        else return JOB_NOP;
+}
+
 bool test_runtime(void) {
         int r;
         _cleanup_free_ char *p = NULL;
