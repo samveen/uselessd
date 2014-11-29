@@ -128,8 +128,7 @@ void fifo_control_loop(void) {
                 } else if (streq("getdt", fifobuf)) {
                         unit_file_operation_tango("get-default-target");
                 } else if (streq("lsenv", fifobuf)) {
-                        /* UB */
-                        log_info("%u", offsetof(Manager, environment));
+                        strv_print(m->environment);
                 } else if (streq("lsunf", fifobuf)) {
                         /* currently unsorted */
                         list_unit_files();
