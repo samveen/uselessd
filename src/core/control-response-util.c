@@ -106,6 +106,8 @@ void unit_file_operation_tango(const char *param) {
         int r;
         int k;
 
+        touch(MANAGER_OPERATION_LOCKFILE);
+
         argruntime = test_runtime();
         argforce = test_force();
 
@@ -210,6 +212,8 @@ void unit_file_operation_tango(const char *param) {
         } else {
                 log_error("Unknown parameter.");
         }
+
+        unlink(MANAGER_OPERATION_LOCKFILE);
 
         for (ic = 0; ic < n_changes; ic++) {
                 if (changes[ic].type == UNIT_FILE_SYMLINK)

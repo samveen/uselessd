@@ -121,3 +121,4 @@
 #define SPECIAL_ARG_ROOT "/run/systemd/arg-root"
 #define SPECIAL_ARG_RUNTIME "/run/systemd/arg-runtime"
 #define SPECIAL_ARG_FORCE "/run/systemd/arg-force"
+#define MANAGER_OPERATION_LOCKFILE "/run/systemd/manager/0.lock"

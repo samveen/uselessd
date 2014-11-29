@@ -38,6 +38,7 @@
 #include "job.h"
 #include "conf-parser.h"
 #include "fileio.h"
+#include "special.h"
 
 #include "control-request.h"
 #include "control-response-util.h"
@@ -136,6 +137,8 @@ void fifo_control_loop(void) {
                         char **w = NULL;
                         char *e = NULL;
 
+                        touch(MANAGER_OPERATION_LOCKFILE);
+
                         j = read_one_line_file("/run/systemd/manager/set-environment", &e);
                         if (j < 0)
                                 log_error("Failed to get environment variable to set.");
@@ -143,6 +146,8 @@ void fifo_control_loop(void) {
                         w = strv_env_set(m->environment, e);
                         if (!w)
                                 log_oom();
+
+                        unlink(MANAGER_OPERATION_LOCKFILE);
 
                         strv_free(m->environment);
                         m->environment = w;
@@ -152,6 +157,8 @@ void fifo_control_loop(void) {
                         char **w = NULL;
                         char *e = NULL;
 
+                        touch(MANAGER_OPERATION_LOCKFILE);
+
                         j = read_one_line_file("/run/systemd/manager/unset-environment", &e);
                         if (j < 0)
                                 log_error("Failed to get environment variable to set.");
@@ -159,6 +166,8 @@ void fifo_control_loop(void) {
                         w = strv_env_unset(m->environment, e);
                         if (!w)
                                 log_oom();
+
+                        unlink(MANAGER_OPERATION_LOCKFILE);
                 } else if (streq("lsunf", fifobuf)) {
                         /* currently unsorted */
                         list_unit_files();
@@ -301,6 +310,7 @@ void fifo_control_loop(void) {
                         bool cleanup = true;
                         Snapshot *s;
 
+                        touch(MANAGER_OPERATION_LOCKFILE);
                         name = read_one_line_file("/run/systemd/manager/create-snapshot", &p);
                         if (name < 0)
                                 log_error("Failed to get snapshot file name.");
@@ -308,6 +318,7 @@ void fifo_control_loop(void) {
                         r = snapshot_create(m, p, cleanup, &s);
                         if (r < 0)
                                 log_error("Snapshot creation failed.");
+                        unlink(MANAGER_OPERATION_LOCKFILE);
 
                 } else if (streq("rmsnp", fifobuf)) {
                         /* ltrace shows only file read. */
@@ -315,6 +326,7 @@ void fifo_control_loop(void) {
                         Unit *u;
                         char *p = NULL;
 
+                        touch(MANAGER_OPERATION_LOCKFILE);
                         name = read_one_line_file("/run/systemd/manager/remove-snapshot", &p);
                         if (name < 0)
                                 log_error("Failed to get snapshot name to remove.");
@@ -329,6 +341,7 @@ void fifo_control_loop(void) {
                         }
 
                         snapshot_remove(SNAPSHOT(u));
+                        unlink(MANAGER_OPERATION_LOCKFILE);
                 }
 
         }
