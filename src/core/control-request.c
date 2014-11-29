@@ -33,6 +33,7 @@
 #include "manager.h"
 #include "snapshot.h"
 #include "util.h"
+#include "env-util.h"
 #include "strv.h"
 #include "job.h"
 #include "conf-parser.h"
@@ -129,6 +130,22 @@ void fifo_control_loop(void) {
                         unit_file_operation_tango("get-default-target");
                 } else if (streq("lsenv", fifobuf)) {
                         strv_print(m->environment);
+                } else if (streq("stenv", fifobuf)) {
+                        /* TODO: strv env is valid check */
+                        int j;
+                        char **w = NULL;
+                        char *e = NULL;
+
+                        j = read_one_line_file("/run/systemd/manager/set-environment", &e);
+                        if (j < 0)
+                                log_error("Failed to get environment variable to set.");
+
+                        w = strv_env_set(m->environment, e);
+                        if (!w)
+                                log_oom();
+
+                        strv_free(m->environment);
+                        m->environment = w;
                 } else if (streq("lsunf", fifobuf)) {
                         /* currently unsorted */
                         list_unit_files();
