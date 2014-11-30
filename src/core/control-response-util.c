@@ -151,11 +151,10 @@ void unit_file_operation_tango(const char *param) {
         UnitFileChange *changes;
         unsigned n_changes = 0, ic;
 
-        const char *p = NULL;
+        char *p;
+        char *s[] = {};
         int r;
         int k;
-
-        touch(MANAGER_OPERATION_LOCKFILE);
 
         argruntime = test_runtime();
         argforce = test_force();
@@ -171,12 +170,12 @@ void unit_file_operation_tango(const char *param) {
         if (streq("get-default-target", param)) {
                 char *default_target = NULL;
 
-                r = unit_file_get_default(argscope, (const char *)argroot, &default_target);
+                r = unit_file_get_default(argscope, argroot, &default_target);
                 if (default_target)
                         log_info("%s", default_target);
 
         } else if (streq("set-default-target", param)) {
-                k = read_one_line_file("/run/systemd/manager/set-default-target", (char **)&p);
+                k = read_one_line_file("/run/systemd/manager/set-default-target", &p);
                 if (k < 0)
                         log_error("Failed to get default target to set: %s.", strerror(-k));
 
@@ -185,65 +184,65 @@ void unit_file_operation_tango(const char *param) {
                         log_error("Failed to set default target: %s.", strerror(-r));
 
         } else if (streq("enable", param)) {
-                k = read_one_line_file("/run/systemd/manager/enable", (char **)&p);
+                k = read_one_line_file("/run/systemd/manager/enable", s);
                 if (k < 0)
                         log_error("Failed to get unit file to enable: %s.", strerror(-k));
 
-                r = unit_file_enable(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
+                r = unit_file_enable(argscope, argruntime, argroot, s, argforce, &changes, &n_changes);
                 if (r < 0)
                         log_error("Failed to enable unit file: %s.", strerror(-r));
 
         } else if (streq("reenable", param)) {
-                k = read_one_line_file("/run/systemd/manager/reenable", (char **)&p);
+                k = read_one_line_file("/run/systemd/manager/reenable", s);
                 if (k < 0)
                         log_error("Failed to get unit file to reenable: %s.", strerror(-k));
 
-                r = unit_file_reenable(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
+                r = unit_file_reenable(argscope, argruntime, argroot, s, argforce, &changes, &n_changes);
                 if (r < 0)
                         log_error("Failed to reenable unit file: %s.", strerror(-r));
 
         } else if (streq("disable", param)) {
-                k = read_one_line_file("/run/systemd/manager/disable", (char **)&p);
+                k = read_one_line_file("/run/systemd/manager/disable", s);
                 if (k < 0)
                         log_error("Failed to get unit file to disable: %s.", strerror(-k));
 
-                r = unit_file_disable(argscope, argruntime, argroot, (char **)p, &changes, &n_changes);
+                r = unit_file_disable(argscope, argruntime, argroot, s, &changes, &n_changes);
                 if (r < 0)
                         log_error("Failed to disable unit file: %s.", strerror(-r));
 
         } else if (streq("preset", param)) {
-                k = read_one_line_file("/run/systemd/manager/preset", (char **)&p);
+                k = read_one_line_file("/run/systemd/manager/preset", s);
                 if (k < 0)
                         log_error("Failed to get unit file preset policy: %s.", strerror(-k));
 
-                r = unit_file_preset(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
+                r = unit_file_preset(argscope, argruntime, argroot, s, argforce, &changes, &n_changes);
                 if (r < 0)
                         log_error("Failed to enable unit file preset policy: %s.", strerror(-r));
 
         } else if (streq("mask", param)) {
-                k = read_one_line_file("/run/systemd/manager/mask", (char **)&p);
+                k = read_one_line_file("/run/systemd/manager/mask", s);
                 if (k < 0)
                         log_error("Failed to get unit file to mask: %s.", strerror(-k));
 
-                r = unit_file_mask(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
+                r = unit_file_mask(argscope, argruntime, argroot, s, argforce, &changes, &n_changes);
                 if (r < 0)
                         log_error("Failed to mask unit file: %s.", strerror(-r));
 
         } else if (streq("unmask", param)) {
-                k = read_one_line_file("/run/systemd/manager/unmask", (char **)&p);
+                k = read_one_line_file("/run/systemd/manager/unmask", s);
                 if (k < 0)
                         log_error("Failed to get unit file to unmask: %s.", strerror(-k));
 
-                r = unit_file_unmask(argscope, argruntime, argroot, (char **)p, &changes, &n_changes);
+                r = unit_file_unmask(argscope, argruntime, argroot, s, &changes, &n_changes);
                 if (r < 0)
                         log_error("Failed to unmask unit file: %s.", strerror(-r));
 
         } else if (streq("link", param)) {
-                k = read_one_line_file("/run/systemd/manager/link", (char **)&p);
+                k = read_one_line_file("/run/systemd/manager/link", s);
                 if (k < 0)
                         log_error("Failed to get unit file to link: %s.", strerror(-k));
 
-                r = unit_file_link(argscope, argruntime, argroot, (char **)p, argforce, &changes, &n_changes);
+                r = unit_file_link(argscope, argruntime, argroot, s, argforce, &changes, &n_changes);
                 if (r < 0)
                         log_error("Failed to link unit file: %s.", strerror(-r));
 
@@ -261,8 +260,6 @@ void unit_file_operation_tango(const char *param) {
         } else {
                 log_error("Unknown parameter.");
         }
-
-        unlink(MANAGER_OPERATION_LOCKFILE);
 
         for (ic = 0; ic < n_changes; ic++) {
                 if (changes[ic].type == UNIT_FILE_SYMLINK)
