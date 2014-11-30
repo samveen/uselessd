@@ -803,15 +803,14 @@ int main(int argc, char *argv[]) {
         }
 
         if (arg_action == ACTION_HELP) {
-                retval = help();
-                goto finish;
+                help();
+                return EXIT_SUCCESS;
         } else if (arg_action == ACTION_VERSION) {
-                retval = version();
-                goto finish;
+                version();
+                return EXIT_SUCCESS;
         } else if (arg_action == ACTION_DUMP_CONFIGURATION_ITEMS) {
                 unit_dump_config_items(stdout);
-                retval = EXIT_SUCCESS;
-                goto finish;
+                return EXIT_SUCCESS;
         } else if (arg_action == ACTION_DONE) {
                 retval = EXIT_SUCCESS;
                 goto finish;
