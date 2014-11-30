@@ -1487,18 +1487,18 @@ int unit_file_enable(
                 return r;
 
         STRV_FOREACH(i, files) {
-			    UnitFileState state;
+                        UnitFileState state;
 
-                /* We only care about not letting masked units in.
-                 * Don't interfere with templated units (ones that
-                 * use format specifiers replaced by '@' in unit names).
-                 */
-			    state = unit_file_get_state(scope, root_dir, *i);
+                        /* We only care about not letting masked units in.
+                        * Don't interfere with templated units (ones that
+                        * use format specifiers replaced by '@' in unit names).
+                        */
+                        state = unit_file_get_state(scope, root_dir, *i);
 
-			    if (state == UNIT_FILE_MASKED || state == UNIT_FILE_MASKED_RUNTIME) {
-					    log_error("Failed to enable unit: Unit %s is masked.", *i);
-					    return -ENOTSUP;
-			    }
+                        if (state == UNIT_FILE_MASKED || state == UNIT_FILE_MASKED_RUNTIME) {
+                                log_error("Failed to enable unit: Unit %s is masked.", *i);
+                                return -ENOTSUP;
+                        }
 
                 r = install_info_add_auto(&c, *i);
                 if (r < 0)
