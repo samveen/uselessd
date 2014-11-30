@@ -1020,8 +1020,7 @@ static int prepare_reexecute(Manager *m, FILE **_f, FDSet **_fds, bool switching
         }
 
         /* Make sure nothing is really destructed when we shut down */
-        m->n_reloading ++;
-        bus_broadcast_reloading(m, true);
+        m->n_reloading++;
 
         fds = fdset_new();
         if (!fds) {
