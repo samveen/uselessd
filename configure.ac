@@ -97,8 +97,6 @@ if test -z "$GPERF" ; then
         AC_MSG_ERROR([*** gperf not found])
 fi
 
-PKG_CHECK_MODULES(FUSE, fuse)
-
 # ------------------------------------------------------------------------------
 address_sanitizer_cflags=
 address_sanitizer_cppflags=
@@ -182,7 +180,6 @@ CC_CHECK_FLAGS_APPEND([with_ldflags], [LDFLAGS], [\
         -Wl,--no-undefined \
         -Wl,--gc-sections \
         -Wl,-z,relro \
-        -lfuse \
         -pie \
         -Wl,-z,now])
 AC_SUBST([OUR_LDFLAGS], "$with_ldflags $address_sanitizer_ldflags $mudflap_ldflags")
