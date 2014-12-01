@@ -37,6 +37,7 @@
 #include "strv.h"
 #include "job.h"
 #include "conf-parser.h"
+#include "utmp-wtmp.h"
 #include "fileio.h"
 #include "special.h"
 
@@ -86,6 +87,8 @@ void fifo_control_loop(void) {
         int f, r, d;
         char fifobuf[BUFSIZ];
         Manager *m;
+        usec_t when;
+        when = now(CLOCK_REALTIME) + USEC_PER_MINUTE;
 
         d = manager_new(SYSTEMD_SYSTEM, true, &m);
         assert_se(d >= 0);
@@ -267,35 +270,108 @@ void fifo_control_loop(void) {
 
                         output_units_list(unit_infos, cnt);
                 /* These would be better served by isolating to targets.
-                 * Be sure to integrate send_shutdownd() utmp record
-                 * writing in full versions. */
+                 * Also make sure char *m is a wall message later on. */
                 } else if (streq("powff", fifobuf)) {
+                        int sd;
+                        int ups;
+                        const char *msg = "ayylmao";
+
                         if (geteuid() != 0)
                                 log_error("Must be root.");
+
+                        sd = send_shutdownd(when, 'P', false, false, msg);
+                        if (sd < 0) {
+                                log_warning("Failed to talk to shutdownd, proceeding with immediate shutdown: %s",
+                                        strerror(-sd));
+                        } else {
+                                char date[FORMAT_TIMESTAMP_MAX];
+
+                                log_info("Shutdown scheduled for %s, use 'shutdown -c' to cancel.",
+                                        format_timestamp(date, sizeof(date), when));
+                        }
+
+                        ups = utmp_put_shutdown();
+                        if (ups < 0)
+                                log_warning("Failed to write utmp record: %s", strerror(-ups));
 
                         reboot(RB_ENABLE_CAD);
                         log_info("Powering off.");
                         reboot(RB_POWER_OFF);
+
                         goto finish;
                 } else if (streq("rboot", fifobuf)) {
+                        int sd;
+                        int ups;
+                        const char *msg = "ayylmao";
+
                         if (geteuid() != 0)
                                 log_error("Must be root.");
+
+                        sd = send_shutdownd(when, 'r', false, false, msg);
+                        if (sd < 0) {
+                                log_warning("Failed to talk to shutdownd, proceeding with immediate shutdown: %s",
+                                        strerror(-sd));
+                        } else {
+                                char date[FORMAT_TIMESTAMP_MAX];
+
+                                log_info("Shutdown scheduled for %s, use 'shutdown -c' to cancel.",
+                                        format_timestamp(date, sizeof(date), when));
+                        }
+
+                        ups = utmp_put_shutdown();
+                        if (ups < 0)
+                                log_warning("Failed to write utmp record: %s", strerror(-ups));
 
                         reboot(RB_ENABLE_CAD);
                         log_info("Rebooting.");
                         reboot(RB_AUTOBOOT);
+
                         goto finish;
                 } else if (streq("halts", fifobuf)) {
+                        int sd;
+                        int ups;
+                        const char *msg = "ayylmao";
+
                         if (geteuid() != 0)
                                 log_error("Must be root.");
+
+                        sd = send_shutdownd(when, 'H', false, false, msg);
+                        if (sd < 0) {
+                                log_warning("Failed to talk to shutdownd, proceeding with immediate shutdown: %s",
+                                        strerror(-sd));
+                        } else {
+                                char date[FORMAT_TIMESTAMP_MAX];
+
+                                log_info("Shutdown scheduled for %s, use 'shutdown -c' to cancel.",
+                                        format_timestamp(date, sizeof(date), when));
+                        }
+
+                        ups = utmp_put_shutdown();
+                        if (ups < 0)
+                                log_warning("Failed to write utmp record: %s", strerror(-ups));
 
                         reboot(RB_ENABLE_CAD);
                         log_info("Halting.");
                         reboot(RB_HALT_SYSTEM);
+
                         goto finish;
                 } else if (streq("kexec", fifobuf)) {
+                        int sd;
+                        const char *msg = "ayylmao";
+
                         if (geteuid() != 0)
                                 log_error("Must be root.");
+
+                        sd = send_shutdownd(when, 'K', false, false, msg);
+                        if (sd < 0) {
+                                log_warning("Failed to talk to shutdownd, proceeding with immediate shutdown: %s",
+                                        strerror(-sd));
+                        } else {
+                                char date[FORMAT_TIMESTAMP_MAX];
+
+                                log_info("Shutdown scheduled for %s, use 'shutdown -c' to cancel.",
+                                        format_timestamp(date, sizeof(date), when));
+                        }
 
                         /* todo */
                         break;
