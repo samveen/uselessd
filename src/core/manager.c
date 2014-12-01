@@ -1823,8 +1823,6 @@ int manager_loop(Manager *m) {
                 } else
                         wait_msec = -1;
 
-                fifo_control_loop();
-
                 n = epoll_wait(m->epoll_fd, &event, 1, wait_msec);
                 if (n < 0) {
 
@@ -1836,6 +1834,8 @@ int manager_loop(Manager *m) {
                         continue;
 
                 assert(n == 1);
+
+                fifo_control_loop();
 
                 r = process_event(m, &event);
                 if (r < 0)
