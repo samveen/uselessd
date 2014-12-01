@@ -381,6 +381,9 @@ void fifo_control_loop(void) {
                 } else if (streq("rescu", fifobuf)) {
                         Job *j;
                         manager_add_job_by_name(m, JOB_START, SPECIAL_RESCUE_TARGET, JOB_ISOLATE, true, &j);
+                } else if (streq("emerg", fifobuf)) {
+                        Job *j;
+                        manager_add_job_by_name(m, JOB_START, SPECIAL_EMERGENCY_TARGET, JOB_ISOLATE, true, &j);
                 } else if (streq("swirt", fifobuf)) {
                         break;
                 } else if (streq("resfa", fifobuf)) {
