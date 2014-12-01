@@ -196,7 +196,7 @@ int cg_kill(const char *controller, const char *path, int sig, bool sigcont, boo
                                         ret = -errno;
                         } else if (ret == 0) {
 
-                                if (sigcont)
+                                if (sigcont && sig != SIGKILL)
                                         kill(pid, SIGCONT);
 
                                 ret = 1;
