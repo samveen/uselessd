@@ -108,6 +108,9 @@ void fifo_control_loop(void) {
                 }
 
                 if (streq("foobr", fifobuf)) {
+                        Unit *u;
+                        u = manager_get_unit(m, "brltty.service");
+                        if (u) log_info("yh");
                         log_info("Badabing.\n");
                 } else if (streq("rload", fifobuf)) {
                         /*m->exit_code = MANAGER_RELOAD;*/
