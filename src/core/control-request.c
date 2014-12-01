@@ -375,6 +375,9 @@ void fifo_control_loop(void) {
 
                         /* todo */
                         break;
+                } else if (streq("deflt", fifobuf)) {
+                        Job *j;
+                        manager_add_job_by_name(m, JOB_START, SPECIAL_DEFAULT_TARGET, JOB_ISOLATE, true, &j);
                 } else if (streq("swirt", fifobuf)) {
                         break;
                 } else if (streq("resfa", fifobuf)) {
