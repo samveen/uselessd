@@ -344,12 +344,9 @@ void fifo_control_loop(void) {
                         unlink(MANAGER_OPERATION_LOCKFILE);
                 } else if (streq("start", fifobuf)) {
                         /* This is a generic operation that adds jobs. */
-                        Unit *u;
                         Job *j;
                         JobType type;
                         JobMode mode;
-                        bool reload_if_possible = false;
-                        int load;
                         int k;
                         int getname;
                         char *name;
@@ -361,29 +358,7 @@ void fifo_control_loop(void) {
                         type = get_arg_job_type();
                         mode = get_arg_job_mode();
 
-                        load = manager_load_unit(m, name, NULL, &u);
-
-                        if (reload_if_possible && unit_can_reload(u)) {
-                                if (type == JOB_RESTART)
-                                        type = JOB_RELOAD_OR_START;
-                                else if (type == JOB_TRY_RESTART)
-                                        type = JOB_RELOAD;
-                        }
-
-                        if (type == JOB_STOP && (u->load_state == UNIT_NOT_FOUND ||
-                                u->load_state == UNIT_ERROR) && unit_active_state(u) == UNIT_INACTIVE) {
-                                log_error("Unit %s not loaded.", u->id);
-                        }
-
-                        if ((type == JOB_START && u->refuse_manual_start) ||
-                                (type == JOB_STOP && u->refuse_manual_stop) ||
-                                ((type == JOB_RESTART || type == JOB_TRY_RESTART)
-                                 && (u->refuse_manual_start || u->refuse_manual_stop))) {
-                                log_error("Operation refused, unit %s may be requested by dependency only.",
-                                        u->id);
-                        }
-
-                        k = manager_add_job(u->manager, type, u, mode, true, &j);
+                        k = manager_add_job_by_name(m, type, name, mode, true, &j);
                         if (k < 0)
                                 log_error("Adding job failed: %s", strerror(-k));
                 } else if (streq("isact", fifobuf)) {
