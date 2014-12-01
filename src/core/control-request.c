@@ -369,17 +369,14 @@ void fifo_control_loop(void) {
                 } else if (streq("isact", fifobuf)) {
                         const char *name = "rsync.service";
                         Unit *u;
+                        const char *active_state;
 
                         u = manager_get_unit(m, name);
                         if (!u)
                                 log_error("Unit %s is not loaded.", name);
-                } else if (streq("isfai", fifobuf)) {
-                        const char *name = "rsync.service";
-                        Unit *u;
 
-                        u = manager_get_unit(m, name);
-                        if (!u)
-                                log_error("Unit %s is not loaded.", name);
+                        active_state = unit_active_state_to_string(unit_active_state(u));
+                        puts(active_state);
                 }
 
         }
