@@ -287,6 +287,8 @@ void fifo_control_loop(void) {
                 } else if (streq("kexec", fifobuf)) {
                         /* todo */
                         break;
+                } else if (streq("swirt", fifobuf)) {
+                        break;
                 } else if (streq("resfa", fifobuf)) {
                         manager_reset_failed(m);
                 } else if (streq("enabl", fifobuf)) {
