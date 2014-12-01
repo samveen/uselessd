@@ -3868,6 +3868,9 @@ const UnitVTable service_vtable = {
         .notify_cgroup_empty = service_notify_cgroup_empty_event,
         .notify_message = service_notify_message,
 
+        .bus_name_owner_change = service_bus_name_owner_change,
+        .bus_query_pid_done = service_bus_query_pid_done,
+
         .can_transient = true,
 
 #ifdef HAVE_SYSV_COMPAT
