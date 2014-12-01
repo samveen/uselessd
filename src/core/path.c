@@ -774,9 +774,5 @@ const UnitVTable path_vtable = {
 
         .trigger_notify = path_trigger_notify,
 
-        .reset_failed = path_reset_failed,
-
-        .bus_interface = "org.freedesktop.systemd1.Path",
-        .bus_message_handler = bus_path_message_handler,
-        .bus_invalidating_properties = bus_path_invalidating_properties
+        .reset_failed = path_reset_failed
 };
