@@ -386,6 +386,20 @@ void fifo_control_loop(void) {
                         k = manager_add_job(u->manager, type, u, mode, true, &j);
                         if (k < 0)
                                 log_error("Adding job failed: %s", strerror(-k));
+                } else if (streq("isact", fifobuf)) {
+                        const char *name = "rsync.service";
+                        Unit *u;
+
+                        u = manager_get_unit(m, name);
+                        if (!u)
+                                log_error("Unit %s is not loaded.", name);
+                } else if (streq("isfai", fifobuf)) {
+                        const char *name = "rsync.service";
+                        Unit *u;
+
+                        u = manager_get_unit(m, name);
+                        if (!u)
+                                log_error("Unit %s is not loaded.", name);
                 }
 
         }
