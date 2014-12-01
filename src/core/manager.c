@@ -1384,7 +1384,7 @@ static int manager_dispatch_sigchld(Manager *m) {
         return 0;
 }
 
-static int manager_start_target(Manager *m, const char *name, JobMode mode) {
+int manager_start_target(Manager *m, const char *name, JobMode mode) {
         int r;
 
         log_debug_unit(name, "Activating special unit %s", name);
