@@ -555,15 +555,6 @@ int manager_new(SystemdRunningAs running_as, bool reexecuting, Manager **_m) {
         if (r < 0)
                 goto fail;
 
-        /* Try to connect to the busses, if possible. */
-        if ((running_as == SYSTEMD_USER && getenv("DBUS_SESSION_BUS_ADDRESS")) ||
-            running_as == SYSTEMD_SYSTEM) {
-                r = bus_init(m, reexecuting || running_as != SYSTEMD_SYSTEM);
-                if (r < 0)
-                        goto fail;
-        } else
-                log_debug("Skipping DBus session bus connection attempt - no DBUS_SESSION_BUS_ADDRESS set...");
-
         m->taint_usr = dir_is_empty("/usr") > 0;
 
         *_m = m;
@@ -1488,20 +1479,7 @@ static int manager_process_signal_fd(Manager *m) {
                         break;
 
                 case SIGUSR1: {
-                        Unit *u;
-
-                        u = manager_get_unit(m, SPECIAL_DBUS_SERVICE);
-
-                        if (!u || UNIT_IS_ACTIVE_OR_RELOADING(unit_active_state(u))) {
-                                log_info("Trying to reconnect to bus...");
-                                bus_init(m, true);
-                        }
-
-                        if (!u || !UNIT_IS_ACTIVE_OR_ACTIVATING(unit_active_state(u))) {
-                                log_info("Loading D-Bus service...");
-                                manager_start_target(m, SPECIAL_DBUS_SERVICE, JOB_REPLACE);
-                        }
-
+                        fifo_control_loop();
                         break;
                 }
 
