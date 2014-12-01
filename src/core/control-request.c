@@ -270,21 +270,33 @@ void fifo_control_loop(void) {
                  * Be sure to integrate send_shutdownd() utmp record
                  * writing in full versions. */
                 } else if (streq("powff", fifobuf)) {
+                        if (geteuid() != 0)
+                                log_error("Must be root.");
+
                         reboot(RB_ENABLE_CAD);
                         log_info("Powering off.");
                         reboot(RB_POWER_OFF);
                         goto finish;
                 } else if (streq("rboot", fifobuf)) {
+                        if (geteuid() != 0)
+                                log_error("Must be root.");
+
                         reboot(RB_ENABLE_CAD);
                         log_info("Rebooting.");
                         reboot(RB_AUTOBOOT);
                         goto finish;
                 } else if (streq("halts", fifobuf)) {
+                        if (geteuid() != 0)
+                                log_error("Must be root.");
+
                         reboot(RB_ENABLE_CAD);
                         log_info("Halting.");
                         reboot(RB_HALT_SYSTEM);
                         goto finish;
                 } else if (streq("kexec", fifobuf)) {
+                        if (geteuid() != 0)
+                                log_error("Must be root.");
+
                         /* todo */
                         break;
                 } else if (streq("swirt", fifobuf)) {
