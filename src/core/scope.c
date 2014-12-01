@@ -473,10 +473,5 @@ const UnitVTable scope_vtable = {
 
         .notify_cgroup_empty = scope_notify_cgroup_empty_event,
 
-        .bus_interface = "org.freedesktop.systemd1.Scope",
-        .bus_message_handler = bus_scope_message_handler,
-        .bus_set_property = bus_scope_set_property,
-        .bus_commit_properties = bus_scope_commit_properties,
-
         .can_transient = true
 };
