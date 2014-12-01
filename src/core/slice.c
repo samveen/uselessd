@@ -305,11 +305,6 @@ const UnitVTable slice_vtable = {
         .active_state = slice_active_state,
         .sub_state_to_string = slice_sub_state_to_string,
 
-        .bus_interface = "org.freedesktop.systemd1.Slice",
-        .bus_message_handler = bus_slice_message_handler,
-        .bus_set_property = bus_slice_set_property,
-        .bus_commit_properties = bus_slice_commit_properties,
-
         .status_message_formats = {
                 .finished_start_job = {
                         [JOB_DONE]       = "Created slice %s.",
