@@ -1403,7 +1403,7 @@ systemd_initctl_CFLAGS = \
 systemd_initctl_LDADD = \
 	libsystemd-shared.la \
 	libsystemd-daemon.la \
-	libsystemd-dbus.la
+	libsystemd-core.la
 endif
 
 # ------------------------------------------------------------------------------

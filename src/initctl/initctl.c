@@ -39,6 +39,8 @@
 #include "log.h"
 #include "list.h"
 #include "initreq.h"
+#include "manager.h"
+#include "job.h"
 #include "special.h"
 #include "def.h"
 
@@ -99,29 +101,33 @@ static const char *translate_runlevel(int runlevel, bool *isolate) {
         return NULL;
 }
 
-/* TODO: Convert to a FIFO control command request once we have
- * acquired start unit functionality. */
 static void change_runlevel(Server *s, int runlevel) {
         const char *target;
-        const char *mode;
+        JobMode mode;
         bool isolate = false;
+        Job *j;
+        Manager *m = NULL;
+        int r;
 
         assert(s);
 
         if (!(target = translate_runlevel(runlevel, &isolate))) {
                 log_warning("Got request for unknown runlevel %c, ignoring.", runlevel);
-                goto finish;
+                return;
         }
 
         if (isolate)
-                mode = "isolate";
+                mode = JOB_ISOLATE;
         else
-                mode = "replace-irreversibly";
+                mode = JOB_REPLACE_IRREVERSIBLY;
 
-        log_debug("Running request %s/start/%s", target, mode);
+        log_debug("Running request %s/start/%s", target, job_mode_to_string(mode));
 
-finish:
-        return;
+        r = manager_add_job_by_name(m, JOB_START, target, mode, true, &j);
+        if (r < 0) {
+                log_error("Failed to change runlevel: %s.", strerror(-r));
+                return;
+        }
 }
 
 static void request_process(Server *s, const struct init_request *req) {
@@ -147,7 +153,7 @@ static void request_process(Server *s, const struct init_request *req) {
                                 if (kill(1, SIGTERM) < 0)
                                         log_error("kill() failed: %m");
 
-                                /* The bus connection will be
+                                /* The connection will be
                                  * terminated if PID 1 is reexecuted,
                                  * hence let's just exit here, and
                                  * rely on that we'll be restarted on
