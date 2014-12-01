@@ -305,8 +305,5 @@ const UnitVTable snapshot_vtable = {
         .deserialize_item = snapshot_deserialize_item,
 
         .active_state = snapshot_active_state,
-        .sub_state_to_string = snapshot_sub_state_to_string,
-
-        .bus_interface = "org.freedesktop.systemd1.Snapshot",
-        .bus_message_handler = bus_snapshot_message_handler
+        .sub_state_to_string = snapshot_sub_state_to_string
 };
