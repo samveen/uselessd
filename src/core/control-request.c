@@ -390,7 +390,7 @@ void fifo_control_loop(void) {
                 } else if (streq("hiber", fifobuf)) {
                         manager_start_target(m, SPECIAL_HIBERNATE_TARGET, JOB_REPLACE_IRREVERSIBLY);
                 } else if (streq("hybsl", fifobuf)) {
-                        manager_start_target_m, SPECIAL_HYBRID_SLEEP_TARGET, JOB_REPLACE_IRREVERSIBLY);
+                        manager_start_target(m, SPECIAL_HYBRID_SLEEP_TARGET, JOB_REPLACE_IRREVERSIBLY);
                 } else if (streq("swirt", fifobuf)) {
                         break;
                 } else if (streq("resfa", fifobuf)) {
