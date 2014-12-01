@@ -24,6 +24,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include <systemd/sd-shutdown.h>
+
 #include "hashmap.h"
 #include "install.h"
 #include "log.h"
@@ -545,4 +547,45 @@ void list_jobs_print(struct job_info* jobs, size_t n) {
 
         if (on_tty())
                 printf("\n%s%zu jobs listed%s.\n", on, n, off);
+}
+
+int send_shutdownd(usec_t t, char mode, bool dry_run, bool warn, const char *message) {
+        _cleanup_close_ int fd;
+        struct sd_shutdown_command c = {
+                .usec = t,
+                .mode = mode,
+                .dry_run = dry_run,
+                .warn_wall = warn,
+        };
+        union sockaddr_union sockaddr = {
+                .un.sun_family = AF_UNIX,
+                .un.sun_path = "/run/systemd/shutdownd",
+        };
+        struct iovec iovec[2] = {
+                {.iov_base = (char*) &c,
+                 .iov_len = offsetof(struct sd_shutdown_command, wall_message),
+                }
+        };
+        struct msghdr msghdr = {
+                .msg_name = &sockaddr,
+                .msg_namelen = offsetof(struct sockaddr_un, sun_path)
+                               + sizeof("/run/systemd/shutdownd") - 1,
+                .msg_iov = iovec,
+                .msg_iovlen = 1,
+        };
+
+        fd = socket(AF_UNIX, SOCK_DGRAM|SOCK_CLOEXEC, 0);
+        if (fd < 0)
+                return -errno;
+
+        if (!isempty(message)) {
+                iovec[1].iov_base = (char*) message;
+                iovec[1].iov_len = strlen(message);
+                msghdr.msg_iovlen++;
+        }
+
+        if (sendmsg(fd, &msghdr, MSG_NOSIGNAL) < 0)
+                return -errno;
+
+        return 0;
 }

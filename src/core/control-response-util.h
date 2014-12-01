@@ -24,6 +24,7 @@
 
 #include "install.h"
 #include "job.h"
+#include "util.h"
 
 struct unit_info {
         const char *id;
@@ -55,3 +56,4 @@ void list_unit_files(void);
 int compare_unit_info(const void *a, const void *b);
 void output_units_list(const struct unit_info *unit_infos, unsigned c);
 void list_jobs_print(struct job_info* jobs, size_t n);
+int send_shutdownd(usec_t t, char mode, bool dry_run, bool warn, const char *message);
