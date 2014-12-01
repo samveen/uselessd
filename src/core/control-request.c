@@ -378,6 +378,7 @@ void fifo_control_loop(void) {
                 } else if (streq("deflt", fifobuf)) {
                         Job *j;
                         manager_add_job_by_name(m, JOB_START, SPECIAL_DEFAULT_TARGET, JOB_ISOLATE, true, &j);
+                /* TODO: print wall messages */
                 } else if (streq("rescu", fifobuf)) {
                         Job *j;
                         manager_add_job_by_name(m, JOB_START, SPECIAL_RESCUE_TARGET, JOB_ISOLATE, true, &j);
@@ -386,6 +387,8 @@ void fifo_control_loop(void) {
                         manager_add_job_by_name(m, JOB_START, SPECIAL_EMERGENCY_TARGET, JOB_ISOLATE, true, &j);
                 } else if (streq("suspn", fifobuf)) {
                         manager_start_target(m, SPECIAL_SUSPEND_TARGET, JOB_REPLACE_IRREVERSIBLY);
+                } else if (streq("hiber", fifobuf)) {
+                        manager_start_target(m, SPECIAL_HIBERNATE_TARGET, JOB_REPLACE_IRREVERSIBLY);
                 } else if (streq("swirt", fifobuf)) {
                         break;
                 } else if (streq("resfa", fifobuf)) {
