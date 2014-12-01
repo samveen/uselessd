@@ -158,6 +158,11 @@ void unit_file_operation_tango(const char *param) {
         int r;
         int k;
 
+        if (running_in_chroot() > 0) {
+                log_info("Running in chroot, ignoring request.");
+                return;
+        }
+
         argruntime = test_runtime();
         argforce = test_force();
 
