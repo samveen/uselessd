@@ -294,6 +294,8 @@ void fifo_control_loop(void) {
                         if (ups < 0)
                                 log_warning("Failed to write utmp record: %s", strerror(-ups));
 
+                        sync();
+
                         reboot(RB_ENABLE_CAD);
                         log_info("Powering off.");
                         reboot(RB_POWER_OFF);
@@ -322,6 +324,8 @@ void fifo_control_loop(void) {
                         if (ups < 0)
                                 log_warning("Failed to write utmp record: %s", strerror(-ups));
 
+                        sync();
+
                         reboot(RB_ENABLE_CAD);
                         log_info("Rebooting.");
                         reboot(RB_AUTOBOOT);
@@ -349,6 +353,8 @@ void fifo_control_loop(void) {
                         ups = utmp_put_shutdown();
                         if (ups < 0)
                                 log_warning("Failed to write utmp record: %s", strerror(-ups));
+
+                        sync();
 
                         reboot(RB_ENABLE_CAD);
                         log_info("Halting.");
