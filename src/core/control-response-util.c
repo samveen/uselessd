@@ -34,6 +34,8 @@
 #include "path-lookup.h"
 #include "path-util.h"
 #include "util.h"
+#include "cgroup-util.h"
+#include "cgroup.h"
 #include "fileio.h"
 #include "special.h"
 
@@ -591,6 +593,335 @@ int send_shutdownd(usec_t t, char mode, bool dry_run, bool warn, const char *mes
 
         if (sendmsg(fd, &msghdr, MSG_NOSIGNAL) < 0)
                 return -errno;
+
+        return 0;
+}
+
+int cgroup_set_property(
+                Unit *u,
+                CGroupContext *c,
+                const char *name,
+                UnitSetPropertiesMode mode) {
+
+        assert(name);
+        assert(u);
+        assert(c);
+
+        if (streq(name, "CPUAccounting")) {
+                if (mode != UNIT_CHECK) {
+                        bool b;
+
+                        c->cpu_accounting = b;
+                        unit_write_drop_in_private(u, mode, name, b ? "CPUAccounting=yes" : "CPUAccounting=no");
+                }
+
+                return 1;
+
+        } else if (streq(name, "CPUShares")) {
+                uint64_t u64;
+                unsigned long ul;
+
+                ul = (unsigned long) u64;
+
+                if (u64 <= 0 || u64 != (uint64_t) ul)
+                        return -EINVAL;
+
+                if (mode != UNIT_CHECK) {
+                        c->cpu_shares = ul;
+                        unit_write_drop_in_private_format(u, mode, name, "CPUShares=%lu", ul);
+                }
+
+                return 1;
+
+        } else if (streq(name, "BlockIOAccounting")) {
+                if (mode != UNIT_CHECK) {
+                        bool b;
+
+                        c->blockio_accounting = b;
+                        unit_write_drop_in_private(u, mode, name, b ? "BlockIOAccounting=yes" : "BlockIOAccounting=no");
+                }
+
+                return 1;
+
+        } else if (streq(name, "BlockIOWeight")) {
+                uint64_t u64;
+                unsigned long ul;
+
+                ul = (unsigned long) u64;
+
+                if (u64 < 10 || u64 > 1000)
+                        return -EINVAL;
+
+                if (mode != UNIT_CHECK) {
+                        c->blockio_weight = ul;
+                        unit_write_drop_in_private_format(u, mode, name, "BlockIOWeight=%lu", ul);
+                }
+
+                return 1;
+
+        } else if (streq(name, "BlockIOReadBandwidth") || streq(name, "BlockIOWriteBandwidth")) {
+                unsigned n = 0;
+                bool read = true;
+                const char *path;
+                uint64_t u64;
+                CGroupBlockIODeviceBandwidth *a;
+
+                if (streq(name, "BlockIOWriteBandwidth"))
+                        read = false;
+
+                        if (mode != UNIT_CHECK) {
+                                CGroupBlockIODeviceBandwidth *b;
+                                bool exist = false;
+
+                                LIST_FOREACH(device_bandwidths, b, c->blockio_device_bandwidths) {
+                                        if (path_equal(path, b->path) && read == b->read) {
+                                                a = b;
+                                                exist = true;
+                                                break;
+                                        }
+                                }
+
+                                if (!exist) {
+                                        a = new0(CGroupBlockIODeviceBandwidth, 1);
+                                        if (!a)
+                                                return -ENOMEM;
+
+                                        a->read = read;
+                                        a->path = strdup(path);
+                                        if (!a->path) {
+                                                free(a);
+                                                return -ENOMEM;
+                                        }
+                                }
+
+                                a->bandwidth = u64;
+
+                                if (!exist)
+                                        LIST_PREPEND(CGroupBlockIODeviceBandwidth, device_bandwidths,
+                                                     c->blockio_device_bandwidths, a);
+                        }
+
+                        n++;
+
+                if (mode != UNIT_CHECK) {
+                        _cleanup_free_ char *buf = NULL;
+                        _cleanup_fclose_ FILE *f = NULL;
+                        CGroupBlockIODeviceBandwidth *a;
+                        CGroupBlockIODeviceBandwidth *next;
+                        size_t size = 0;
+
+                        if (n == 0) {
+                                LIST_FOREACH_SAFE(device_bandwidths, a, next, c->blockio_device_bandwidths)
+                                        if (a->read == read)
+                                                cgroup_context_free_blockio_device_bandwidth(c, a);
+                        }
+
+                        f = open_memstream(&buf, &size);
+                        if (!f)
+                                return -ENOMEM;
+
+                         if (read) {
+                                fputs("BlockIOReadBandwidth=\n", f);
+                                 LIST_FOREACH(device_bandwidths, a, c->blockio_device_bandwidths)
+                                        if (a->read)
+                                                fprintf(f, "BlockIOReadBandwidth=%s %" PRIu64 "\n", a->path, a->bandwidth);
+                        } else {
+                                fputs("BlockIOWriteBandwidth=\n", f);
+                                LIST_FOREACH(device_bandwidths, a, c->blockio_device_bandwidths)
+                                        if (!a->read)
+                                                fprintf(f, "BlockIOWriteBandwidth=%s %" PRIu64 "\n", a->path, a->bandwidth);
+                        }
+
+                        fflush(f);
+                        unit_write_drop_in_private(u, mode, name, buf);
+                }
+
+                return 1;
+
+        } else if (streq(name, "BlockIODeviceWeight")) {
+                unsigned n = 0;
+                const char *path;
+                uint64_t u64;
+                unsigned long ul;
+                CGroupBlockIODeviceWeight *a;
+
+                ul = (unsigned long) u64;
+                if (ul < 10 || ul > 1000)
+                        return -EINVAL;
+
+                if (mode != UNIT_CHECK) {
+                        CGroupBlockIODeviceWeight *b;
+                        bool exist = false;
+
+                        LIST_FOREACH(device_weights, b, c->blockio_device_weights) {
+                                if (path_equal(b->path, path)) {
+                                        a = b;
+                                        exist = true;
+                                        break;
+                                }
+                        }
+
+                        if (!exist) {
+                                a = new0(CGroupBlockIODeviceWeight, 1);
+                                if (!a)
+                                        return -ENOMEM;
+
+                                a->path = strdup(path);
+                                if (!a->path) {
+                                        free(a);
+                                        return -ENOMEM;
+                                }
+                        }
+
+                        a->weight = ul;
+
+                        if (!exist)
+                                LIST_PREPEND(CGroupBlockIODeviceWeight, device_weights,
+                                                c->blockio_device_weights, a);
+                }
+                n++;
+
+                if (mode != UNIT_CHECK) {
+                        _cleanup_free_ char *buf = NULL;
+                        _cleanup_fclose_ FILE *f = NULL;
+                        CGroupBlockIODeviceWeight *a;
+                        size_t size = 0;
+
+                        if (n == 0) {
+                                while (c->blockio_device_weights)
+                                        cgroup_context_free_blockio_device_weight(c, c->blockio_device_weights);
+                        }
+
+                        f = open_memstream(&buf, &size);
+                        if (!f)
+                                return -ENOMEM;
+
+                        fputs("BlockIODeviceWeight=\n", f);
+                        LIST_FOREACH(device_weights, a, c->blockio_device_weights)
+                                fprintf(f, "BlockIODeviceWeight=%s %lu\n", a->path, a->weight);
+
+                        fflush(f);
+                        unit_write_drop_in_private(u, mode, name, buf);
+                }
+
+                return 1;
+
+        } else if (streq(name, "MemoryAccounting")) {
+                if (mode != UNIT_CHECK) {
+                        bool b;
+
+                        c->memory_accounting = b;
+                        unit_write_drop_in_private(u, mode, name, b ? "MemoryAccounting=yes" : "MemoryAccounting=no");
+                }
+
+                return 1;
+
+        } else if (streq(name, "MemoryLimit")) {
+                if (mode != UNIT_CHECK) {
+                        uint64_t limit;;
+
+                        c->memory_limit = limit;
+                        unit_write_drop_in_private_format(u, mode, name, "%s=%" PRIu64, name, limit);
+                }
+
+                return 1;
+
+        } else if (streq(name, "DevicePolicy")) {
+                const char *policy;
+                CGroupDevicePolicy p;
+
+                p = cgroup_device_policy_from_string(policy);
+                if (p < 0)
+                        return -EINVAL;
+
+                if (mode != UNIT_CHECK) {
+                        char *buf;
+
+                        c->device_policy = p;
+
+                        buf = strappenda("DevicePolicy=", policy);
+                        unit_write_drop_in_private(u, mode, name, buf);
+                }
+
+                return 1;
+
+        } else if (streq(name, "DeviceAllow")) {
+                unsigned n = 0;
+                const char *path, *rwm;
+                CGroupDeviceAllow *a;
+
+                if (!path_startswith(path, "/dev")) {
+                        log_error("DeviceAllow= requires device node");
+                        return -EINVAL;
+                }
+
+                if (isempty(rwm))
+                        rwm = "rwm";
+
+                if (!in_charset(rwm, "rwm")) {
+                        log_error("DeviceAllow= requires combination of rwm flags");
+                        return -EINVAL;
+                }
+
+                if (mode != UNIT_CHECK) {
+                        CGroupDeviceAllow *b;
+                        bool exist = false;
+
+                        LIST_FOREACH(device_allow, b, c->device_allow) {
+                                if (path_equal(b->path, path)) {
+                                        a = b;
+                                        exist = true;
+                                        break;
+                                }
+                        }
+
+                        if (!exist) {
+                                a = new0(CGroupDeviceAllow, 1);
+                                if (!a)
+                                        return -ENOMEM;
+
+                                a->path = strdup(path);
+                                if (!a->path) {
+                                        free(a);
+                                        return -ENOMEM;
+                                }
+                        }
+
+                        a->r = !!strchr(rwm, 'r');
+                        a->w = !!strchr(rwm, 'w');
+                        a->m = !!strchr(rwm, 'm');
+
+                        if (!exist)
+                                LIST_PREPEND(CGroupDeviceAllow, device_allow, c->device_allow, a);
+                }
+
+                n++;
+
+                if (mode != UNIT_CHECK) {
+                        _cleanup_free_ char *buf = NULL;
+                        _cleanup_fclose_ FILE *f = NULL;
+                        CGroupDeviceAllow *a;
+                        size_t size = 0;
+
+                        if (n == 0) {
+                                while (c->device_allow)
+                                        cgroup_context_free_device_allow(c, c->device_allow);
+                        }
+
+                        f = open_memstream(&buf, &size);
+                        if (!f)
+                                return -ENOMEM;
+
+                        fputs("DeviceAllow=\n", f);
+                        LIST_FOREACH(device_allow, a, c->device_allow)
+                                fprintf(f, "DeviceAllow=%s %s%s%s\n", a->path, a->r ? "r" : "", a->w ? "w" : "", a->m ? "m" : "");
+
+                        fflush(f);
+                        unit_write_drop_in_private(u, mode, name, buf);
+                }
+
+                return 1;
+        }
 
         return 0;
 }
