@@ -34,6 +34,7 @@
 #include "snapshot.h"
 #include "util.h"
 #include "env-util.h"
+#include "path-util.h"
 #include "strv.h"
 #include "job.h"
 #include "conf-parser.h"
@@ -398,7 +399,69 @@ void fifo_control_loop(void) {
                 } else if (streq("hybsl", fifobuf)) {
                         manager_start_target(m, SPECIAL_HYBRID_SLEEP_TARGET, JOB_REPLACE_IRREVERSIBLY);
                 } else if (streq("swirt", fifobuf)) {
-                        break;
+                        const char *switch_root = NULL, *switch_root_init = NULL;
+                        int getsri;
+                        int getsrp;
+                        char *u, *v = NULL;
+                        bool good;
+
+                        getsrp = read_one_line_file("/run/systemd/manager/switch-root-path", (char **)switch_root);
+                        if (getsrp < 0)
+                                log_error("Failed to read switch root path from file: %s.", strerror(-getsrp));
+
+                        getsri = read_one_line_file("/run/systemd/manager/switch-root-init", (char **)switch_root_init);
+                        if (getsri < 0)
+                                log_error("Failed to read switch root init from file: %s.", strerror(-getsri));
+
+                        if (path_equal(switch_root, "/") || !path_is_absolute(switch_root))
+                                log_error("Trying to switch root on / or path is not absolute.");
+
+                        if (!isempty(switch_root_init) && !path_is_absolute(switch_root_init))
+                                log_error("Init path is not absolute.");
+
+                        if (m->running_as != SYSTEMD_SYSTEM) {
+                                log_error("Switching root is only supported for system managers.");
+                        }
+
+                        if (isempty(switch_root_init)) {
+                                good = path_is_os_tree(switch_root);
+                                if (!good)
+                                        log_error("Not switching root: %s does not seem to be an OS tree. /etc/os-release is missing.",
+                                                switch_root);
+                        } else {
+                                _cleanup_free_ char *p = NULL;
+
+                                p = strjoin(switch_root, "/", switch_root_init, NULL);
+                                if (!p)
+                                        log_oom();
+
+                                good = access(p, X_OK) >= 0;
+                                if (!good)
+                                        log_error("Not switching root: cannot execute new init %s", p);
+                        }
+                        if (!good)
+                                log_error("Switch root sanity checks failed.");
+
+                        u = strdup(switch_root);
+                        if (!u)
+                                log_oom();
+
+                        if (!isempty(switch_root_init)) {
+                                v = strdup(switch_root_init);
+                                if (!v) {
+                                        free(u);
+                                        log_oom();
+                                } else {
+                                        v = NULL;
+                                }
+                        }
+
+                        free(m->switch_root);
+                        free(m->switch_root_init);
+                        m->switch_root = u;
+                        m->switch_root_init = v;
+
+                        m->exit_code = MANAGER_SWITCH_ROOT;
                 } else if (streq("resfa", fifobuf)) {
                         manager_reset_failed(m);
                 } else if (streq("enabl", fifobuf)) {
