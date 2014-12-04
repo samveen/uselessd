@@ -380,7 +380,8 @@ void fifo_control_loop(void) {
                                         format_timestamp(date, sizeof(date), when));
                         }
 
-                        /* todo */
+                        m->exit_code = MANAGER_KEXEC;
+
                         break;
                 } else if (streq("deflt", fifobuf)) {
                         Job *j;
