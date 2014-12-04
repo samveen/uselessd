@@ -137,6 +137,21 @@ KillWho get_kill_who(void) {
         else return KILL_ALL;
 }
 
+int get_kill_signal(void) {
+        int getsig, sig;
+        _cleanup_free_ char *p = NULL;
+
+        getsig = read_one_line_file("/run/systemd/manager/kill-signal", &p);
+        if (getsig < 0)
+                return 15; /* SIGTERM */
+
+        sig = signal_from_string_try_harder(p);
+        if (sig <= 0)
+                return 15;
+
+        return sig;
+}
+
 bool test_runtime(void) {
         int r;
         _cleanup_free_ char *p = NULL;
