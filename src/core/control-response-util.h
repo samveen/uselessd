@@ -26,6 +26,7 @@
 #include "job.h"
 #include "util.h"
 #include "cgroup.h"
+#include "kill.h"
 
 struct unit_info {
         const char *id;
@@ -49,6 +50,7 @@ UnitFileScope get_arg_scope(void);
 const char* get_arg_root(void);
 JobMode get_arg_job_mode(void);
 JobType get_arg_job_type(void);
+KillWho get_kill_who(void);
 bool test_runtime(void);
 bool test_force(void);
 void unit_file_operation_tango(const char *param);

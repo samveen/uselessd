@@ -31,6 +31,7 @@
 #include "log.h"
 #include "job.h"
 #include "unit.h"
+#include "kill.h"
 #include "path-lookup.h"
 #include "path-util.h"
 #include "util.h"
@@ -117,6 +118,23 @@ JobType get_arg_job_type(void) {
         else if (streq("verify-active", p))
                 return JOB_VERIFY_ACTIVE;
         else return JOB_NOP;
+}
+
+KillWho get_kill_who(void) {
+        int kw;
+        _cleanup_free_ char *p = NULL;
+
+        kw = read_one_line_file("/run/systemd/manager/kill-who", &p);
+        if (kw < 0)
+                return -1;
+
+        if (streq("all", p))
+                return KILL_ALL;
+        else if (streq("control", p))
+                return KILL_CONTROL;
+        else if (streq("main", p))
+                return KILL_MAIN;
+        else return KILL_ALL;
 }
 
 bool test_runtime(void) {
