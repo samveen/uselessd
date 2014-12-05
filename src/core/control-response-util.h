@@ -51,7 +51,7 @@ const char* get_arg_root(void);
 JobMode get_arg_job_mode(void);
 JobType get_arg_job_type(void);
 KillWho get_kill_who(void);
-int get_kill_signal(void);
+int32_t get_kill_signal(void);
 bool test_runtime(void);
 bool test_force(void);
 void unit_file_operation_tango(const char *param);

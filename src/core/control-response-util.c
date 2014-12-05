@@ -137,7 +137,7 @@ KillWho get_kill_who(void) {
         else return KILL_ALL;
 }
 
-int get_kill_signal(void) {
+int32_t get_kill_signal(void) {
         int getsig, sig;
         _cleanup_free_ char *p = NULL;
 

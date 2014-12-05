@@ -413,7 +413,7 @@ static int manager_setup_signals(Manager *m) {
                         SIGCHLD,     /* Child died */
                         SIGTERM,     /* Reexecute daemon */
                         SIGHUP,      /* Reload configuration */
-                        SIGUSR1,     /* systemd/upstart: reconnect to D-Bus */
+                        SIGUSR1,     /* uselessd: restart control loop */
                         SIGUSR2,     /* systemd: dump status */
                         SIGINT,      /* Kernel sends us this on control-alt-del */
                         SIGWINCH,    /* Kernel sends us this on kbrequest (alt-arrowup) */
@@ -1479,7 +1479,7 @@ static int manager_process_signal_fd(Manager *m) {
                         break;
 
                 case SIGUSR1: {
-                        fifo_control_loop();
+                        fifo_control_loop(m);
                         break;
                 }
 
@@ -1813,7 +1813,7 @@ int manager_loop(Manager *m) {
 
                 assert(n == 1);
 
-                fifo_control_loop();
+                fifo_control_loop(m);
 
                 r = process_event(m, &event);
                 if (r < 0)
