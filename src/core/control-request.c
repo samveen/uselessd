@@ -114,7 +114,7 @@ void fifo_control_loop(void) {
 
                 if (streq("foobr", fifobuf)) {
                         Unit *u;
-                        u = manager_get_unit(m, "brltty.service");
+                        u = manager_get_unit(m, "default.target");
                         if (u) log_info("yh");
                         log_info("Badabing.\n");
                 } else if (streq("rload", fifobuf)) {
@@ -215,7 +215,6 @@ void fifo_control_loop(void) {
                         Job *j;
                         int jobfile;
                         uint32_t id;
-                        int l;
                         _cleanup_free_ char *p = NULL;
 
                         jobfile = read_one_line_file("/run/systemd/manager/cancel-job-id", &p);
@@ -224,6 +223,7 @@ void fifo_control_loop(void) {
                         j = manager_get_job(m, id);
                         if (!j) {
                                 log_error("Job %u does not exist.", (unsigned) id);
+                                break;
                         }
 
                         job_finish_and_invalidate(j, JOB_CANCELED, true);
@@ -488,7 +488,7 @@ void fifo_control_loop(void) {
                         int name;
                         _cleanup_free_ char *p = NULL;
                         int k;
-                        bool cleanup = true;
+                        bool cleanup = false;
                         Snapshot *s;
 
                         touch(MANAGER_OPERATION_LOCKFILE);
@@ -559,6 +559,7 @@ void fifo_control_loop(void) {
                         u = manager_get_unit(m, name);
                         if (!u) {
                                 log_error("Unit %s is not loaded.", name);
+                                break;
                         }
 
                         k = unit_kill(u, who, signo);
@@ -572,6 +573,7 @@ void fifo_control_loop(void) {
                         u = manager_get_unit(m, name);
                         if (!u)
                                 log_error("Unit %s is not loaded.", name);
+                                break;
 
                         active_state = unit_active_state_to_string(unit_active_state(u));
                         puts(active_state);
