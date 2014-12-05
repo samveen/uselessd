@@ -39,6 +39,7 @@
 #include "job.h"
 #include "conf-parser.h"
 #include "utmp-wtmp.h"
+#include "kill.h"
 #include "fileio.h"
 #include "special.h"
 
@@ -503,7 +504,7 @@ void fifo_control_loop(void) {
                         /* ltrace shows only file read. */
                         int name;
                         Unit *u;
-                        char *p = NULL;
+                        _cleanup_free_ char *p = NULL;
 
                         touch(MANAGER_OPERATION_LOCKFILE);
                         name = read_one_line_file("/run/systemd/manager/remove-snapshot", &p);
@@ -540,6 +541,28 @@ void fifo_control_loop(void) {
                         k = manager_add_job_by_name(m, type, name, mode, true, &j);
                         if (k < 0)
                                 log_error("Adding job failed: %s", strerror(-k));
+                } else if (streq("pkill", fifobuf)) {
+                        char *name;
+                        int k, q;
+                        int32_t signo;
+                        Unit *u;
+                        KillWho who;
+
+                        signo = get_kill_signal();
+                        who = get_kill_who();
+
+                        q = read_one_line_file("/run/systemd/manager/kill", &name);
+                        if (q < 0)
+                                log_error("Failed to get unit to kill: %s.", strerror(-q));
+
+                        u = manager_get_unit(m, name);
+                        if (!u) {
+                                log_error("Unit %s is not loaded.", name);
+                        }
+
+                        k = unit_kill(u, who, signo);
+                        if (k < 0)
+                                log_error("Failed to send kill signal to unit: %s.", strerror(-k));
                 } else if (streq("isact", fifobuf)) {
                         const char *name = "rsync.service";
                         Unit *u;
