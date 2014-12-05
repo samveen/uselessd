@@ -216,12 +216,12 @@ void fifo_control_loop(void) {
                         int jobfile;
                         uint32_t id;
                         int l;
-                        const char *p = "68";
+                        _cleanup_free_ char *p = NULL;
 
-                        //jobfile = read_one_line_file("/run/systemd/manager/cancel-job-id", (char **)&p);
-                        l = safe_atou32(p, &id);
+                        jobfile = read_one_line_file("/run/systemd/manager/cancel-job-id", &p);
+                        id = atoi(p);
 
-                        j = manager_get_job(m, l);
+                        j = manager_get_job(m, id);
                         if (!j) {
                                 log_error("Job %u does not exist.", (unsigned) id);
                         }
