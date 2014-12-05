@@ -50,6 +50,9 @@ void create_control_fifo(void) {
         int c;
         int d;
 
+        if (access("/run/systemd/fifoctl", F_OK) != -1)
+                return;
+
         c = mkfifo("/run/systemd/fifoctl", 0644);
         if (c < 0) {
                 log_error("Creation of fifoctl IPC server endpoint failed: %s.", strerror(-c));
@@ -85,11 +88,18 @@ void unlink_control_fifo(void) {
 }
 
 /* Much of this should likely be moved and refactored later on. */
-void fifo_control_loop(Manager *m) {
+void fifo_control_loop(void) {
         int f, r, d;
         char fifobuf[BUFSIZ];
+        Manager *m;
         usec_t when;
         when = now(CLOCK_REALTIME) + USEC_PER_MINUTE;
+
+        d = manager_new(SYSTEMD_SYSTEM, true, &m);
+        assert_se(d >= 0);
+        assert_se(manager_startup(m, NULL, NULL) >= 0);
+
+        assert(m->environment);
 
         create_control_fifo();
 
