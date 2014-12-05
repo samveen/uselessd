@@ -577,9 +577,13 @@ void fifo_control_loop(void) {
 
                         active_state = unit_active_state_to_string(unit_active_state(u));
                         puts(active_state);
+                } else if (streq("mdump", fifobuf)) {
+                        if (kill(getpid(), SIGUSR2) < 0)
+                                log_error("kill() failed: %m");
+                                return;
                 }
-
         }
+
 finish:
         close(f);
         unlink_control_fifo();
