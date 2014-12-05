@@ -271,6 +271,30 @@ void fifo_control_loop(void) {
                         qsort(unit_infos, cnt, sizeof(struct unit_info), compare_unit_info);
 
                         output_units_list(unit_infos, cnt);
+                } else if (streq("lsdep", fifobuf)) {
+                        Unit *u;
+                        UnitDependency dep;
+                        int name;
+                        _cleanup_free_ char *p = NULL;
+                        Iterator i;
+                        const char *prefix = "\t";
+
+                        name = read_one_line_file("/run/systemd/manager/list-dependencies", &p);
+                        if (name < 0)
+                                log_error("Failed to get unit to list dependencies of: %s.", strerror(-name));
+
+                        u = manager_get_unit(m, p);
+                        if (!u)
+                                log_error("Unit %s is not loaded.", p);
+                                break;
+
+                        for (dep = 0; dep < _UNIT_DEPENDENCY_MAX; dep++) {
+                                Unit *other;
+
+                                SET_FOREACH(other, u->dependencies[dep], i)
+                                        fprintf(stdout, "%s\t%s: %s\n", prefix, unit_dependency_to_string(dep),
+                                                other->id);
+                        }
                 /* These would be better served by isolating to targets.
                  * Also make sure char *m is a wall message later on. */
                 } else if (streq("powff", fifobuf)) {
@@ -515,6 +539,7 @@ void fifo_control_loop(void) {
                         u = manager_get_unit(m, p);
                         if (!u) {
                                 log_error("Unit %s does not exist.", p);
+                                break;
                         }
 
                         if (u->type != UNIT_SNAPSHOT) {
