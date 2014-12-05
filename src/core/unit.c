@@ -544,16 +544,16 @@ static void merge_dependencies(Unit *u, Unit *other, UnitDependency d) {
                 for (k = 0; k < _UNIT_DEPENDENCY_MAX; k++) {
                         /* Do not add dependencies between u and itself */
                         if (back == u) {
-							    set_remove(back->dependencies[k], other);
-					    } else {
-							    r = set_remove_and_put(back->dependencies[k], other, u);
+                                set_remove(back->dependencies[k], other);
+                        } else {
+                                r = set_remove_and_put(back->dependencies[k], other, u);
                                 if (r == -EEXIST)
                                         set_remove(back->dependencies[k], other);
                                 else
                                         assert(r >= 0 || r == -ENOENT);
                         }
-			   }
-		}
+                }
+        }
 
         /* Also do not move dependencies on u to itself. */
         set_remove(other->dependencies[d], u);
