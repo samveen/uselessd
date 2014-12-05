@@ -1007,7 +1007,7 @@ int main(int argc, char *argv[]) {
                         r = manager_reload(m);
                         if (r < 0)
                                 log_error("Failed to reload: %s", strerror(-r));
-                        fifo_control_loop();
+                        fifo_control_loop(m);
                         break;
 
                 case MANAGER_REEXECUTE:
