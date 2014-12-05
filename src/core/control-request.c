@@ -487,6 +487,7 @@ void fifo_control_loop(void) {
                 } else if (streq("mksnp", fifobuf)) {
                         int name;
                         _cleanup_free_ char *p = NULL;
+                        int k;
                         bool cleanup = true;
                         Snapshot *s;
 
@@ -495,9 +496,9 @@ void fifo_control_loop(void) {
                         if (name < 0)
                                 log_error("Failed to get snapshot file name.");
 
-                        r = snapshot_create(m, p, cleanup, &s);
-                        if (r < 0)
-                                log_error("Snapshot creation failed.");
+                        k = snapshot_create(m, p, cleanup, &s);
+                        if (k < 0)
+                                log_error("Snapshot creation failed: %s.", strerror(-k));
                         unlink(MANAGER_OPERATION_LOCKFILE);
 
                 } else if (streq("rmsnp", fifobuf)) {
