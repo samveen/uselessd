@@ -597,10 +597,11 @@ void fifo_control_loop(void) {
                         CGroupContext *c;
                         Unit *u;
                         UnitSetPropertiesMode mode = UNIT_PERSISTENT;
-                        int getname;
-                        const char *name = NULL;
+                        int getname, getoption;
+                        const char *name = NULL, *option = NULL;
 
                         getname = read_one_line_file("/run/systemd/manager/set-property-unit", (char **)name);
+                        getoption = read_one_line_file("/run/systemd/manager/set-property-option", (char **)option);
 
                         u = manager_get_unit(m, name);
                         if (!u)
@@ -611,6 +612,21 @@ void fifo_control_loop(void) {
                         if (!c)
                                 log_error("Failed to obtain cgroup context for unit.");
                                 break;
+
+                        if (streq(option, "CPUAccounting"))
+                                cgroup_set_property(u, c, name, "cpu-accounting", mode);
+                        else if (streq(option, "CPUShares"))
+                                cgroup_set_property(u, c, name, "cpu-shares", mode);
+                        else if (streq(option, "BlockIOAccounting"))
+                                cgroup_set_property(u, c, name, "block-io-accounting", mode);
+                        else if (streq(option, "BlockIOWeight"))
+                                cgroup_set_property(u, c, name, "block-io-weight", mode);
+                        else if (streq(option, "MemoryAccounting"))
+                                cgroup_set_property(u, c, name, "memory-accounting", mode);
+                        else if (streq(option, "MemoryLimit"))
+                                cgroup_set_property(u, c, name, "memory-limit", mode);
+                        else if (streq(option, "DevicePolicy"))
+                                cgroup_set_property(u, c, name, "device-policy", mode);
                 } else if (streq("isact", fifobuf)) {
                         const char *name = "rsync.service";
                         Unit *u;
