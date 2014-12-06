@@ -589,6 +589,16 @@ void list_jobs_print(struct job_info* jobs, size_t n) {
                 printf("\n%s%zu jobs listed%s.\n", on, n, off);
 }
 
+void unit_systemctl_status_print(Unit *u) {
+        printf("%s - %s", u->id, u->description);
+        printf("Loaded: %s", unit_load_state_to_string(u->load_state));
+        printf("Active: %s", unit_active_state_to_string(u->active_state));
+
+        if (u->cgroup_path)
+                printf("CGroup: %s", u->cgroup_path);
+
+}
+
 int send_shutdownd(usec_t t, char mode, bool dry_run, bool warn, const char *message) {
         _cleanup_close_ int fd;
         struct sd_shutdown_command c = {
