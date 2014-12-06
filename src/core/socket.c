@@ -144,10 +144,6 @@ static void socket_done(Unit *u) {
         free(s->bind_to_device);
         s->bind_to_device = NULL;
 
-        free(s->smack);
-        free(s->smack_ip_in);
-        free(s->smack_ip_out);
-
         unit_unwatch_timer(u, &s->timer_watch);
 }
 
@@ -462,21 +458,6 @@ static void socket_dump(Unit *u, FILE *f, const char *prefix) {
                 fprintf(f,
                         "%sReusePort: %s\n",
                          prefix, yes_no(s->reuseport));
-
-        if (s->smack)
-                fprintf(f,
-                        "%sSmackLabel: %s\n",
-                        prefix, s->smack);
-
-        if (s->smack_ip_in)
-                fprintf(f,
-                        "%sSmackLabelIPIn: %s\n",
-                        prefix, s->smack_ip_in);
-
-        if (s->smack_ip_out)
-                fprintf(f,
-                        "%sSmackLabelIPOut: %s\n",
-                        prefix, s->smack_ip_out);
 
         LIST_FOREACH(port, p, s->ports) {
 

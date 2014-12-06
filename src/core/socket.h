@@ -146,10 +146,6 @@ struct Socket {
         bool reuseport;
         long mq_maxmsg;
         long mq_msgsize;
-
-        char *smack;
-        char *smack_ip_in;
-        char *smack_ip_out;
 };
 
 /* Called from the service code when collecting fds */
