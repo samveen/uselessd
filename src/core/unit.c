@@ -46,7 +46,6 @@
 #include "mkdir.h"
 #include "label.h"
 #include "fileio-label.h"
-#include "bus-errors.h"
 
 const UnitVTable * const unit_vtable[_UNIT_TYPE_MAX] = {
         [UNIT_SERVICE] = &service_vtable,
