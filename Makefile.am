@@ -893,7 +893,6 @@ libsystemd_core_la_SOURCES = \
 	src/core/securebits.h \
 	src/core/initreq.h \
 	src/core/special.h \
-	src/core/bus-errors.h \
 	src/core/build.h \
 	src/core/sysfs-show.h \
 	src/core/switch-root.h \
