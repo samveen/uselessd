@@ -1479,7 +1479,7 @@ static int manager_process_signal_fd(Manager *m) {
                         break;
 
                 case SIGUSR1: {
-                        fifo_control_loop(m);
+                        fifo_control_loop();
                         break;
                 }
 
@@ -1813,7 +1813,7 @@ int manager_loop(Manager *m) {
 
                 assert(n == 1);
 
-                fifo_control_loop(m);
+                fifo_control_loop();
 
                 r = process_event(m, &event);
                 if (r < 0)
