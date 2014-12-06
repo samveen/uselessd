@@ -851,7 +851,7 @@ int cgroup_set_property(
 
         } else if (streq(name, "MemoryLimit")) {
                 if (mode != UNIT_CHECK) {
-                        uint64_t limit;;
+                        uint64_t limit;
 
                         c->memory_limit = limit;
                         unit_write_drop_in_private_format(u, mode, name, "%s=%" PRIu64, name, limit);
