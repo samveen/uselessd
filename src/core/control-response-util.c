@@ -592,7 +592,7 @@ void list_jobs_print(struct job_info* jobs, size_t n) {
 void unit_systemctl_status_print(Unit *u) {
         printf("%s - %s", u->id, u->description);
         printf("Loaded: %s", unit_load_state_to_string(u->load_state));
-        printf("Active: %s", unit_active_state_to_string(u->active_state));
+        printf("Active: %s", unit_active_state_to_string(unit_active_state(u)));
 
         if (u->cgroup_path)
                 printf("CGroup: %s", u->cgroup_path);
