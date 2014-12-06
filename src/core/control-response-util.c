@@ -667,7 +667,6 @@ int cgroup_set_property(
                 }
 
                 return 1;
-
         } else if (streq(param, "cpu-shares")) {
                 uint64_t u64;
                 unsigned long ul;
@@ -685,7 +684,6 @@ int cgroup_set_property(
                 }
 
                 return 1;
-
         } else if (streq(param, "block-io-accounting")) {
                 if (mode != UNIT_CHECK) {
                         bool b = parse_boolean(value);
@@ -695,7 +693,6 @@ int cgroup_set_property(
                 }
 
                 return 1;
-
         } else if (streq(param, "block-io-weight")) {
                 uint64_t u64;
                 unsigned long ul;
@@ -713,7 +710,6 @@ int cgroup_set_property(
                 }
 
                 return 1;
-
         } else if (streq(name, "BlockIOReadBandwidth") || streq(name, "BlockIOWriteBandwidth")) {
                 unsigned n = 0;
                 bool read = true;
@@ -792,7 +788,6 @@ int cgroup_set_property(
                 }
 
                 return 1;
-
         } else if (streq(name, "BlockIODeviceWeight")) {
                 unsigned n = 0;
                 const char *path;
@@ -860,7 +855,6 @@ int cgroup_set_property(
                 }
 
                 return 1;
-
         } else if (streq(param, "memory-accounting")) {
                 if (mode != UNIT_CHECK) {
                         bool b = parse_boolean(value);
@@ -870,7 +864,6 @@ int cgroup_set_property(
                 }
 
                 return 1;
-
         } else if (streq(param, "memory-limit")) {
                 if (mode != UNIT_CHECK) {
                         uint64_t limit = atoi(value);
@@ -880,7 +873,6 @@ int cgroup_set_property(
                 }
 
                 return 1;
-
         } else if (streq(param, "device-policy")) {
                 const char *policy = value;
                 CGroupDevicePolicy p;
@@ -899,7 +891,6 @@ int cgroup_set_property(
                 }
 
                 return 1;
-
         } else if (streq(name, "DeviceAllow")) {
                 unsigned n = 0;
                 const char *path, *rwm;
