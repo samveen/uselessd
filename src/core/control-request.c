@@ -593,6 +593,24 @@ void fifo_control_loop(void) {
                         k = unit_kill(u, who, signo);
                         if (k < 0)
                                 log_error("Failed to send kill signal to unit: %s.", strerror(-k));
+                } else if (streq("setpy", fifobuf)) {
+                        CGroupContext *c;
+                        Unit *u;
+                        UnitSetPropertiesMode mode = UNIT_PERSISTENT;
+                        int getname;
+                        const char *name = NULL;
+
+                        getname = read_one_line_file("/run/systemd/manager/set-property-name", (char **)name);
+
+                        u = manager_get_unit(m, name);
+                        if (!u)
+                                log_error("Unit %s is not loaded.", name);
+                                break;
+
+                        c = unit_get_cgroup_context(u);
+                        if (!c)
+                                log_error("Failed to obtain cgroup context for unit.");
+                                break;
                 } else if (streq("isact", fifobuf)) {
                         const char *name = "rsync.service";
                         Unit *u;
