@@ -1018,15 +1018,10 @@ org.freedesktop.systemd1.%.xml: uselessd
 pkgconfigdata_DATA = \
 	src/core/systemd.pc
 
-nodist_rpmmacros_DATA = \
-	src/core/macros.systemd
-
 EXTRA_DIST += \
-	src/core/systemd.pc.in \
-	src/core/macros.systemd.in
+	src/core/systemd.pc.in
 
 CLEANFILES += \
-	src/core/macros.systemd \
 	src/core/org.freedesktop.systemd1.policy.in
 
 # ------------------------------------------------------------------------------
