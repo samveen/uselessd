@@ -847,9 +847,9 @@ int cgroup_set_property(
 
                 return 1;
 
-        } else if (streq(name, "MemoryAccounting")) {
+        } else if (streq(name, "memory-accounting")) {
                 if (mode != UNIT_CHECK) {
-                        bool b;
+                        bool b = parse_boolean(value);
 
                         c->memory_accounting = b;
                         unit_write_drop_in_private(u, mode, name, b ? "MemoryAccounting=yes" : "MemoryAccounting=no");
