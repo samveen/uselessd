@@ -19,7 +19,9 @@ uselessd System and Service Manager [original description do not steal]
         - except src/shared/MurmurHash3.c which is Public Domain
 
     REQUIREMENTS:
-       Linux kernel >= 3.0
+        Linux kernel >= 3.4
+       (might be 3.0 or less if using --disable-initd, but this has
+       not been tested)
            CONFIG_DEVTMPFS
            CONFIG_CGROUPS (it's OK to disable all controllers)
            CONFIG_INOTIFY_USER
@@ -28,8 +30,7 @@ uselessd System and Service Manager [original description do not steal]
            CONFIG_EPOLL
            CONFIG_NET
            CONFIG_SYSFS
-
-       Linux kernel >= 3.8 for Smack support
+           CONFIG_PROC_FS
 
         Mount and bind mount handling might require it:
           CONFIG_FHANDLE
@@ -38,12 +39,19 @@ uselessd System and Service Manager [original description do not steal]
         create additional symlinks in /dev/disk/ and /dev/tape:
           CONFIG_BLK_DEV_BSG
 
+        Required for PrivateNetwork in service units:
+          CONFIG_NET_NS
+
         Optional but strongly recommended:
           CONFIG_IPV6
           CONFIG_AUTOFS4_FS
           CONFIG_TMPFS_POSIX_ACL
           CONFIG_TMPFS_XATTR
           CONFIG_SECCOMP
+
+        Required for CPUShares in resource control unit settings:
+         CONFIG_CGROUP_SCHED
+         CONFIG_FAIR_GROUP_SCHED
 
         For UEFI systems:
           CONFIG_EFI_VARS
