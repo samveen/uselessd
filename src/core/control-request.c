@@ -600,7 +600,7 @@ void fifo_control_loop(void) {
                         int getname;
                         const char *name = NULL;
 
-                        getname = read_one_line_file("/run/systemd/manager/set-property-name", (char **)name);
+                        getname = read_one_line_file("/run/systemd/manager/set-property-unit", (char **)name);
 
                         u = manager_get_unit(m, name);
                         if (!u)

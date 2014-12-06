@@ -634,6 +634,7 @@ int cgroup_set_property(
                 Unit *u,
                 CGroupContext *c,
                 const char *name,
+                const char *param,
                 UnitSetPropertiesMode mode) {
 
         assert(name);
