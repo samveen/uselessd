@@ -40,7 +40,6 @@
 #include "load-dropin.h"
 #include "log.h"
 #include "unit-name.h"
-#include "dbus-unit.h"
 #include "special.h"
 #include "cgroup-util.h"
 #include "missing.h"
@@ -406,8 +405,6 @@ void unit_free(Unit *u) {
 
         if (u->manager->n_reloading <= 0)
                 unit_remove_transient(u);
-
-        bus_unit_send_removed_signal(u);
 
         if (u->load_state != UNIT_STUB)
                 if (UNIT_VTABLE(u)->done)

@@ -27,7 +27,6 @@
 #include "slice.h"
 #include "load-fragment.h"
 #include "log.h"
-#include "dbus-slice.h"
 #include "special.h"
 #include "unit-name.h"
 
