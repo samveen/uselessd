@@ -881,8 +881,8 @@ int cgroup_set_property(
 
                 return 1;
 
-        } else if (streq(param, "DevicePolicy")) {
-                const char *policy;
+        } else if (streq(param, "device-policy")) {
+                const char *policy = value;
                 CGroupDevicePolicy p;
 
                 p = cgroup_device_policy_from_string(policy);
