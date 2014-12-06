@@ -636,14 +636,21 @@ int cgroup_set_property(
                 const char *name,
                 const char *param,
                 UnitSetPropertiesMode mode) {
+        int k;
+        const char *value = NULL;
 
         assert(name);
         assert(u);
         assert(c);
 
-        if (streq(name, "CPUAccounting")) {
+        k = read_one_line_file("/run/systemd/manager/set-property-value", (char **)value);
+        if (k < 0)
+                log_error("Failed to read option value for unit property to set from file: %s.", strerror(-k));
+                return 1;
+
+        if (streq(param, "cpu-accounting")) {
                 if (mode != UNIT_CHECK) {
-                        bool b;
+                        bool b = parse_boolean(value);
 
                         c->cpu_accounting = b;
                         unit_write_drop_in_private(u, mode, name, b ? "CPUAccounting=yes" : "CPUAccounting=no");
