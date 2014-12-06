@@ -658,7 +658,7 @@ int cgroup_set_property(
 
                 return 1;
 
-        } else if (streq(name, "CPUShares")) {
+        } else if (streq(param, "cpu-shares")) {
                 uint64_t u64;
                 unsigned long ul;
 
@@ -667,6 +667,8 @@ int cgroup_set_property(
                 if (u64 <= 0 || u64 != (uint64_t) ul)
                         return -EINVAL;
 
+                ul = atoi(value);
+
                 if (mode != UNIT_CHECK) {
                         c->cpu_shares = ul;
                         unit_write_drop_in_private_format(u, mode, name, "CPUShares=%lu", ul);
@@ -674,7 +676,7 @@ int cgroup_set_property(
 
                 return 1;
 
-        } else if (streq(name, "block-io-accounting")) {
+        } else if (streq(param, "block-io-accounting")) {
                 if (mode != UNIT_CHECK) {
                         bool b = parse_boolean(value);
 
@@ -684,7 +686,7 @@ int cgroup_set_property(
 
                 return 1;
 
-        } else if (streq(name, "BlockIOWeight")) {
+        } else if (streq(param, "block-io-weight")) {
                 uint64_t u64;
                 unsigned long ul;
 
@@ -692,6 +694,8 @@ int cgroup_set_property(
 
                 if (u64 < 10 || u64 > 1000)
                         return -EINVAL;
+
+                ul = atoi(value);
 
                 if (mode != UNIT_CHECK) {
                         c->blockio_weight = ul;
@@ -847,7 +851,7 @@ int cgroup_set_property(
 
                 return 1;
 
-        } else if (streq(name, "memory-accounting")) {
+        } else if (streq(param, "memory-accounting")) {
                 if (mode != UNIT_CHECK) {
                         bool b = parse_boolean(value);
 
@@ -857,7 +861,7 @@ int cgroup_set_property(
 
                 return 1;
 
-        } else if (streq(name, "memory-limit")) {
+        } else if (streq(param, "memory-limit")) {
                 if (mode != UNIT_CHECK) {
                         uint64_t limit = atoi(value);
 
@@ -867,7 +871,7 @@ int cgroup_set_property(
 
                 return 1;
 
-        } else if (streq(name, "DevicePolicy")) {
+        } else if (streq(param, "DevicePolicy")) {
                 const char *policy;
                 CGroupDevicePolicy p;
 
