@@ -997,12 +997,6 @@ dist_pkgsysconf_DATA += \
 	src/core/user.conf \
 	src/core/sleep.conf
 
-dist_dbuspolicy_DATA += \
-	src/core/org.freedesktop.systemd1.conf
-
-dist_dbussystemservice_DATA += \
-	src/core/org.freedesktop.systemd1.service
-
 dbusinterface_DATA += \
 	org.freedesktop.systemd1.Manager.xml \
 	org.freedesktop.systemd1.Job.xml \
@@ -1966,8 +1960,7 @@ USER_UNIT_ALIASES += \
 GENERAL_ALIASES += \
 	$(systemunitdir)/remote-fs.target $(pkgsysconfdir)/system/multi-user.target.wants/remote-fs.target \
 	$(systemunitdir)/getty@.service $(pkgsysconfdir)/system/getty.target.wants/getty@tty1.service \
-	$(pkgsysconfdir)/user $(sysconfdir)/xdg/systemd/user \
-	../system-services/org.freedesktop.systemd1.service $(dbussessionservicedir)/org.freedesktop.systemd1.service
+	$(pkgsysconfdir)/user $(sysconfdir)/xdg/systemd/user
 
 if HAVE_SYSV_COMPAT
 INSTALL_DIRS += \
