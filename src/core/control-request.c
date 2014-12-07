@@ -564,7 +564,7 @@ void fifo_control_loop(void) {
 
                         getname = read_one_line_file("/run/systemd/manager/launch", &name);
                         if (getname < 0)
-                                log_error("Failed to get unit name to perform job operation on.");
+                                log_error("Failed to get unit name to perform job operation on: %s.", strerror(-getname));
 
                         type = get_arg_job_type();
                         mode = get_arg_job_mode();
@@ -572,6 +572,19 @@ void fifo_control_loop(void) {
                         k = manager_add_job_by_name(m, type, name, mode, true, &j);
                         if (k < 0)
                                 log_error("Adding job failed: %s", strerror(-k));
+                } else if (streq("uload", fifobuf)) {
+                        Unit *u;
+                        int getname;
+                        char *name;
+
+                        getname = read_one_line_file("/run/systemd/manager/load", &name);
+                        if (getname < 0)
+                                log_error("Failed to get unit name to load: %s.", strerror(-getname));
+
+                        u = manager_get_unit(m, name);
+                        if (!u)
+                                manager_load_unit(m, name, NULL, &u);
+                        else log_error("Unit already exists, not loading.");
                 } else if (streq("pkill", fifobuf)) {
                         char *name;
                         int k, q;
