@@ -82,6 +82,7 @@ rootlibexecdir=$(rootprefix)/lib/systemd
 # Scripts
 cglsdir=@rootprefix@/bin
 sleepdir=@rootprefix@/lib/systemd
+systemctldir=@rootprefix@/bin
 
 CLEANFILES = $(BUILT_SOURCES)
 DISTCLEANFILES =
@@ -1379,6 +1380,9 @@ lcov-run lcov-report:
 	echo "Need to reconfigure with --enable-coverage"
 endif
 
+# -----------------------------------------------------------------------------
+dist_systemctl_DATA = \
+	src/systemctl/systemctl
 # ------------------------------------------------------------------------------
 if HAVE_SYSV_COMPAT
 systemd_initctl_SOURCES = \
