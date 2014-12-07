@@ -274,6 +274,8 @@ void fifo_control_loop(void) {
                         qsort(unit_infos, cnt, sizeof(struct unit_info), compare_unit_info);
 
                         output_units_list(unit_infos, cnt);
+                } else if (streq("lssoc", fifobuf)) {
+                        /* base on lsuni */
                 } else if (streq("lsdep", fifobuf)) {
                         Unit *u;
                         UnitDependency dep;
