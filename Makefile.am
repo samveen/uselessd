@@ -372,8 +372,7 @@ EXTRA_DIST += \
 	units/debug-shell.service.in \
 	units/initrd-parse-etc.service.in \
 	units/initrd-cleanup.service.in \
-	units/initrd-switch-root.service.in \
-	tools/introspect.awk
+	units/initrd-switch-root.service.in
 
 CLEANFILES += \
 	units/console-shell.service.m4 \
