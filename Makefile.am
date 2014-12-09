@@ -969,23 +969,8 @@ dist_pkgsysconf_DATA += \
 	src/core/user.conf \
 	src/core/sleep.conf
 
-dbusinterface_DATA += \
-	org.freedesktop.systemd1.Manager.xml \
-	org.freedesktop.systemd1.Job.xml \
-	org.freedesktop.systemd1.Unit.xml \
-	org.freedesktop.systemd1.Service.xml \
-	org.freedesktop.systemd1.Socket.xml \
-	org.freedesktop.systemd1.Target.xml \
-	org.freedesktop.systemd1.Snapshot.xml \
-	org.freedesktop.systemd1.Path.xml
-
 polkitpolicy_in_in_files += \
 	src/core/org.freedesktop.systemd1.policy.in.in
-
-org.freedesktop.systemd1.%.xml: uselessd
-	$(AM_V_GEN)$(LIBTOOL) --mode=execute $(OBJCOPY) -O binary -j introspect.$* $< $@.tmp && \
-		$(STRINGS) $@.tmp | $(AWK) -f $(srcdir)/tools/introspect.awk | \
-		$(DBUS_PREPROCESS) -o $@ - && rm $@.tmp
 
 pkgconfigdata_DATA = \
 	src/core/systemd.pc
