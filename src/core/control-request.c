@@ -195,10 +195,11 @@ void fifo_control_loop(Manager *m) {
                                         log_oom();
                                 }
 
+                                /*
                                 jobs[used++] = (struct job_info) { id,
                                                                 strdup(name),
                                                                 strdup(type),
-                                                                strdup(state) };
+                                                                strdup(state) }; */
 
                                 if (!jobs[used-1].name || !jobs[used-1].type || !jobs[used-1].state) {
                                         log_oom();
