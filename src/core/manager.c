@@ -1228,8 +1228,6 @@ unsigned manager_dispatch_dbus_queue(Manager *m) {
 
         if (m->send_reloading_done) {
                 m->send_reloading_done = false;
-
-                bus_broadcast_reloading(m, false);
         }
 
         return n;
@@ -2240,7 +2238,6 @@ int manager_reload(Manager *m) {
                 return r;
 
         m->n_reloading ++;
-        bus_broadcast_reloading(m, true);
 
         fds = fdset_new();
         if (!fds) {
@@ -2443,8 +2440,6 @@ void manager_check_finished(Manager *m) {
                                    format_timespan(sum, sizeof(sum), total_usec, USEC_PER_MSEC),
                                    NULL);
         }
-
-        bus_broadcast_finished(m, firmware_usec, loader_usec, kernel_usec, initrd_usec, userspace_usec, total_usec);
 
         sd_notifyf(false,
                    "READY=1\nSTATUS=Startup finished in %s.",
