@@ -19,8 +19,6 @@
   along with systemd; If not, see <http://www.gnu.org/licenses/>.
 ***/
 
-#include <dbus/dbus.h>
-
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
@@ -1390,9 +1388,6 @@ int main(int argc, char *argv[]) {
 
         /* Move out of the way, so that we won't block unmounts */
         assert_se(chdir("/")  == 0);
-
-        /* Make sure D-Bus doesn't fiddle with the SIGPIPE handlers */
-        dbus_connection_set_change_sigpipe(FALSE);
 
         /* Reset the console, but only if this is really init and we
          * are freshly booted */
