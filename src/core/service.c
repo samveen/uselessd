@@ -42,6 +42,7 @@
 #include "utf8.h"
 #include "env-util.h"
 #include "fileio.h"
+#include "dbus-activation.h"
 
 #ifdef HAVE_SYSV_COMPAT
 

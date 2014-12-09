@@ -70,6 +70,7 @@
 #include "boot-timestamps.h"
 #include "env-util.h"
 #include "control-request.h"
+#include "dbus-activation.h"
 
 /* As soon as 5s passed since a unit was added to our GC queue, make sure to run a gc sweep */
 #define GC_QUEUE_USEC_MAX (10*USEC_PER_SEC)

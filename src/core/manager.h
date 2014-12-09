@@ -84,7 +84,6 @@ struct Watch {
 #include "hashmap.h"
 #include "list.h"
 #include "set.h"
-#include "dbus.h"
 #include "path-lookup.h"
 #include "execute.h"
 #include "unit-name.h"

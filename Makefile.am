@@ -723,8 +723,8 @@ noinst_LTLIBRARIES += \
 	libsystemd-dbus.la
 
 libsystemd_dbus_la_SOURCES = \
-	src/shared/dbus-common.c \
-	src/shared/dbus-common.h
+	src/shared/dbus-activation.c \
+	src/shared/dbus-activation.h
 
 libsystemd_dbus_la_CFLAGS = \
 	$(AM_CFLAGS) \
@@ -851,34 +851,6 @@ libsystemd_core_la_SOURCES = \
 	src/core/execute.h \
 	src/core/kill.c \
 	src/core/kill.h \
-	src/core/dbus.c \
-	src/core/dbus.h \
-	src/core/dbus-manager.c \
-	src/core/dbus-manager.h \
-	src/core/dbus-unit.c \
-	src/core/dbus-unit.h \
-	src/core/dbus-job.c \
-	src/core/dbus-job.h \
-	src/core/dbus-service.c \
-	src/core/dbus-service.h \
-	src/core/dbus-socket.c \
-	src/core/dbus-socket.h \
-	src/core/dbus-target.c \
-	src/core/dbus-target.h \
-	src/core/dbus-snapshot.c \
-	src/core/dbus-snapshot.h \
-	src/core/dbus-path.c \
-	src/core/dbus-path.h \
-	src/core/dbus-slice.c \
-	src/core/dbus-slice.h \
-	src/core/dbus-scope.c \
-	src/core/dbus-scope.h \
-	src/core/dbus-execute.c \
-	src/core/dbus-execute.h \
-	src/core/dbus-kill.c \
-	src/core/dbus-kill.h \
-	src/core/dbus-cgroup.c \
-	src/core/dbus-cgroup.h \
 	src/core/cgroup.c \
 	src/core/cgroup.h \
 	src/core/locale-setup.h \
