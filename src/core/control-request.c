@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <limits.h>
@@ -89,7 +90,7 @@ void unlink_control_fifo(void) {
 
 /* Much of this should likely be moved and refactored later on. */
 void fifo_control_loop(Manager *m) {
-        int f, r, d;
+        int f, r;
         char fifobuf[BUFSIZ];
         usec_t when;
         when = now(CLOCK_REALTIME) + USEC_PER_MINUTE;
@@ -233,7 +234,7 @@ void fifo_control_loop(Manager *m) {
                         unsigned cnt = 0;
 
                         HASHMAP_FOREACH_KEY(u, k, m->units, i) {
-                                char *u_path, *j_path;
+                                char *u_path = NULL, *j_path = NULL;
                                 const char *description, *load_state, *active_state, *sub_state, *sjob_type, *following;
                                 uint32_t job_id;
                                 Unit *follow;
