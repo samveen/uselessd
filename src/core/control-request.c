@@ -43,8 +43,8 @@
 #include "fileio.h"
 #include "special.h"
 
-#include "control-request.h"
 #include "control-response-util.h"
+#include "control-request.h"
 
 void create_control_fifo(void) {
         int c;
@@ -88,18 +88,11 @@ void unlink_control_fifo(void) {
 }
 
 /* Much of this should likely be moved and refactored later on. */
-void fifo_control_loop(void) {
+void fifo_control_loop(Manager *m) {
         int f, r, d;
         char fifobuf[BUFSIZ];
-        Manager *m;
         usec_t when;
         when = now(CLOCK_REALTIME) + USEC_PER_MINUTE;
-
-        d = manager_new(SYSTEMD_SYSTEM, true, &m);
-        assert_se(d >= 0);
-        assert_se(manager_startup(m, NULL, NULL) >= 0);
-
-        assert(m->environment);
 
         create_control_fifo();
 

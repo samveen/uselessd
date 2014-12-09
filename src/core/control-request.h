@@ -21,4 +21,4 @@
 
 void create_control_fifo(void);
 void unlink_control_fifo(void);
-void fifo_control_loop(void);
+void fifo_control_loop(Manager *m);
