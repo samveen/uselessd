@@ -313,12 +313,6 @@ void unit_add_to_dbus_queue(Unit *u) {
         if (u->load_state == UNIT_STUB || u->in_dbus_queue)
                 return;
 
-        /* Shortcut things if nobody cares */
-        if (!bus_has_subscriber(u->manager)) {
-                u->sent_dbus_new_signal = true;
-                return;
-        }
-
         LIST_PREPEND(Unit, dbus_queue, u->manager->dbus_unit_queue, u);
         u->in_dbus_queue = true;
 }
