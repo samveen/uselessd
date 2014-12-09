@@ -1212,15 +1212,11 @@ unsigned manager_dispatch_dbus_queue(Manager *m) {
 
         while ((u = m->dbus_unit_queue)) {
                 assert(u->in_dbus_queue);
-
-                bus_unit_send_change_signal(u);
                 n++;
         }
 
         while ((j = m->dbus_job_queue)) {
                 assert(j->in_dbus_queue);
-
-                bus_job_send_change_signal(j);
                 n++;
         }
 
@@ -2042,8 +2038,6 @@ int manager_serialize(Manager *m, FILE *f, FDSet *fds, bool switching_root) {
                 }
         }
 
-        bus_serialize(m, f);
-
         fputc('\n', f);
 
         HASHMAP_FOREACH_KEY(u, t, m->units, i) {
@@ -2069,10 +2063,6 @@ int manager_serialize(Manager *m, FILE *f, FDSet *fds, bool switching_root) {
 
         if (ferror(f))
                 return -EIO;
-
-        r = bus_fdset_add_all(m, fds);
-        if (r < 0)
-                return r;
 
         return 0;
 }
@@ -2163,8 +2153,7 @@ int manager_deserialize(Manager *m, FILE *f, FDSet *fds) {
 
                         strv_free(m->environment);
                         m->environment = e;
-                } else if (bus_deserialize_item(m, l) == 0)
-                        log_debug("Unknown serialization item '%s'", l);
+                }
         }
 
         for (;;) {
