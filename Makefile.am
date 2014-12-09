@@ -1986,7 +1986,6 @@ endif
 www_target = www.freedesktop.org:/srv/www.freedesktop.org/www/software/systemd
 doc-sync: all destdir-sphinx
 	rsync -rlv --delete-excluded --include="*.html" --exclude="*" --omit-dir-times man/ $(www_target)/man/
-	rsync -rlv --delete --omit-dir-times docs/html/python-systemd/ $(www_target)/python-systemd/
 
 git-tag:
 	git tag "v$(VERSION)" -m "systemd $(VERSION)"
