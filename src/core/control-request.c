@@ -118,12 +118,10 @@ void fifo_control_loop(Manager *m) {
                         /*m->exit_code = MANAGER_RELOAD;*/
                         if (kill(getpid(), SIGHUP) < 0)
                                 log_error("kill() failed: %m");
-                                return;
                 } else if (streq("rexec", fifobuf)) {
                         /*m->exit_code = MANAGER_REEXECUTE;*/
                         if (kill(getpid(), SIGTERM) < 0)
                                 log_error("kill() failed: %m");
-                                return;
                 } else if (streq("mexit", fifobuf)) {
                         if (m->running_as == SYSTEMD_SYSTEM && getpid() == 1)
                                 log_error("Exit is only supported for user service managers and non-PID1 system managers.");
@@ -131,7 +129,6 @@ void fifo_control_loop(Manager *m) {
                         /*m->exit_code = MANAGER_EXIT;*/
                         if (kill(getpid(), SIGINT) < 0)
                                 log_error("kill() failed: %m");
-                                return;
                 } else if (streq("getdt", fifobuf)) {
                         unit_file_operation_tango("get-default-target");
                 } else if (streq("lsenv", fifobuf)) {
@@ -652,7 +649,8 @@ void fifo_control_loop(Manager *m) {
                 } else if (streq("mdump", fifobuf)) {
                         if (kill(getpid(), SIGUSR2) < 0)
                                 log_error("kill() failed: %m");
-                                return;
+                } else {
+                        log_error("Unknown control command.");
                 }
         }
 
