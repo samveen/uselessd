@@ -200,6 +200,7 @@ void fifo_control_loop(Manager *m) {
 
                                 if (!jobs[used-1].name || !jobs[used-1].type || !jobs[used-1].state) {
                                         log_oom();
+                                        break;
                                 }
 
                         }
