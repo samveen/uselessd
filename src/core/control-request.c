@@ -96,7 +96,7 @@ void fifo_control_loop(Manager *m) {
         when = now(CLOCK_REALTIME) + USEC_PER_MINUTE;
         bool swrt, shutdown;
         char *switch_root_dir = NULL;
-        const char *switch_root_init = NULL;
+        char *switch_root_init = NULL;
 
         create_control_fifo();
 

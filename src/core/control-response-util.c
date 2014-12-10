@@ -1062,7 +1062,7 @@ void regular_reexec(void) {
 }
 
 void reexec_procedure(char *switch_root_dir, char *switch_root_init,
-                        FILE *serialization, FDSet *fds, char *param,
+                        FILE *serialization, FDSet *fds, const char *param,
                         Manager *m) {
         const char **args;
         int r;

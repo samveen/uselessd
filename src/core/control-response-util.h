@@ -67,6 +67,6 @@ int cgroup_set_property(Unit *u, CGroupContext *c, const char *name,
 int prepare_reexecute(Manager *m, FILE **_f, FDSet **_fds, bool switching_root);
 void regular_reexec(void);
 void reexec_procedure(char *switch_root_dir, char *switch_root_init,
-                        FILE *serialization, FDSet *fds, char *param,
+                        FILE *serialization, FDSet *fds, const char *param,
                         Manager *m);
 void shutdown_verb(void);
