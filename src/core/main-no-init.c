@@ -990,42 +990,8 @@ int main(int argc, char *argv[]) {
                         log_error("Failed to run mainloop: %s", strerror(-r));
                         goto finish;
                 }
-
-                switch (m->exit_code) {
-
-                case MANAGER_EXIT:
-                        retval = EXIT_SUCCESS;
-                        log_debug("Remove uselessd from the premises.");
-                        goto finish;
-
-                case MANAGER_RELOAD:
-                        log_info("Reloading.");
-                        r = manager_reload(m);
-                        if (r < 0)
-                                log_error("Failed to reload: %s", strerror(-r));
-                        fifo_control_loop(m);
-                        break;
-
-                case MANAGER_REEXECUTE:
-                        log_notice("Reexecute request leads to exit in non-init. Exiting.");
-                        goto finish;
-
-                case MANAGER_SWITCH_ROOT:
-                        log_error("Switching root on a no-init instance unsupported. Exiting.");
-                        goto finish;
-
-                case MANAGER_REBOOT:
-                case MANAGER_POWEROFF:
-                case MANAGER_HALT:
-                case MANAGER_KEXEC: {
-                       log_error("Running stage 3 system command from a no-init instance. Exiting.");
-                       goto finish;
-
-                default:
-                        assert_not_reached("Unknown exit code.");
-                }
         }
-	}
+
 
 finish:
         if (m)

@@ -19,6 +19,8 @@
   along with uselessd; If not, see <http://www.gnu.org/licenses/>.
 ***/
 
+#include "manager.h"
+
 void create_control_fifo(void);
 void unlink_control_fifo(void);
 void fifo_control_loop(Manager *m);

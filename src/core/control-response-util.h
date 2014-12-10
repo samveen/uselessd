@@ -64,3 +64,9 @@ void unit_systemctl_status_print(Unit *u);
 int send_shutdownd(usec_t t, char mode, bool dry_run, bool warn, const char *message);
 int cgroup_set_property(Unit *u, CGroupContext *c, const char *name,
                         const char *param, UnitSetPropertiesMode mode);
+int prepare_reexecute(Manager *m, FILE **_f, FDSet **_fds, bool switching_root);
+void regular_reexec(void);
+void reexec_procedure(char *switch_root_dir, char *switch_root_init,
+                        FILE *serialization, FDSet *fds, char *param,
+                        Manager *m);
+void shutdown_verb(void);

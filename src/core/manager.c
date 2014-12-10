@@ -1390,7 +1390,7 @@ int manager_start_target(Manager *m, const char *name, JobMode mode) {
         return r;
 }
 
-static int manager_process_signal_fd(Manager *m) {
+int manager_process_signal_fd(Manager *m) {
         ssize_t n;
         struct signalfd_siginfo sfsi;
         bool sigchld = false;
@@ -1472,7 +1472,7 @@ static int manager_process_signal_fd(Manager *m) {
                         break;
 
                 case SIGUSR1: {
-                        manager_reload(m);
+                        fifo_control_loop(m);
                         break;
                 }
 
@@ -1805,6 +1805,8 @@ int manager_loop(Manager *m) {
                         continue;
 
                 assert(n == 1);
+
+                fifo_control_loop(m);
 
                 r = process_event(m, &event);
                 if (r < 0)
@@ -2246,6 +2248,8 @@ int manager_reload(Manager *m) {
                 goto finish;
         }
 
+        log_info("Reloading.");
+
         /* From here on there is no way back. */
         manager_clear_jobs_and_units(m);
         manager_undo_generators(m);
@@ -2283,6 +2287,8 @@ int manager_reload(Manager *m) {
                 r = q;
 
         unlink_control_fifo();
+
+        fifo_control_loop(m);
 
         assert(m->n_reloading > 0);
         m->n_reloading--;

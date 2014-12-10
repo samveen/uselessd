@@ -94,6 +94,9 @@ void fifo_control_loop(Manager *m) {
         char fifobuf[BUFSIZ];
         usec_t when;
         when = now(CLOCK_REALTIME) + USEC_PER_MINUTE;
+        bool swrt, shutdown;
+        char *switch_root_dir = NULL;
+        const char *switch_root_init = NULL;
 
         create_control_fifo();
 
@@ -115,20 +118,17 @@ void fifo_control_loop(Manager *m) {
                         if (u) log_info("yh");
                         log_info("Badabing.\n");
                 } else if (streq("rload", fifobuf)) {
-                        /*m->exit_code = MANAGER_RELOAD;*/
-                        if (kill(getpid(), SIGHUP) < 0)
-                                log_error("kill() failed: %m");
+                        manager_reload(m);
                 } else if (streq("rexec", fifobuf)) {
-                        /*m->exit_code = MANAGER_REEXECUTE;*/
-                        if (kill(getpid(), SIGTERM) < 0)
-                                log_error("kill() failed: %m");
+                        reexec_procedure(NULL, NULL, NULL, NULL, "regular-reexec", m);
                 } else if (streq("mexit", fifobuf)) {
                         if (m->running_as == SYSTEMD_SYSTEM && getpid() == 1)
                                 log_error("Exit is only supported for user service managers and non-PID1 system managers.");
 
-                        /*m->exit_code = MANAGER_EXIT;*/
-                        if (kill(getpid(), SIGINT) < 0)
-                                log_error("kill() failed: %m");
+                        manager_free(m);
+                        close(f);
+                        unlink_control_fifo();
+                        _exit(EXIT_SUCCESS);
                 } else if (streq("getdt", fifobuf)) {
                         unit_file_operation_tango("get-default-target");
                 } else if (streq("lsenv", fifobuf)) {
@@ -297,7 +297,7 @@ void fifo_control_loop(Manager *m) {
                 } else if (streq("powff", fifobuf)) {
                         int sd;
                         int ups;
-                        const char *msg = "ayylmao";
+                        const char *msg = NULL;
 
                         if (geteuid() != 0)
                                 log_error("Must be root.");
@@ -323,11 +323,13 @@ void fifo_control_loop(Manager *m) {
                         log_info("Powering off.");
                         reboot(RB_POWER_OFF);
 
+                        shutdown = true;
+
                         goto finish;
                 } else if (streq("rboot", fifobuf)) {
                         int sd;
                         int ups;
-                        const char *msg = "ayylmao";
+                        const char *msg = NULL;
 
                         if (geteuid() != 0)
                                 log_error("Must be root.");
@@ -353,11 +355,13 @@ void fifo_control_loop(Manager *m) {
                         log_info("Rebooting.");
                         reboot(RB_AUTOBOOT);
 
+                        shutdown = true;
+
                         goto finish;
                 } else if (streq("halts", fifobuf)) {
                         int sd;
                         int ups;
-                        const char *msg = "ayylmao";
+                        const char *msg = NULL;
 
                         if (geteuid() != 0)
                                 log_error("Must be root.");
@@ -383,10 +387,12 @@ void fifo_control_loop(Manager *m) {
                         log_info("Halting.");
                         reboot(RB_HALT_SYSTEM);
 
+                        shutdown = true;
+
                         goto finish;
                 } else if (streq("kexec", fifobuf)) {
                         int sd;
-                        const char *msg = "ayylmao";
+                        const char *msg = NULL;
 
                         if (geteuid() != 0)
                                 log_error("Must be root.");
@@ -404,7 +410,9 @@ void fifo_control_loop(Manager *m) {
 
                         m->exit_code = MANAGER_KEXEC;
 
-                        break;
+                        shutdown = true;
+
+                        goto finish;
                 } else if (streq("deflt", fifobuf)) {
                         Job *j;
                         manager_add_job_by_name(m, JOB_START, SPECIAL_DEFAULT_TARGET, JOB_ISOLATE, true, &j);
@@ -422,7 +430,7 @@ void fifo_control_loop(Manager *m) {
                 } else if (streq("hybsl", fifobuf)) {
                         manager_start_target(m, SPECIAL_HYBRID_SLEEP_TARGET, JOB_REPLACE_IRREVERSIBLY);
                 } else if (streq("swirt", fifobuf)) {
-                        const char *switch_root = NULL, *switch_root_init = NULL;
+                        const char *switch_root = NULL;
                         int getsri;
                         int getsrp;
                         char *u, *v = NULL;
@@ -484,7 +492,12 @@ void fifo_control_loop(Manager *m) {
                         m->switch_root = u;
                         m->switch_root_init = v;
 
-                        m->exit_code = MANAGER_SWITCH_ROOT;
+                        switch_root_dir = m->switch_root;
+                        switch_root_init = m->switch_root_init;
+                        m->switch_root = m->switch_root_init = NULL;
+
+                        swrt = true;
+                        goto finish;
                 } else if (streq("resfa", fifobuf)) {
                         manager_reset_failed(m);
                 } else if (streq("enabl", fifobuf)) {
@@ -647,14 +660,43 @@ void fifo_control_loop(Manager *m) {
                         active_state = unit_active_state_to_string(unit_active_state(u));
                         puts(active_state);
                 } else if (streq("mdump", fifobuf)) {
-                        if (kill(getpid(), SIGUSR2) < 0)
-                                log_error("kill() failed: %m");
+                        FILE *fil;
+                        char *dump = NULL;
+                        size_t size;
+
+                        if (!(fil = open_memstream(&dump, &size))) {
+                                log_warning("Failed to allocate memory stream.");
+                                break;
+                        }
+
+                        manager_dump_units(m, fil, "\t");
+                        manager_dump_jobs(m, fil, "\t");
+
+                        if (ferror(fil)) {
+                                fclose(fil);
+                                free(dump);
+                                log_warning("Failed to write status stream");
+                                break;
+                        }
+
+                        fclose(fil);
+                        log_dump(LOG_INFO, dump);
+                        free(dump);
                 } else {
                         log_error("Unknown control command.");
                 }
         }
 
 finish:
+        if (m)
+                manager_free(m);
+
         close(f);
         unlink_control_fifo();
+
+        if (shutdown)
+                shutdown_verb();
+
+        if (swrt)
+                reexec_procedure(switch_root_dir, switch_root_init, NULL, NULL, NULL, m);
 }

@@ -44,7 +44,6 @@
 #include "strv.h"
 #include "def.h"
 #include "virt.h"
-#include "watchdog.h"
 #include "path-util.h"
 #include "switch-root.h"
 #include "capability.h"
@@ -79,8 +78,6 @@ static bool arg_switched_root = false;
 static char ***arg_join_controllers = NULL;
 static ExecOutput arg_default_std_output = EXEC_OUTPUT_SYSLOG;
 static ExecOutput arg_default_std_error = EXEC_OUTPUT_INHERIT;
-static usec_t arg_runtime_watchdog = 0;
-static usec_t arg_shutdown_watchdog = 10 * USEC_PER_MINUTE;
 static char **arg_default_environment = NULL;
 static struct rlimit *arg_default_rlimit[RLIMIT_NLIMITS] = {};
 static uint64_t arg_capability_bounding_set_drop = 0;
@@ -625,8 +622,6 @@ static int parse_config_file(void) {
                 { "Manager", "DefaultStandardOutput", config_parse_output,       0, &arg_default_std_output  },
                 { "Manager", "DefaultStandardError",  config_parse_output,       0, &arg_default_std_error   },
                 { "Manager", "JoinControllers",       config_parse_join_controllers, 0, &arg_join_controllers },
-                { "Manager", "RuntimeWatchdogSec",    config_parse_sec,          0, &arg_runtime_watchdog    },
-                { "Manager", "ShutdownWatchdogSec",   config_parse_sec,          0, &arg_shutdown_watchdog   },
                 { "Manager", "CapabilityBoundingSet", config_parse_bounding_set, 0, &arg_capability_bounding_set_drop },
                 { "Manager", "TimerSlackNSec",        config_parse_nsec,         0, &arg_timer_slack_nsec    },
                 { "Manager", "DefaultEnvironment",    config_parse_environ,      0, &arg_default_environment },
@@ -1002,68 +997,6 @@ static int version(void) {
         return 0;
 }
 
-static int prepare_reexecute(Manager *m, FILE **_f, FDSet **_fds, bool switching_root) {
-        FILE *f = NULL;
-        FDSet *fds = NULL;
-        int r;
-
-        assert(m);
-        assert(_f);
-        assert(_fds);
-
-        r = manager_open_serialization(m, &f);
-        if (r < 0) {
-                log_error("Failed to create serialization file: %s", strerror(-r));
-                goto fail;
-        }
-
-        /* Make sure nothing is really destructed when we shut down */
-        m->n_reloading++;
-
-        fds = fdset_new();
-        if (!fds) {
-                r = -ENOMEM;
-                log_error("Failed to allocate fd set: %s", strerror(-r));
-                goto fail;
-        }
-
-        r = manager_serialize(m, f, fds, switching_root);
-        if (r < 0) {
-                log_error("Failed to serialize state: %s", strerror(-r));
-                goto fail;
-        }
-
-        if (fseeko(f, 0, SEEK_SET) < 0) {
-                log_error("Failed to rewind serialization fd: %m");
-                goto fail;
-        }
-
-        r = fd_cloexec(fileno(f), false);
-        if (r < 0) {
-                log_error("Failed to disable O_CLOEXEC for serialization: %s", strerror(-r));
-                goto fail;
-        }
-
-        r = fdset_cloexec(fds, false);
-        if (r < 0) {
-                log_error("Failed to disable O_CLOEXEC for serialization fds: %s", strerror(-r));
-                goto fail;
-        }
-
-        *_f = f;
-        *_fds = fds;
-
-        return 0;
-
-fail:
-        fdset_free(fds);
-
-        if (f)
-                fclose(f);
-
-        return r;
-}
-
 static int bump_rlimit_nofile(struct rlimit *saved_rlimit) {
         struct rlimit nl;
         int r;
@@ -1184,7 +1117,6 @@ int main(int argc, char *argv[]) {
         bool skip_setup = false;
         int j;
         bool loaded_policy = false;
-        bool arm_reboot_watchdog = false;
         bool queue_default_job = false;
         char *switch_root_dir = NULL, *switch_root_init = NULL;
         static struct rlimit saved_rlimit_nofile = { 0, 0 };
@@ -1433,9 +1365,6 @@ int main(int argc, char *argv[]) {
                 test_cgroups();
         }
 
-        if (arg_running_as == SYSTEMD_SYSTEM && arg_runtime_watchdog > 0)
-                watchdog_set_timeout(&arg_runtime_watchdog);
-
         if (arg_timer_slack_nsec != (nsec_t) -1)
                 if (prctl(PR_SET_TIMERSLACK, arg_timer_slack_nsec) < 0)
                         log_error("Failed to adjust timer slack: %m");
@@ -1474,8 +1403,6 @@ int main(int argc, char *argv[]) {
         m->confirm_spawn = arg_confirm_spawn;
         m->default_std_output = arg_default_std_output;
         m->default_std_error = arg_default_std_error;
-        m->runtime_watchdog = arg_runtime_watchdog;
-        m->shutdown_watchdog = arg_shutdown_watchdog;
         m->userspace_timestamp = userspace_timestamp;
         m->kernel_timestamp = kernel_timestamp;
         m->initrd_timestamp = initrd_timestamp;
@@ -1578,65 +1505,6 @@ int main(int argc, char *argv[]) {
                         log_error("Failed to run mainloop: %s", strerror(-r));
                         goto finish;
                 }
-
-                switch (m->exit_code) {
-
-                case MANAGER_EXIT:
-                        retval = EXIT_SUCCESS;
-                        log_debug("Exit.");
-                        goto finish;
-
-                case MANAGER_RELOAD:
-                        log_info("Reloading.");
-                        r = manager_reload(m);
-                        if (r < 0)
-                                log_error("Failed to reload: %s", strerror(-r));
-                        break;
-
-                case MANAGER_REEXECUTE:
-
-                        if (prepare_reexecute(m, &serialization, &fds, false) < 0)
-                                goto finish;
-
-                        reexecute = true;
-                        log_notice("Reexecuting.");
-                        goto finish;
-
-                case MANAGER_SWITCH_ROOT:
-                        /* Steal the switch root parameters */
-                        switch_root_dir = m->switch_root;
-                        switch_root_init = m->switch_root_init;
-                        m->switch_root = m->switch_root_init = NULL;
-
-                        if (!switch_root_init)
-                                if (prepare_reexecute(m, &serialization, &fds, true) < 0)
-                                        goto finish;
-
-                        reexecute = true;
-                        log_notice("Switching root.");
-                        goto finish;
-
-                case MANAGER_REBOOT:
-                case MANAGER_POWEROFF:
-                case MANAGER_HALT:
-                case MANAGER_KEXEC: {
-                        static const char * const table[_MANAGER_EXIT_CODE_MAX] = {
-                                [MANAGER_REBOOT] = "reboot",
-                                [MANAGER_POWEROFF] = "poweroff",
-                                [MANAGER_HALT] = "halt",
-                                [MANAGER_KEXEC] = "kexec"
-                        };
-
-                        assert_se(shutdown_verb = table[m->exit_code]);
-                        arm_reboot_watchdog = m->exit_code == MANAGER_REBOOT;
-
-                        log_notice("Shutting down.");
-                        goto finish;
-                }
-
-                default:
-                        assert_not_reached("Unknown exit code.");
-                }
         }
 
 finish:
@@ -1652,158 +1520,11 @@ finish:
         dbus_shutdown();
         label_finish();
 
-        if (reexecute) {
-                const char **args;
-                unsigned i, args_size;
-
-                /* Close and disarm the watchdog, so that the new
-                 * instance can reinitialize it, but doesn't get
-                 * rebooted while we do that */
-                watchdog_close(true);
-
-                /* Reset the RLIMIT_NOFILE to the kernel default, so
-                 * that the new systemd can pass the kernel default to
-                 * its child processes */
-                if (saved_rlimit_nofile.rlim_cur > 0)
-                        setrlimit(RLIMIT_NOFILE, &saved_rlimit_nofile);
-
-                if (switch_root_dir) {
-                        /* Kill all remaining processes from the
-                         * initrd, but don't wait for them, so that we
-                         * can handle the SIGCHLD for them after
-                         * deserializing. */
-                        broadcast_signal(SIGTERM, false);
-
-                        /* And switch root */
-                        r = switch_root(switch_root_dir);
-                        if (r < 0)
-                                log_error("Failed to switch root, ignoring: %s", strerror(-r));
-                }
-
-                args_size = MAX(6, argc+1);
-                args = newa(const char*, args_size);
-
-                if (!switch_root_init) {
-                        char sfd[16];
-
-                        /* First try to spawn ourselves with the right
-                         * path, and with full serialization. We do
-                         * this only if the user didn't specify an
-                         * explicit init to spawn. */
-
-                        assert(serialization);
-                        assert(fds);
-
-                        snprintf(sfd, sizeof(sfd), "%i", fileno(serialization));
-                        char_array_0(sfd);
-
-                        i = 0;
-                        args[i++] = SYSTEMD_BINARY_PATH;
-                        if (switch_root_dir)
-                                args[i++] = "--switched-root";
-                        args[i++] = arg_running_as == SYSTEMD_SYSTEM ? "--system" : "--user";
-                        args[i++] = "--deserialize";
-                        args[i++] = sfd;
-                        args[i++] = NULL;
-
-                        /* do not pass along the environment we inherit from the kernel or initrd */
-                        if (switch_root_dir)
-                                clearenv();
-
-                        assert(i <= args_size);
-                        execv(args[0], (char* const*) args);
-                }
-
-                /* Try the fallback, if there is any, without any
-                 * serialization. We pass the original argv[] and
-                 * envp[]. (Well, modulo the ordering changes due to
-                 * getopt() in argv[], and some cleanups in envp[],
-                 * but let's hope that doesn't matter.) */
-
-                if (serialization) {
-                        fclose(serialization);
-                        serialization = NULL;
-                }
-
-                if (fds) {
-                        fdset_free(fds);
-                        fds = NULL;
-                }
-
-                /* Reopen the console */
-                make_console_stdio();
-
-                for (j = 1, i = 1; j < argc; j++)
-                        args[i++] = argv[j];
-                args[i++] = NULL;
-                assert(i <= args_size);
-
-                if (switch_root_init) {
-                        args[0] = switch_root_init;
-                        execv(args[0], (char* const*) args);
-                        log_warning("Failed to execute configured init, trying fallback: %m");
-                }
-
-                args[0] = "/sbin/init";
-                execv(args[0], (char* const*) args);
-
-                if (errno == ENOENT) {
-                        log_warning("No /sbin/init, trying fallback");
-
-                        args[0] = "/bin/sh";
-                        args[1] = NULL;
-                        execv(args[0], (char* const*) args);
-                        log_error("Failed to execute /bin/sh, giving up: %m");
-                } else
-                        log_warning("Failed to execute /sbin/init, giving up: %m");
-        }
-
         if (serialization)
                 fclose(serialization);
 
         if (fds)
                 fdset_free(fds);
-
-        if (shutdown_verb) {
-                const char * command_line[] = {
-                        SYSTEMD_SHUTDOWN_BINARY_PATH,
-                        shutdown_verb,
-                        NULL
-                };
-                char **env_block;
-
-                if (arm_reboot_watchdog && arg_shutdown_watchdog > 0) {
-                        char e[32];
-
-                        /* If we reboot let's set the shutdown
-                         * watchdog and tell the shutdown binary to
-                         * repeatedly ping it */
-                        watchdog_set_timeout(&arg_shutdown_watchdog);
-                        watchdog_close(false);
-
-                        /* Tell the binary how often to ping */
-                        snprintf(e, sizeof(e), "WATCHDOG_USEC=%llu", (unsigned long long) arg_shutdown_watchdog);
-                        char_array_0(e);
-
-                        env_block = strv_append(environ, e);
-                } else {
-                        env_block = strv_copy(environ);
-                        watchdog_close(true);
-                }
-
-                /* Avoid the creation of new processes forked by the
-                 * kernel; at this point, we will not listen to the
-                 * signals anyway */
-                if (detect_container(NULL) <= 0)
-                        cg_uninstall_release_agent(SYSTEMD_CGROUP_CONTROLLER);
-
-                execve(SYSTEMD_SHUTDOWN_BINARY_PATH, (char **) command_line, env_block);
-                free(env_block);
-                log_error("Failed to execute shutdown binary, freezing: %m");
-        }
-
-        if (getpid() == 1)
-                freeze();
 
         return retval;
 }

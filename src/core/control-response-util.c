@@ -36,8 +36,13 @@
 #include "path-util.h"
 #include "util.h"
 #include "cgroup-util.h"
+#include "strv.h"
 #include "cgroup.h"
 #include "fileio.h"
+#include "virt.h"
+#include "killall.h"
+#include "watchdog.h"
+#include "switch-root.h"
 #include "special.h"
 
 #include "control-response-util.h"
@@ -970,4 +975,150 @@ int cgroup_set_property(
         }
 
         return 0;
+}
+
+int prepare_reexecute(Manager *m, FILE **_f, FDSet **_fds, bool switching_root) {
+        FILE *f = NULL;
+        FDSet *fds = NULL;
+        int r;
+
+        assert(m);
+        assert(_f);
+        assert(_fds);
+
+        r = manager_open_serialization(m, &f);
+        if (r < 0) {
+                log_error("Failed to create serialization file: %s", strerror(-r));
+                goto fail;
+        }
+
+        /* Make sure nothing is really destructed when we shut down */
+        m->n_reloading++;
+
+        fds = fdset_new();
+        if (!fds) {
+                r = -ENOMEM;
+                log_error("Failed to allocate fd set: %s", strerror(-r));
+                goto fail;
+        }
+
+        r = manager_serialize(m, f, fds, switching_root);
+        if (r < 0) {
+                log_error("Failed to serialize state: %s", strerror(-r));
+                goto fail;
+        }
+
+        if (fseeko(f, 0, SEEK_SET) < 0) {
+                log_error("Failed to rewind serialization fd: %m");
+                goto fail;
+        }
+
+        r = fd_cloexec(fileno(f), false);
+        if (r < 0) {
+                log_error("Failed to disable O_CLOEXEC for serialization: %s", strerror(-r));
+                goto fail;
+        }
+
+        r = fdset_cloexec(fds, false);
+        if (r < 0) {
+                log_error("Failed to disable O_CLOEXEC for serialization fds: %s", strerror(-r));
+                goto fail;
+        }
+
+        *_f = f;
+        *_fds = fds;
+
+        return 0;
+
+fail:
+        fdset_free(fds);
+
+        if (f)
+                fclose(f);
+
+        return r;
+}
+
+void regular_reexec(void) {
+        const char **args = NULL;
+
+        make_console_stdio();
+
+        args[0] = "/sbin/init";
+        execv(args[0], (char* const*) args);
+
+        if (errno == ENOENT) {
+                log_warning("No /sbin/init, trying fallback");
+
+                args[0] = "/bin/sh";
+                args[1] = NULL;
+                execv(args[0], (char* const*) args);
+                log_error("Failed to execute /bin/sh, giving up: %m");
+                return;
+        } else {
+                log_warning("Failed to execute /sbin/init, giving up: %m");
+                return;
+        }
+}
+
+void reexec_procedure(char *switch_root_dir, char *switch_root_init,
+                        FILE *serialization, FDSet *fds, char *param,
+                        Manager *m) {
+        const char **args;
+        int r;
+
+        if (prepare_reexecute(m, &serialization, &fds, true) < 0)
+                log_error("Failed to reexecute.");
+                return;
+
+        /* No serialization! */
+
+        if (streq(param, "regular-reexec")) {
+                regular_reexec();
+        }
+
+        /* Close and disarm the watchdog, so that the new
+        * instance can reinitialize it, but doesn't get
+        * rebooted while we do that */
+        watchdog_close(true);
+
+        if (switch_root_init) {
+                args[0] = switch_root_init;
+                execv(args[0], (char* const*) args);
+                log_warning("Failed to execute configured init, trying fallback: %m");
+        }
+
+        /* Kill all remaining processes from the
+        * initrd, but don't wait for them, so that we
+        * can handle the SIGCHLD for them after
+        * deserializing. */
+        broadcast_signal(SIGTERM, false);
+
+        /* And switch root */
+        r = switch_root(switch_root_dir);
+        if (r < 0)
+                log_error("Failed to switch root, ignoring: %s", strerror(-r));
+}
+
+void shutdown_verb(void) {
+        const char *shutdown_verb = NULL;
+        const char * command_line[] = {
+                SYSTEMD_SHUTDOWN_BINARY_PATH,
+                shutdown_verb,
+                NULL
+        };
+        char **env_block;
+
+        if (detect_container(NULL) <= 0)
+                cg_uninstall_release_agent(SYSTEMD_CGROUP_CONTROLLER);
+
+        env_block = strv_copy(environ);
+        watchdog_close(true);
+
+        execve(SYSTEMD_SHUTDOWN_BINARY_PATH, (char **) command_line, env_block);
+        free(env_block);
+        log_error("Failed to execute shutdown binary, freezing: %m");
+
+        if (getpid() == 1)
+                freeze();
 }
