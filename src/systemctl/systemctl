@@ -16,6 +16,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with uselessd; If not, see <http://www.gnu.org/licenses/>.
 
+CONTROLPIPE=/run/systemd/fifoctl
+CONTROLFILES=/run/systemd/manager
+
 show_help() {
     cat << EOF
 systemctl [OPTIONS...] {COMMAND} ...
@@ -23,19 +26,170 @@ systemctl [OPTIONS...] {COMMAND} ...
 Query or send control commands to the uselessd manager.
 
 -h --help                  Show this help message.
---root=PATH                Enable unit files in the specified root directory
---kill-who=WHO             Who to send signal to
--s --signal=SIGNAL         Which signal to send
---scope=UNIT_FILE_SCOPE    Can be one of system (default), global or user
+--root PATH                Enable unit files in the specified root directory
+--kill-who WHO             Who to send signal to
+-s --signal SIGNAL         Which signal to send
+--scope UNIT_FILE_SCOPE    Can be one of system (default), global or user
                            (latter two are partially equivalent to --global and --user
                            from upstream systemd.)
---job-type=TYPE            What type of job for the manager to queue (start, stop, reload, etc.)
+--job-type TYPE            What type of job for the manager to queue (start, stop, reload, etc.)
                            This is handled automatically by the unit commands, but may be useful
                            manually for debugging.
---job-mode=MODE            The mode with which to start the job (replace, fail, isolate, etc.)
+--job-mode MODE            The mode with which to start the job (replace, fail, isolate, etc.)
                            Once again - handled automatically, may be used for debugging.
                            This option can be equivalent to --irreversible, --fail and
                            --ignore-dependencies from upstream systemd.
 -f --force                 When enabling unit files, override existing symlinks
+--runtime                  Make changes only temporarily (when used with enable/disable/etc.),
+                           i.e. that are lost on reboot.
+
+Unit Commands:
+  list-units                      List loaded units
+  list-sockets                    List loaded sockets ordered by address
+  start [NAME...]                 Start (activate) one or more units
+  stop [NAME...]                  Stop (deactivate) one or more units
+  reload [NAME...]                Reload one or more units
+  restart [NAME...]               Start or restart one or more units
+  try-restart [NAME...]           Restart one or more units if active
+  reload-or-restart [NAME...]     Reload one or more units if possible,
+                                  otherwise start or restart
+  reload-or-try-restart [NAME...] Reload one or more units if possible,
+                                  otherwise restart if active
+  isolate [NAME]                  Start one unit and stop all others
+  kill [NAME...]                  Send signal to processes of a unit
+  is-active [NAME...]             Check whether units are active
+  is-failed [NAME...]             Check whether units are failed
+  status [NAME...]                Show runtime status of one or more units
+  show [NAME...]                  Show properties of one or more
+                                  units/jobs or the manager
+  set-property [NAME] [ASSIGNMENT...]
+                                  Sets one or more properties of a unit
+  reset-failed                    Reset failed state for all, one, or more
+                                  units
+  list-dependencies [NAME]        Recursively show units which are required
+                                  or wanted by this unit or by which this
+                                  unit is required or wanted
+
+Unit File Commands:
+  list-unit-files                 List installed unit files
+  enable [NAME...]                Enable one or more unit files
+  disable [NAME...]               Disable one or more unit files
+  reenable [NAME...]              Reenable one or more unit files
+  preset [NAME...]                Enable/disable one or more unit files
+                                  based on preset configuration
+  is-enabled [NAME...]            Check whether unit files are enabled
+
+  mask [NAME...]                  Mask one or more units
+  unmask [NAME...]                Unmask one or more units
+  link [PATH...]                  Link one or more units files into
+                                  the search path
+  get-default                     Get the name of the default target
+  set-default NAME                Set the default target
+
+Job Commands:
+  list-jobs                       List jobs
+  cancel [JOB-ID...]              Cancel all, one, or more jobs
+
+Snapshot Commands:
+  snapshot [NAME]                 Create a snapshot
+  delete [NAME...]                Remove one or more snapshots
+
+Environment Commands:
+  show-environment                Dump environment
+  set-environment [NAME=VALUE...] Set one or more environment variables
+  unset-environment [NAME...]     Unset one or more environment variables
+
+Manager Lifecycle Commands:
+  daemon-reload                   Reload uselessd manager configuration
+  daemon-reexec                   Reexecute uselessd manager
+
+System Commands:
+  default                         Enter system default mode
+  rescue                          Enter system rescue mode
+  emergency                       Enter system emergency mode
+  halt                            Shut down and halt the system
+  poweroff                        Shut down and power-off the system
+  reboot                          Shut down and reboot the system
+  kexec                           Shut down and reboot the system with kexec
+  user-exit                       Request user instance exit
+  switch-root [ROOT] [INIT]       Change to a different root file system
+  suspend                         Suspend the system
+  hibernate                       Hibernate the system
+  hybrid-sleep                    Hibernate and suspend the system
 EOF
 }
+
+# Imperative programming. Never again.
+for i in "$@"
+do
+        case $i in
+                default)
+                printf "deflt" > $CONTROLPIPE
+                ;;
+                rescue)
+                printf "rescu" > $CONTROLPIPE
+                ;;
+                emergency)
+                printf "emerg" > $CONTROLPIPE
+                ;;
+                halt)
+                printf "halts" > $CONTROLPIPE
+                ;;
+                poweroff)
+                printf "powff" > $CONTROLPIPE
+                ;;
+                reboot)
+                printf "rboot" > $CONTROLPIPE
+                ;;
+                kexec)
+                printf "kexec" > $CONTROLPIPE
+                ;;
+                \exit)\
+                printf "mexit" > $CONTROLPIPE
+                ;;
+                switch-root)
+                ;;
+                suspend)
+                printf "suspn" > $CONTROLPIPE
+                ;;
+                hibernate)
+                printf "hiber" > $CONTROLPIPE
+                ;;
+                hybrid-sleep)
+                printf "hybsl" > $CONTROLPIPE
+                ;;
+                daemon-reload)
+                printf "rload" > $CONTROLPIPE
+                ;;
+                daemon-reexec)
+                printf "rexec" > $CONTROLPIPE
+                ;;
+                show-environment)
+                printf "lsenv" > $CONTROLPIPE
+                ;;
+                list-jobs)
+                printf "lsjob" > $CONTROLPIPE
+                break
+                ;;
+                list-unit-files)
+                printf "lsunf" > $CONTROLPIPE
+                ;;
+                list-units)
+                printf "lsuni" > $CONTROLPIPE
+                ;;
+                list-sockets)
+                printf "lssoc" > $CONTROLPIPE
+                ;;
+                reset-failed)
+                printf "resfa" > $CONTROLPIPE
+                ;;
+                get-default)
+                printf "getdt" > $CONTROLPIPE
+                ;;
+                *)
+                echo Unknown option, mate.
+                show_help
+                exit 0
+                ;;
+        esac
+done
