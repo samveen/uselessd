@@ -281,6 +281,16 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
         </varlistentry>
 
         <varlistentry>
+          <term><command>load <replaceable>NAME</replaceable>...</command></term>
+
+          <listitem>
+            <para>Load a unit on the command line. This registers a unit object
+            into the Manager, but doesn't actually activate anything.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+
+        <varlistentry>
           <term><command>start <replaceable>NAME</replaceable>...</command></term>
 
           <listitem>
@@ -684,12 +694,18 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><command>cancel <replaceable>JOB</replaceable>...</command></term>
+          <term><command>cancel <replaceable>JOB-ID</replaceable>...</command></term>
 
           <listitem>
-            <para>Cancel one or more jobs specified on the command line
-            by their numeric job IDs. If no job ID is specified, cancel
-            all pending jobs.</para>
+            <para>Cancel a job specified on the command line
+            by its numeric job ID.</para>
+          </listitem>
+        </varlistentry>
+        <varlistentry>
+          <term><command>clear-jobs</command></term>
+
+          <listitem>
+            <para>Cancel all jobs.</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -799,6 +815,15 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
             helpful as a heavy-weight <command>daemon-reload</command>.
             While the daemon is being reexecuted, all sockets systemd listening
             on behalf of user configuration will stay accessible.
+            </para>
+          </listitem>
+        </varlistentry>
+                <varlistentry>
+          <term><command>dump</command></term>
+
+          <listitem>
+            <para>Dump the units and jobs from the Manager's queue
+            into raw format.
             </para>
           </listitem>
         </varlistentry>
