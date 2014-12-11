@@ -937,16 +937,25 @@
                         </varlistentry>
 
                         <varlistentry>
-                                <term><filename>/run/systemd/private</filename></term>
+                                <term><filename>/run/systemd/fifoctl</filename></term>
 
                                 <listitem><para>Used internally as
                                 communication channel between
                                 <citerefentry><refentrytitle>systemctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>
-                                and the systemd process. This is an
-                                <constant>AF_UNIX</constant> stream socket. This interface
-                                is private to systemd and should not
-                                be used in external
-                                projects.</para></listitem>
+                                and the uselessd process. This is a
+                                FIFO (named pipe). This interface
+                                is private to uselessd, but you may
+                                send control commands to it from miscellaneous
+                                scripts and utilities, if needed.</para></listitem>
+                        </varlistentry>
+
+
+                        <varlistentry>
+                                <term><filename>/run/systemd/fifoout</filename></term>
+
+                                <listitem><para>A FIFO where output from control
+                                commands sent to fifoctl is written for the
+                                systemctl client script to read from.</para></listitem>
                         </varlistentry>
 
                         <varlistentry>
