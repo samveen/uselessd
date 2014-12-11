@@ -402,12 +402,17 @@ static int unit_create_cgroups(Unit *u, CGroupControllerMask mask) {
         if (r < 0)
                 log_error("Failed to create cgroup %s: %s", path, strerror(-r));
 
-        /* Then, possibly move things over */
         if (u->cgroup_path) {
-                r = cg_migrate_everywhere(u->manager->cgroup_supported, u->cgroup_path, path);
-                if (r < 0)
-                         log_error("Failed to migrate cgroup from %s to %s: %s",
-                                       u->cgroup_path, path, strerror(-r));
+                if (u->type != UNIT_SLICE) {
+
+                        /* Then, possibly move things over, but not if
+                         * subgroups may contain processes, which is the case
+                         * for slice units. */
+                        r = cg_migrate_everywhere(u->manager->cgroup_supported, u->cgroup_path, path);
+                        if (r < 0)
+                                log_error("Failed to migrate cgroup from %s to %s: %s",
+                                        u->cgroup_path, path, strerror(-r));
+                }
         }
 
         if (!was_in_hash) {
