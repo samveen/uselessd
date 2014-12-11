@@ -119,6 +119,8 @@ System Commands:
 EOF
 }
 
+[ ! -f $CONTROLPIPE ] && echo "Control pipe does not exist in /run."; exit 1
+
 # Imperative programming. Never again.
 for i in "$@"
 do
