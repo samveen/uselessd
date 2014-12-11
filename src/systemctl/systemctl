@@ -119,7 +119,7 @@ System Commands:
 EOF
 }
 
-[ ! -f $CONTROLPIPE ] && echo "Control pipe does not exist in /run."; exit 1
+[ ! -p $CONTROLPIPE ] && echo "Control pipe does not exist in /run." && exit 1
 
 # Imperative programming. Never again.
 for i in "$@"
@@ -171,7 +171,6 @@ do
                 ;;
                 list-jobs)
                 printf "lsjob" > $CONTROLPIPE
-                break
                 ;;
                 list-unit-files)
                 printf "lsunf" > $CONTROLPIPE
