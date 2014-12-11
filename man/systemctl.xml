@@ -132,7 +132,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
       </varlistentry>
 
       <varlistentry>
-        <term><option>--job-type</option></term>
+        <term><option>--job-type=</option></term>
 
         <listitem>
           <para>One of start, stop, restart, reload, reload-or-restart,
@@ -143,7 +143,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
       </varlistentry>
 
       <varlistentry>
-        <term><option>--kill-who</option></term>
+        <term><option>--kill-who=</option></term>
 
         <listitem>
           <para>When used with <command>kill</command>, choose which
@@ -158,7 +158,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
 
       <varlistentry>
         <term><option>-s</option></term>
-        <term><option>--signal</option></term>
+        <term><option>--signal=</option></term>
 
         <listitem>
           <para>When used with <command>kill</command>, choose which
