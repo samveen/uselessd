@@ -25,14 +25,14 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
 
   <refentryinfo>
     <title>systemctl</title>
-    <productname>systemd</productname>
+    <productname>uselessd</productname>
 
     <authorgroup>
       <author>
         <contrib>Developer</contrib>
-        <firstname>Lennart</firstname>
-        <surname>Poettering</surname>
-        <email>lennart@poettering.net</email>
+        <firstname>The Initfinder</firstname>
+        <surname>General</surname>
+        <email>u@wotm8.com</email>
       </author>
     </authorgroup>
   </refentryinfo>
@@ -44,7 +44,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
 
   <refnamediv>
     <refname>systemctl</refname>
-    <refpurpose>Control the systemd system and service manager</refpurpose>
+    <refpurpose>Control the uselessd system and service manager</refpurpose>
   </refnamediv>
 
   <refsynopsisdiv>
@@ -61,7 +61,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
 
     <para><command>systemctl</command> may be used to
     introspect and control the state of the
-    <citerefentry><refentrytitle>systemd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
+    <citerefentry><refentrytitle>uselessd</refentrytitle><manvolnum>1</manvolnum></citerefentry>
     system and service manager.</para>
   </refsect1>
 
@@ -79,287 +79,71 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
         text and exits.</para></listitem>
       </varlistentry>
 
-      <varlistentry>
-        <term><option>--version</option></term>
-
-        <listitem>
-          <para>Prints a short version string and exits.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-t</option></term>
-        <term><option>--type=</option></term>
-
-        <listitem>
-          <para>The argument should be a comma-separated list of unit
-          types such as <option>service</option> and
-          <option>socket</option>.
-          </para>
-
-          <para>If one of the arguments is a unit type, when listing
-          units, limit display to certain unit types. Otherwise, units
-          of all types will be shown.</para>
-
-          <para>As a special case, if one of the arguments is
-          <option>help</option>, a list of allowed values will be
-          printed and the program will exit.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--state=</option></term>
-
-        <listitem>
-        <para>The argument should be a comma-separated list of unit LOAD,
-        SUB, or ACTIVE states. When listing units, show only those
-        in specified states.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-p</option></term>
-        <term><option>--property=</option></term>
-
-        <listitem>
-          <para>When showing unit/job/manager properties with the
-          <command>show</command> command, limit display to certain
-          properties as specified as argument. If not specified, all
-          set properties are shown. The argument should be a
-          comma-separated list of property names, such as
-          <literal>MainPID</literal>. If specified more than once, all
-          properties with the specified names are shown.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-a</option></term>
-        <term><option>--all</option></term>
-
-        <listitem>
-          <para>When listing units, show all loaded units, regardless
-          of their state, including inactive units. When showing
-          unit/job/manager properties, show all properties regardless
-          whether they are set or not.</para>
-          <para>To list all units installed on the system, use the
-          <command>list-unit-files</command> command instead.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--reverse</option></term>
-
-        <listitem>
-          <para>Show reverse dependencies between units with
-          <command>list-dependencies</command>, i.e. units with
-          dependencies of type <varname>Wants=</varname> or
-          <varname>Requires=</varname> on the given unit.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--after</option></term>
-        <term><option>--before</option></term>
-
-        <listitem>
-          <para>Show which units are started after or before
-          with <command>list-dependencies</command>, respectively.
-          </para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-l</option></term>
-        <term><option>--full</option></term>
-
-        <listitem>
-          <para>Do not ellipsize unit names, process tree entries, and
-          truncate unit descriptions in the output of
-          <command>list-units</command> and
-          <command>list-jobs</command>.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--fail</option></term>
-
-        <listitem>
-          <para>If the requested operation conflicts with a pending
-          unfinished job, fail the command. If this is not specified,
-          the requested operation will replace the pending job, if
-          necessary. Do not confuse with
-          <option>--failed</option>.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--show-types</option></term>
-
-        <listitem>
-          <para>When showing sockets, show the type of the socket.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--irreversible</option></term>
-
-        <listitem>
-          <para>Mark this transaction's jobs as irreversible. This prevents
-          future conflicting transactions from replacing these jobs.
-          The jobs can still be cancelled using the <command>cancel</command>
-          command.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--ignore-dependencies</option></term>
-
-        <listitem>
-          <para>When enqueuing a new job, ignore all its dependencies
-          and execute it immediately. If passed, no required units of
-          the unit passed will be pulled in, and no ordering
-          dependencies will be honored. This is mostly a debugging and
-          rescue tool for the administrator and should not be used by
-          applications.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-i</option></term>
-        <term><option>--ignore-inhibitors</option></term>
-
-        <listitem>
-          <para>When system shutdown or a sleep state is requested,
-          ignore inhibitor locks. Applications can establish inhibitor
-          locks to avoid that certain important operations (such as CD
-          burning or suchlike) are interrupted by system shutdown or a
-          sleep state. Any user may take these locks and privileged
-          users may override these locks. If any locks are taken,
-          shutdown and sleep state requests will normally fail
-          (regardless if privileged or not) and a list of active locks
-          is printed. However, if <option>--ignore-inhibitors</option>
-          is specified, the locks are ignored and not printed, and the
-          operation attempted anyway, possibly requiring additional
-          privileges.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-q</option></term>
-        <term><option>--quiet</option></term>
-
-        <listitem>
-          <para>Suppress output to standard output in
-          <command>snapshot</command>,
-          <command>is-active</command>,
-          <command>is-failed</command>,
-          <command>enable</command> and
-        <command>disable</command>.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--no-block</option></term>
-
-        <listitem>
-          <para>Do not synchronously wait for the requested operation
-          to finish. If this is not specified, the job will be
-          verified, enqueued and <command>systemctl</command> will
-          wait until it is completed. By passing this argument, it is
-          only verified and enqueued.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--no-legend</option></term>
-
-        <listitem>
-          <para>Do not print a legend, i.e.  the column headers and
-          the footer with hints.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--system</option></term>
-
-        <listitem>
-          <para>Talk to the systemd system manager. (Default)</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--user</option></term>
-
-        <listitem>
-          <para>Talk to the systemd manager of the calling
-          user.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--no-wall</option></term>
-
-        <listitem>
-          <para>Do not send wall message before halt, power-off,
-          reboot.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--global</option></term>
-
-        <listitem>
-          <para>When used with <command>enable</command> and
-          <command>disable</command>, operate on the global user
-          configuration directory, thus enabling or disabling a unit
-          file globally for all future logins of all users.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--no-reload</option></term>
-
-        <listitem>
-          <para>When used with <command>enable</command> and
-          <command>disable</command>, do not implicitly reload daemon
-          configuration after executing the changes.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--no-ask-password</option></term>
-
-        <listitem>
-          <para>When used with <command>start</command> and related
-          commands, disables asking for passwords. Background services
-          may require input of a password or passphrase string, for
-          example to unlock system hard disks or cryptographic
-          certificates. Unless this option is specified and the
-          command is invoked from a terminal,
-          <command>systemctl</command> will query the user on the
-          terminal for the necessary secrets. Use this option to
-          switch this behavior off. In this case, the password must be
-          supplied by some other means (for example graphical password
-          agents) or the service might fail. This also disables
-          querying the user for authentication for privileged
-          operations.</para>
-        </listitem>
-
-      </varlistentry>
-
      <varlistentry>
-        <term><option>--avoid-bus</option></term>
+        <term><option>--job-mode=</option></term>
 
         <listitem>
-        <para>Bypass system bus checks and communicate with private
-        IPC socket directly (where passive, unprivileged or otherwise
-        permitted).</para>
+        <para>When queuing a new job, this option controls how to deal with
+        already queued jobs. It takes one of <literal>fail</literal>,
+        <literal>replace</literal>,
+        <literal>replace-irreversibly</literal>,
+        <literal>isolate</literal>,
+        <literal>ignore-dependencies</literal> or
+        <literal>ignore-requirements</literal> Defaults to
+        <literal>replace</literal>, except when the
+        <command>isolate</command> command is used which implies the
+        <literal>isolate</literal> job mode.</para>
+
+        <para>If <literal>fail</literal> is specified and a requested
+        operation conflicts with a pending job (more specifically:
+        causes an already pending start job to be reversed into a stop
+        job or vice versa), cause the operation to fail.</para>
+
+        <para>If <literal>replace</literal> (the default) is
+        specified, any conflicting pending job will be replaced, as
+        necessary.</para>
+
+        <para>If <literal>replace-irreversibly</literal> is specified,
+        operate like <literal>replace</literal>, but also mark the new
+        jobs as irreversible. This prevents future conflicting
+        transactions from replacing these jobs (or even being enqueued
+        while the irreversible jobs are still pending). Irreversible
+        jobs can still be cancelled using the <command>cancel</command>
+        command.</para>
+
+        <para><literal>isolate</literal> is only valid for start
+        operations and causes all other units to be stopped when the
+        specified unit is started. This mode is always used when the
+        <command>isolate</command> command is used.</para>
+
+        <para>If <literal>ignore-dependencies</literal> is specified,
+        then all unit dependencies are ignored for this new job and
+        the operation is executed immediately. If passed, no required
+        units of the unit passed will be pulled in, and no ordering
+        dependencies will be honored. This is mostly a debugging and
+        rescue tool for the administrator and should not be used by
+        applications.</para>
+
+        <para><literal>ignore-requirements</literal> is similar to
+        <literal>ignore-dependencies</literal>, but only causes the
+        requirement dependencies to be ignored, the ordering
+        dependencies will still be honoured.</para>
         </listitem>
-     </varlistentry>
+      </varlistentry>
 
       <varlistentry>
-        <term><option>--kill-who=</option></term>
+        <term><option>--job-type</option></term>
+
+        <listitem>
+          <para>One of start, stop, restart, reload, reload-or-restart,
+          try-restart, verify-active or nop. Handled automatically by
+          the relevant unit commands like start and stop, but may
+          be set for debugging purposes. Writes to /run/systemd/arg-job-type.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>--kill-who</option></term>
 
         <listitem>
           <para>When used with <command>kill</command>, choose which
@@ -367,21 +151,21 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
           <option>control</option> or <option>all</option> to select
           whether to kill only the main process of the unit, the
           control process or all processes of the unit. If omitted,
-          defaults to <option>all</option>.</para>
+          defaults to <option>all</option>. Writes to /run/systemd/manager/kill-who.</para>
         </listitem>
 
       </varlistentry>
 
       <varlistentry>
         <term><option>-s</option></term>
-        <term><option>--signal=</option></term>
+        <term><option>--signal</option></term>
 
         <listitem>
           <para>When used with <command>kill</command>, choose which
           signal to send to selected processes. Must be one of the
           well known signal specifiers such as <constant>SIGTERM</constant>, <constant>SIGINT</constant> or
           <constant>SIGSTOP</constant>. If omitted, defaults to
-          <option>SIGTERM</option>.</para>
+          <option>SIGTERM</option>. Writes to /run/systemd/manager/kill-signal.</para>
         </listitem>
       </varlistentry>
 
@@ -391,7 +175,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
 
         <listitem>
           <para>When used with <command>enable</command>, overwrite
-          any existing conflicting symlinks.</para>
+          any existing conflicting symlinks. Writes to /run/systemd/arg-force.</para>
 
           <para>When used with <command>halt</command>,
           <command>poweroff</command>, <command>reboot</command> or
@@ -416,9 +200,8 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
           <para>When used with
           <command>enable</command>/<command>disable</command>/<command>is-enabled</command>
           (and related commands), use alternative root path when
-          looking for unit files.</para>
+          looking for unit files. Writes to /run/systemd/arg-root.</para>
         </listitem>
-
       </varlistentry>
 
       <varlistentry>
@@ -442,58 +225,15 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
       </varlistentry>
 
       <varlistentry>
-        <term><option>-H</option></term>
-        <term><option>--host</option></term>
+        <term><option>--scope</option></term>
 
         <listitem>
-          <para>Execute operation remotely. Specify a hostname, or
-          username and hostname separated by <literal>@</literal>, to connect to. This
-          will use SSH to talk to the remote systemd
-          instance.</para>
-        </listitem>
-      </varlistentry>
+          <para>Sets the unit file scope encoded in the /run/systemd/arg-scope
+          file.</para>
 
-      <varlistentry>
-        <term><option>-P</option></term>
-        <term><option>--privileged</option></term>
-
-        <listitem>
-          <para>Acquire privileges via PolicyKit before executing the
-          operation.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-n</option></term>
-        <term><option>--lines=</option></term>
-
-        <listitem>
-          <para>When used with <command>status</command>, controls the
-          number of journal lines to show, counting from the most
-          recent ones. Takes a positive integer argument. Defaults to
-          10.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>-o</option></term>
-        <term><option>--output=</option></term>
-
-        <listitem>
-          <para>When used with <command>status</command>, controls the
-          formatting of the journal entries that are shown. For the
-          available choices, see
-          <citerefentry><refentrytitle>journalctl</refentrytitle><manvolnum>1</manvolnum></citerefentry>.
-          Defaults to <literal>short</literal>.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term><option>--plain</option></term>
-
-        <listitem>
-          <para>When used with <command>list-dependencies</command>,
-          the output is printed as a list instead of a tree.</para>
+          <para>Can be one of system, global or user. Defaults to system, AKA
+          for system-wide managers. Equivalent to --system, --global and --user
+          options in upstream systemd.</para>
         </listitem>
       </varlistentry>
 
@@ -513,8 +253,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
           <term><command>list-units</command></term>
 
           <listitem>
-            <para>List known units (subject to limitations specified
-            with <option>-t</option>).</para>
+            <para>List known units.</para>
 
             <para>This is the default command.</para>
           </listitem>
@@ -538,9 +277,6 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
             Note: because the addresses might contains spaces, this output
             is not suitable for programmatic consumption.
             </para>
-
-            <para>See also the options <option>--show-types</option>,
-            <option>--all</option>, and <option>--failed</option>.</para>
           </listitem>
         </varlistentry>
 
@@ -656,9 +392,7 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
 
           <listitem>
             <para>Check whether any of the specified units are active
-            (i.e. running). Returns an exit code 0 if at least one is
-            active, non-zero otherwise. Unless <option>--quiet</option>
-            is specified, this will also print the current unit state to
+            (i.e. running). This will also print the current unit state to
             STDOUT.</para>
           </listitem>
         </varlistentry>
@@ -674,15 +408,11 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><command>status [<replaceable>NAME</replaceable>...|<replaceable>PID</replaceable>...]</command></term>
+          <term><command>status [<replaceable>NAME</replaceable>]</command></term>
 
           <listitem>
             <para>Show terse runtime status information about one or
-            more units, followed by most recent log data from the
-            journal. If no units are specified, show all units (subject
-            to limitations specified with <option>-t</option>). If a PID
-            is passed, show information about the unit the process
-            belongs to.</para>
+            more units.</para>
 
             <para>This function is intended to generate human-readable
             output. If you are looking for computer-parsable output, use
@@ -690,18 +420,11 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
           </listitem>
         </varlistentry>
         <varlistentry>
-          <term><command>show [<replaceable>NAME</replaceable>...|<replaceable>JOB</replaceable>...]</command></term>
+          <term><command>show [<replaceable>NAME</replaceable>...]</command></term>
 
           <listitem>
-            <para>Show properties of one or more units, jobs, or the
-            manager itself. If no argument is specified, properties of
-            the manager will be shown. If a unit name is specified,
-            properties of the unit is shown, and if a job id is
-            specified, properties of the job is shown. By default, empty
-            properties are suppressed. Use <option>--all</option> to
-            show those too. To select specific properties to show, use
-            <option>--property=</option>. This command is intended to be
-            used whenever computer-parsable output is required. Use
+            <para>Show properties of one or more units, or the manager itself.
+            This command is intended to be used whenever computer-parsable output is required. Use
             <command>status</command> if you are looking for formatted
             human-readable output.</para>
           </listitem>
@@ -723,7 +446,7 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
             next reboot. The syntax of the property assignment follows
             closely the syntax of assignments in unit files.</para>
 
-            <para>Example: <command>systemctl set-property foobar.service CPUShares=777</command></para>
+            <para>Example: <command>systemctl set-property foobar.service CPUShares 777</command></para>
 
             <para>Note that this command allows changing multiple
             properties at the same time, which is preferable over
@@ -734,27 +457,15 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
         </varlistentry>
 
         <varlistentry>
-          <term><command>help <replaceable>NAME</replaceable>...|<replaceable>PID</replaceable>...</command></term>
+          <term><command>reset-failed</command></term>
 
           <listitem>
-            <para>Show manual pages for one or more units, if
-            available. If a PID is given, the manual pages for the unit
-            the process belongs to are shown.</para>
-          </listitem>
-        </varlistentry>
-
-        <varlistentry>
-          <term><command>reset-failed [<replaceable>NAME</replaceable>...]</command></term>
-
-          <listitem>
-            <para>Reset the <literal>failed</literal> state of the
-            specified units, or if no unit name is passed, reset the state of all
+            <para>Reset the <literal>failed</literal> state of all
             units. When a unit fails in some way (i.e. process exiting
             with non-zero error code, terminating abnormally or timing
             out), it will automatically enter the
             <literal>failed</literal> state and its exit code and status
-            is recorded for introspection by the administrator until the
-            service is restarted or reset with this command.</para>
+            is recorded for introspection by the administrator.</para>
           </listitem>
         </varlistentry>
 
@@ -763,11 +474,7 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
 
           <listitem>
             <para>Shows required and wanted units of the specified
-            unit. If no unit is specified,
-            <filename>default.target</filename> is implied. Target units
-            are recursively expanded.  When <option>--all</option> is
-            passed, all other units are recursively expanded as
-            well.</para>
+            unit.</para>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -831,9 +538,7 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
             process (in case of service units), or binds the socket (in
             case of socket units), and so on.</para>
 
-            <para>Depending on whether <option>--system</option>,
-            <option>--user</option>, <option>--runtime</option>,
-            or<option>--global</option>, is specified, this enables the unit
+            <para>Depending on the runtime state or unit file scope given, this enables the unit
             for the system, for the calling user only, for only this boot of
             the system, or for all future logins of all users, or only this
             boot.  Note that in the last case, no systemd daemon
@@ -862,10 +567,8 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
             output may be suppressed by passing <option>--quiet</option>.
             </para>
 
-            <para>This command honors <option>--system</option>,
-            <option>--user</option>, <option>--runtime</option>,
-            <option>--global</option> in a similar way as
-            <command>enable</command>.</para>
+            <para>This command honors unit file scopes, force and runtime
+            in a similar way to <command>enable</command>.</para>
           </listitem>
         </varlistentry>
 
@@ -874,10 +577,7 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
 
           <listitem>
             <para>Checks whether any of the specified unit files are
-            enabled (as with <command>enable</command>). Returns an exit
-            code of 0 if at least one is enabled, non-zero
-            otherwise. Prints the current enable status. To suppress
-            this output, use <option>--quiet</option>.</para>
+            enabled (as with <command>enable</command>). Prints the current enable status.
           </listitem>
         </varlistentry>
 
@@ -1140,7 +840,7 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
 
           <listitem>
             <para>Shut down and halt the system. This is mostly equivalent to
-            <command>start halt.target --irreversible</command>, but also
+            <command>start halt.target --job-mode=replace=irreversibly</command>, but also
             prints a wall message to all users.  If combined with
             <option>--force</option>, shutdown of all running services is
             skipped, however all processes are killed and all file
@@ -1156,7 +856,7 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
 
           <listitem>
             <para>Shut down and power-off the system. This is mostly
-            equivalent to <command>start poweroff.target --irreversible</command>,
+            equivalent to <command>start poweroff.target --job-mode=replace-irreversibly</command>,
             but also prints a wall message to all users. If combined with
             <option>--force</option>, shutdown of all running services is
             skipped, however all processes are killed and all file
@@ -1172,7 +872,7 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
 
           <listitem>
             <para>Shut down and reboot the system. This is mostly
-            equivalent to <command>start reboot.target --irreversible</command>,
+            equivalent to <command>start reboot.target --job-mode=replace-irreversibly</command>,
             but also prints a wall message to all users. If combined with
             <option>--force</option>, shutdown of all running services is
             skipped, however all processes are killed and all file
@@ -1188,7 +888,7 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
 
           <listitem>
             <para>Shut down and reboot the system via kexec. This is
-            mostly equivalent to <command>start kexec.target --irreversible</command>,
+            mostly equivalent to <command>start kexec.target --job-mode=replace-irreversibly</command>,
             but also prints a wall message to all users. If combined
             with <option>--force</option>, shutdown of all running
             services is skipped, however all processes are killed and
@@ -1202,8 +902,8 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
           <listitem>
             <para>Ask the systemd manager to quit. This is only
             supported for user service managers (i.e. in conjunction
-            with the <option>--user</option> option) and will fail
-            otherwise.</para>
+            with the <option>--user</option> option), or non-PID1 system managers,
+            and will fail otherwise.</para>
           </listitem>
 
         </varlistentry>
@@ -1247,23 +947,12 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
             the path to the new system manager binary below it to
             execute as PID 1. If the latter is omitted or the empty
             string, a systemd binary will automatically be searched for
-            and used as init. If the system manager path is omitted or
-            equal to the empty string, the state of the initrd's system
-            manager process is passed to the main system manager, which
-            allows later introspection of the state of the services
-            involved in the initrd boot.</para>
+            and used as init.</para>
           </listitem>
         </varlistentry>
       </variablelist>
     </refsect2>
 
-  </refsect1>
-
-  <refsect1>
-    <title>Exit status</title>
-
-    <para>On success, 0 is returned, a non-zero failure
-    code otherwise.</para>
   </refsect1>
 
   <refsect1>
