@@ -624,18 +624,6 @@ void fifo_control_loop(Manager *m) {
                                 cgroup_set_property(u, c, name, "memory-limit", mode);
                         else if (streq(option, "DevicePolicy"))
                                 cgroup_set_property(u, c, name, "device-policy", mode);
-                } else if (streq("isact", fifobuf)) {
-                        const char *name = "rsync.service";
-                        Unit *u;
-                        const char *active_state;
-
-                        u = manager_get_unit(m, name);
-                        if (!u)
-                                log_error("Unit %s is not loaded.", name);
-                                break;
-
-                        active_state = unit_active_state_to_string(unit_active_state(u));
-                        puts(active_state);
                 } else if (streq("mdump", fifobuf)) {
                         FILE *fil;
                         char *dump = NULL;
