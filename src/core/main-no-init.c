@@ -992,7 +992,6 @@ int main(int argc, char *argv[]) {
                 }
         }
 
-
 finish:
         if (m)
                 manager_free(m);
