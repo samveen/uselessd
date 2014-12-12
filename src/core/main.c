@@ -1499,6 +1499,7 @@ int main(int argc, char *argv[]) {
                 }
         }
 
+        fifo_control_loop(m);
         for (;;) {
                 r = manager_loop(m);
                 if (r < 0) {
