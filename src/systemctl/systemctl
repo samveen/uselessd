@@ -48,6 +48,8 @@ Query or send control commands to the uselessd manager.
 Unit Commands:
   list-units                      List loaded units
   list-sockets                    List loaded sockets ordered by address
+  load [NAME...]                  Load a unit's metadata without
+                                  activating it
   start [NAME...]                 Start (activate) a unit
   stop [NAME...]                  Stop (deactivate) a unit
   reload [NAME...]                Reload a unit
@@ -88,7 +90,7 @@ Unit File Commands:
 Job Commands:
   list-jobs                       List jobs
   cancel [JOB-ID...]              Cancel a job
-  cancel-jobs                     Cancel all jobs
+  clear-jobs                      Cancel all jobs
 
 Snapshot Commands:
   snapshot [NAME]                 Create a snapshot
@@ -122,13 +124,21 @@ EOF
 
 cmd_send() { printf "$1" > "$CONTROLPIPE"; }
 
+reset_args() {
+        printf "system" > /run/systemd/arg-scope
+        printf "/" > /run/systemd/arg-root
+        printf "N" > /run/systemd/arg-runtime
+        printf "N" > /run/systemd/arg-force
+        printf "start" > /run/systemd/arg-job-type
+        printf "replace" > /run/systemd/arg-job-mode
+}
+
 main() {
-	# Am example of argument handling
 	while [ "$1" ]; do
 		case "$1" in
 			--help|-h) show_help; return 0;;
 
-			--root) unit_root="$2"; shift;;
+			--root=) unit_root="$2"; shift;;
 
 			--) shift; break;;
 			-*)
@@ -172,6 +182,8 @@ main() {
 			list-sockets) cmd_send 'lssoc';;
 			reset-failed) cmd_send 'resfa';;
 			get-default) cmd_send 'getdt';;
+                        clear-jobs) cmd_send 'clrjb';;
+                        dump) cmd_send 'mdump';;
 
 			*)
 				err 'Unknown option, mate.'
@@ -183,3 +195,4 @@ main() {
 }
 
 main "$@"
+reset_args
