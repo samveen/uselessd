@@ -101,6 +101,7 @@ static const char *translate_runlevel(int runlevel, bool *isolate) {
         return NULL;
 }
 
+/* TODO: Actually write a control command to the system-wide Manager. */
 static void change_runlevel(Server *s, int runlevel) {
         const char *target;
         JobMode mode;
@@ -108,6 +109,9 @@ static void change_runlevel(Server *s, int runlevel) {
         Job *j;
         Manager *m = NULL;
         int r;
+
+        manager_new(SYSTEMD_SYSTEM, false, &m);
+        manager_startup(m, NULL, NULL);
 
         assert(s);
 
