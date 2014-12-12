@@ -28,16 +28,16 @@ systemctl [OPTIONS...] {COMMAND} ...
 Query or send control commands to the uselessd manager.
 
 -h --help                  Show this help message.
---root PATH                Enable unit files in the specified root directory
---kill-who WHO             Who to send signal to
--s --signal SIGNAL         Which signal to send
---scope UNIT_FILE_SCOPE    Can be one of system (default), global or user
+--root=PATH                Enable unit files in the specified root directory
+--kill-who=WHO             Who to send signal to
+-s --signal=SIGNAL         Which signal to send
+--scope=UNIT_FILE_SCOPE    Can be one of system (default), global or user
                            (latter two are partially equivalent to --global and --user
                            from upstream systemd.)
---job-type TYPE            What type of job for the manager to queue (start, stop, reload, etc.)
+--job-type=TYPE            What type of job for the manager to queue (start, stop, reload, etc.)
                            This is handled automatically by the unit commands, but may be useful
                            manually for debugging.
---job-mode MODE            The mode with which to start the job (replace, fail, isolate, etc.)
+--job-mode=MODE            The mode with which to start the job (replace, fail, isolate, etc.)
                            Once again - handled automatically, may be used for debugging.
                            This option can be equivalent to --irreversible, --fail and
                            --ignore-dependencies from upstream systemd.
@@ -114,7 +114,7 @@ System Commands:
   poweroff                        Shut down and power-off the system
   reboot                          Shut down and reboot the system
   kexec                           Shut down and reboot the system with kexec
-  user-exit                       Request user instance exit
+  exit                            Request user instance exit
   switch-root [ROOT] [INIT]       Change to a different root file system
   suspend                         Suspend the system
   hibernate                       Hibernate the system
@@ -137,9 +137,14 @@ main() {
 	while [ "$1" ]; do
 		case "$1" in
 			--help|-h) show_help; return 0;;
-
-			--root=) unit_root="$2"; shift;;
-
+			--root=) unit_root="$2"; printf "$unit_root" > /run/systemd/arg-root; shift;;
+                        --runtime) printf "Y" > /run/systemd/arg-runtime;;
+                        --force) printf "Y" > /run/systemd/arg-force;;
+                        --scope=) unit_scope="$2"; printf "$unit_scope" > /run/systemd/arg-scope; shift;;
+                        --signal=|-s) kill_sig="$2"; printf "$kill_sig" > $CONTROLFILES/kill-signal; shift;;
+                        --kill-who=) kill_who="$2"; printf "$kill_who" > $CONTROLFILES/kill-who; shift;;
+                        --job-type=) j_type="$2"; printf "$j_type" > /run/systemd/arg-job-type; shift;;
+                        --job-mode) j_mode="$2"; printf "$j_mode" > /run/systemd/arg-job-mode; shift;;
 			--) shift; break;;
 			-*)
 				err "Unrecognized key: $1"
@@ -184,7 +189,62 @@ main() {
 			get-default) cmd_send 'getdt';;
                         clear-jobs) cmd_send 'clrjb';;
                         dump) cmd_send 'mdump';;
-
+                        is-enabled)
+                                printf "$2" > $CONTROLFILES/is-enabled
+                                cmd_send 'isena'
+                                ;;
+                        set-default)
+                                printf "$2" > $CONTROLFILES/set-default-target
+                                cmd_send 'setdt'
+                                ;;
+                        enable)
+                                printf "$2" > $CONTROLFILES/enable
+                                cmd_send 'enabl'
+                                ;;
+                        disable)
+                                printf "$2" > $CONTROLFILES/disable
+                                cmd_send 'disabl'
+                                ;;
+                        reenable)
+                                printf "$2" > $CONTROLFILES/reenable
+                                cmd_send 'reenab'
+                                ;;
+                        preset)
+                                printf "$2" > $CONTROLFILES/preset
+                                cmd_send 'prset'
+                                ;;
+                        mask)
+                                printf "$2" > $CONTROLFILES/mask
+                                cmd_send 'maskf'
+                                ;;
+                        unmask)
+                                printf "$2" > $CONTROLFILES/unmask
+                                cmd_send 'umskf'
+                                ;;
+                        link)
+                                printf "$2" > $CONTROLFILES/link
+                                cmd_send 'linkf'
+                                ;;
+                        snapshot)
+                                printf "$2" > $CONTROLFILES/create-snapshot
+                                cmd_send 'mksnp'
+                                ;;
+                        delete)
+                                printf "$2" > $CONTROLFILES/remove-snapshot
+                                cmd_send 'rmsnp'
+                                ;;
+                        cancel)
+                                printf "$2" > $CONTROLFILES/cancel-job-id
+                                cmd_send 'cnjob'
+                                ;;
+                        set-environment)
+                                printf "$2" > $CONTROLFILES/set-environment
+                                cmd_send 'stenv'
+                                ;;
+                        unset-environment)
+                                printf "$2" > $CONTROLFILES/unset-environment
+                                cmd_send 'usenv'
+                                ;;
 			*)
 				err 'Unknown option, mate.'
 				show_help
