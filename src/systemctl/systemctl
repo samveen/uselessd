@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # vim: softtabstop=8 expandtab
 
 # This file is part of uselessd.
@@ -259,6 +259,70 @@ main() {
                         unset-environment)
                                 printf "$2" > $CONTROLFILES/unset-environment
                                 cmd_send 'usenv'
+                        ;;
+                        load)
+                                printf "$2" > $CONTROLFILES/load
+                                cmd_send 'uload'
+                        ;;
+                        is-active|is-failed)
+
+                        ;;
+                        list-dependencies)
+
+                        ;;
+                        show)
+
+                        ;;
+                        status)
+                                printf "status not yet implemented.\n"
+                        ;;
+                        start)
+                                printf "start" > $RUNTIMEDIR/arg-job-type
+                                printf "$2" > $CONTROLFILES/launch
+                                cmd_send 'start'
+                        ;;
+                        stop)
+                                printf "stop" > $RUNTIMEDIR/arg-job-type
+                                printf "$2" > $CONTROLFILES/launch
+                                cmd_send 'start'
+                        ;;
+                        reload)
+                                printf "reload" > $RUNTIMEDIR/arg-job-type
+                                printf "$2" > $CONTROLFILES/launch
+                                cmd_send 'start'
+                        ;;
+                        restart)
+                                printf "restart" > $RUNTIMEDIR/arg-job-type
+                                printf "$2" > $CONTROLFILES/launch
+                                cmd_send 'start'
+                        ;;
+                        try-restart|condrestart)
+                                printf "try-restart" > $RUNTIMEDIR/arg-job-type
+                                printf "$2" > $CONTROLFILES/launch
+                                cmd_send 'start'
+                        ;;
+                        reload-or-restart)
+                                printf "reload-or-start" > $RUNTIMEDIR/arg-job-type
+                                printf "$2" > $CONTROLFILES/launch
+                                cmd_send 'start'
+                        ;;
+                        reload-or-try-restart|force-reload)
+                        ;;
+                        isolate)
+                                printf "start" > $RUNTIMEDIR/arg-job-type
+                                printf "isolate" > $RUNTIMEDIR/arg-job-mode
+                                printf "$2" > $CONTROLFILES/launch
+                                cmd_send 'start'
+                        ;;
+                        kill)
+                                printf "$2" > $CONTROLFILES/kill
+                                cmd_send 'pkill'
+                        ;;
+                        set-property)
+                                printf "$2" > $CONTROLFILES/set-property-unit
+                                printf "$3" > $CONTROLFILES/set-property-option
+                                printf "$4" > $CONTROLFILES/set-property-value
+                                cmd_send 'setpy'
                         ;;
                         *)
                                 err 'Unknown option, mate.'
