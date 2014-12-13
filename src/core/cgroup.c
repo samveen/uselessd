@@ -389,11 +389,11 @@ static int unit_create_cgroups(Unit *u, CGroupControllerMask mask) {
         r = hashmap_put(u->manager->cgroup_unit, path, u);
         
         if (r == 0) {
-			    was_in_hash = true;
+                was_in_hash = true;
         } else if (r < 0) {
-			    log_error(r == -EEXIST ?
-                              "cgroup %s exists already: %s" : "hashmap_put failed for %s: %s",
-                              path, strerror(-r));
+                log_error(r == -EEXIST ?
+                        "cgroup %s exists already: %s" : "hashmap_put failed for %s: %s",
+                        path, strerror(-r));
                 return r;
         }
 
