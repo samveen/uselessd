@@ -53,6 +53,7 @@
 #include "sd-daemon.h"
 #include "sd-messages.h"
 
+#include "control-request.h"
 #include "mount-setup.h"
 #include "kmod-setup.h"
 #include "fileio.h"
@@ -1108,8 +1109,6 @@ int main(int argc, char *argv[]) {
         usec_t before_startup, after_startup;
         char timespan[FORMAT_TIMESPAN_MAX];
         FDSet *fds = NULL;
-        bool reexecute = false;
-        const char *shutdown_verb = NULL;
         dual_timestamp initrd_timestamp = { 0ULL, 0ULL };
         dual_timestamp userspace_timestamp = { 0ULL, 0ULL };
         dual_timestamp kernel_timestamp = { 0ULL, 0ULL };
@@ -1118,7 +1117,6 @@ int main(int argc, char *argv[]) {
         int j;
         bool loaded_policy = false;
         bool queue_default_job = false;
-        char *switch_root_dir = NULL, *switch_root_init = NULL;
         static struct rlimit saved_rlimit_nofile = { 0, 0 };
 
 #ifdef HAVE_SYSV_COMPAT
