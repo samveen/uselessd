@@ -288,7 +288,6 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
             into the Manager, but doesn't actually activate anything.</para>
           </listitem>
         </varlistentry>
-        <varlistentry>
 
         <varlistentry>
           <term><command>start <replaceable>NAME</replaceable>...</command></term>
@@ -588,6 +587,7 @@ kobject-uevent 1 systemd-udevd-kernel.socket systemd-udevd.service
           <listitem>
             <para>Checks whether any of the specified unit files are
             enabled (as with <command>enable</command>). Prints the current enable status.
+            </para>
           </listitem>
         </varlistentry>
 
