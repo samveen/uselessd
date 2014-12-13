@@ -1,4 +1,6 @@
 #!/bin/sh
+# vim: softtabstop=8 expandtab
+
 # This file is part of uselessd.
 
 # Copyright 2014 The Initfinder General
@@ -16,8 +18,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with uselessd; If not, see <http://www.gnu.org/licenses/>.
 
-CONTROLPIPE='/run/systemd/fifoctl'
-CONTROLFILES='/run/systemd/manager'
+RUNTIMEDIR='/run/systemd'
+CONTROLPIPE="${RUNTIMEDIR}/fifoctl"
+CONTROLFILES="${RUNTIMEDIR}/manager"
 
 err() { echo "$1" >&2; }
 
@@ -134,124 +137,136 @@ reset_args() {
 }
 
 main() {
-	while [ "$1" ]; do
-		case "$1" in
-			--help|-h) show_help; return 0;;
-			--root=) unit_root="$2"; printf "$unit_root" > /run/systemd/arg-root; shift;;
-                        --runtime) printf "Y" > /run/systemd/arg-runtime;;
-                        --force) printf "Y" > /run/systemd/arg-force;;
-                        --scope=) unit_scope="$2"; printf "$unit_scope" > /run/systemd/arg-scope; shift;;
-                        --signal=|-s) kill_sig="$2"; printf "$kill_sig" > $CONTROLFILES/kill-signal; shift;;
-                        --kill-who=) kill_who="$2"; printf "$kill_who" > $CONTROLFILES/kill-who; shift;;
-                        --job-type=) j_type="$2"; printf "$j_type" > /run/systemd/arg-job-type; shift;;
-                        --job-mode) j_mode="$2"; printf "$j_mode" > /run/systemd/arg-job-mode; shift;;
-			--) shift; break;;
-			-*)
-				err "Unrecognized key: $1"
-				show_help
-				return 1
-			;;
-			*) break;;
-		esac
-		shift
-	done
+        while [ "$1" ]; do
+                case "$1" in
+                        --help|-h) show_help; return 0;;
 
-	[ -p $CONTROLPIPE ] || {
-		err "Control pipe does not exist in /run."
-		return 1
-	}
+                        --runtime) flag_runtime='1';;
+                        --force) flag_force='1';;
+                        --job-mode=*) j_mode="${1#*=}";;
+                        --root=*) unit_root="${1#*=}";;
+                        --scope=*) unit_scope="${1#*=}";;
+                        --signal=*) kill_sig="${1#*=}";;
+                        -s) kill_sig="$2";;
+                        --kill-who=*) kill_who="${1#*=}";;
+                        --job-type=*) j_type="${1#*=}";;
 
-	# Imperative programming. Never again.
-	for i in "$@"
-	do
-		case "$i" in
-			default) cmd_send 'deflt';;
-			rescue) cmd_send 'rescu';;
-			emergency) cmd_send 'emerg';;
-			halt) cmd_send 'halts';;
-			poweroff) cmd_send 'powff';;
-			reboot) cmd_send 'rboot';;
-			kexec) cmd_send 'kexec';;
-			\exit)\
+                        --) shift; break;;
+                        -*)
+                                err "Unrecognized key: $1"
+                                show_help
+                                return 1
+                        ;;
+                        *) break;;
+                esac
+                shift
+        done
+
+        [ -p $CONTROLPIPE ] || {
+                err "Control pipe does not exist in /run."
+                return 1
+        }
+
+        [[ "$flag_runtime" ]] && { printf "Y" > "${RUNTIMEDIR}/arg-runtime"; }
+        [[ "$flag_force" ]] && { printf "Y" > "${RUNTIMEDIR}/arg-force"; }
+        [[ "$j_type" ]] && { printf "$j_type" > "${RUNTIMEDIR}/arg-job-type"; }
+        [[ "$j_mode" ]] && { printf "$j_mode" > "${RUNTIMEDIR}/arg-job-mode"; }
+        [[ "$unit_root" ]] && { printf "$unit_root" > "${RUNTIMEDIR}/arg-root"; }
+        [[ "$unit_scope" ]] && { printf "$unit_scope" > "${RUNTIMEDIR}/arg-scope"; }
+        [[ "$kill_sig" ]] && { printf "$kill_sig" > "${CONTROLFILES}/kill-signal"; }
+        [[ "$kill_who" ]] && { printf "$kill_who" > "${CONTROLFILES}/kill-who"; }
+
+        # Imperative programming. Never again.
+        for i in "$@"; do
+                case "$i" in
+                        default) cmd_send 'deflt';;
+                        rescue) cmd_send 'rescu';;
+                        emergency) cmd_send 'emerg';;
+                        halt) cmd_send 'halts';;
+                        poweroff) cmd_send 'powff';;
+                        reboot) cmd_send 'rboot';;
+                        kexec) cmd_send 'kexec';;
+                        \exit)\
                                 cmd_send 'mexit';;
-			switch-root) :;;
-			suspend) cmd_send 'suspn';;
-			hibernate) cmd_send 'hiber';;
-			hybrid-sleep) cmd_send 'hybsl';;
-			daemon-reload) cmd_send 'rload';;
-			daemon-reexec) cmd_send 'rexec';;
-			show-environment) cmd_send 'lsenv';;
-			list-jobs) cmd_send 'lsjob';;
-			list-unit-files) cmd_send 'lsunf';;
-			list-units) cmd_send 'lsuni';;
-			list-sockets) cmd_send 'lssoc';;
-			reset-failed) cmd_send 'resfa';;
-			get-default) cmd_send 'getdt';;
+                        switch-root) :;;
+                        suspend) cmd_send 'suspn';;
+                        hibernate) cmd_send 'hiber';;
+                        hybrid-sleep) cmd_send 'hybsl';;
+                        daemon-reload) cmd_send 'rload';;
+                        daemon-reexec) cmd_send 'rexec';;
+                        show-environment) cmd_send 'lsenv';;
+                        list-jobs) cmd_send 'lsjob';;
+                        list-unit-files) cmd_send 'lsunf';;
+                        list-units) cmd_send 'lsuni';;
+                        list-sockets) cmd_send 'lssoc';;
+                        reset-failed) cmd_send 'resfa';;
+                        get-default) cmd_send 'getdt';;
                         clear-jobs) cmd_send 'clrjb';;
                         dump) cmd_send 'mdump';;
+
                         is-enabled)
                                 printf "$2" > $CONTROLFILES/is-enabled
                                 cmd_send 'isena'
-                                ;;
+                        ;;
                         set-default)
                                 printf "$2" > $CONTROLFILES/set-default-target
                                 cmd_send 'setdt'
-                                ;;
+                        ;;
                         enable)
                                 printf "$2" > $CONTROLFILES/enable
                                 cmd_send 'enabl'
-                                ;;
+                        ;;
                         disable)
                                 printf "$2" > $CONTROLFILES/disable
                                 cmd_send 'disabl'
-                                ;;
+                        ;;
                         reenable)
                                 printf "$2" > $CONTROLFILES/reenable
                                 cmd_send 'reenab'
-                                ;;
+                        ;;
                         preset)
                                 printf "$2" > $CONTROLFILES/preset
                                 cmd_send 'prset'
-                                ;;
+                        ;;
                         mask)
                                 printf "$2" > $CONTROLFILES/mask
                                 cmd_send 'maskf'
-                                ;;
+                        ;;
                         unmask)
                                 printf "$2" > $CONTROLFILES/unmask
                                 cmd_send 'umskf'
-                                ;;
+                        ;;
                         link)
                                 printf "$2" > $CONTROLFILES/link
                                 cmd_send 'linkf'
-                                ;;
+                        ;;
                         snapshot)
                                 printf "$2" > $CONTROLFILES/create-snapshot
                                 cmd_send 'mksnp'
-                                ;;
+                        ;;
                         delete)
                                 printf "$2" > $CONTROLFILES/remove-snapshot
                                 cmd_send 'rmsnp'
-                                ;;
+                        ;;
                         cancel)
                                 printf "$2" > $CONTROLFILES/cancel-job-id
                                 cmd_send 'cnjob'
-                                ;;
+                        ;;
                         set-environment)
                                 printf "$2" > $CONTROLFILES/set-environment
                                 cmd_send 'stenv'
-                                ;;
+                        ;;
                         unset-environment)
                                 printf "$2" > $CONTROLFILES/unset-environment
                                 cmd_send 'usenv'
-                                ;;
-			*)
-				err 'Unknown option, mate.'
-				show_help
-				return 1
-			;;
-		esac
-	done
+                        ;;
+                        *)
+                                err 'Unknown option, mate.'
+                                show_help
+                                return 1
+                        ;;
+                esac
+        done
 }
 
 main "$@"
