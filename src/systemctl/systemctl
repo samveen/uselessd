@@ -265,16 +265,35 @@ main() {
                                 cmd_send 'uload'
                         ;;
                         is-active|is-failed)
-
+                                cmd_send 'mdump'
+                                cat $RUNTIMEDIR/manager-unit-dump |
+                                        grep -A 15 "Unit $2" |
+                                        sed -n -e 's/^.*Unit Active State: //p'
+                                break
                         ;;
                         list-dependencies)
-
+                                cmd_send 'mdump'
+                                awk '/Unit '$2'/,/--delimiter--/' $RUNTIMEDIR/manager-unit-dump |
+                                        grep -e "Requires" -e "RequiresOverridable" \
+                                        -e "Requisite" -e "RequisiteOverridable" \
+                                        -e "Wants" -e "BindsTo" -e "PartOf" -e "RequiredBy" \
+                                        -e "RequiredByOverridable" -e "WantedBy" \
+                                        -e "BoundBy" -e "ConsistsOf" -e "Conflicts" \
+                                        -e "ConflictedBy" -e "Before" -e "After" \
+                                        -e "OnFailure" -e "Triggers" -e "TriggeredBy" \
+                                        -e "PropagatesReloadTo" -e "PropagatesReloadFrom" \
+                                        -e "References" -e "ReferencedBy"
+                                break
                         ;;
                         show)
-
+                                cmd_send 'mdump'
+                                awk '/Unit '$2'/,/--delimiter--/' $RUNTIMEDIR/manager-unit-dump |
+                                        sed '/--delimiter--/d'
+                                break
                         ;;
                         status)
                                 printf "status not yet implemented.\n"
+                                return 1
                         ;;
                         start)
                                 printf "start" > $RUNTIMEDIR/arg-job-type
