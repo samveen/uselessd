@@ -625,28 +625,8 @@ void fifo_control_loop(Manager *m) {
                         else if (streq(option, "DevicePolicy"))
                                 cgroup_set_property(u, c, name, "device-policy", mode);
                 } else if (streq("mdump", fifobuf)) {
-                        FILE *fil;
-                        char *dump = NULL;
-                        size_t size;
-
-                        if (!(fil = open_memstream(&dump, &size))) {
-                                log_warning("Failed to allocate memory stream.");
-                                break;
-                        }
-
-                        manager_dump_units(m, fil, "\t");
-                        manager_dump_jobs(m, fil, "\t");
-
-                        if (ferror(fil)) {
-                                fclose(fil);
-                                free(dump);
-                                log_warning("Failed to write status stream");
-                                break;
-                        }
-
-                        fclose(fil);
-                        log_dump(LOG_INFO, dump);
-                        free(dump);
+                        manager_dump_units(m, NULL, "\t");
+                        manager_dump_jobs(m, NULL, "\t");
                 } else {
                         log_error("Unknown control command.");
                 }

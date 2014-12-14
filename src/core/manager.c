@@ -1079,25 +1079,47 @@ int manager_load_unit(
 void manager_dump_jobs(Manager *s, FILE *f, const char *prefix) {
         Iterator i;
         Job *j;
+        FILE *fil;
 
         assert(s);
-        assert(f);
+
+        fil = fopen("/run/systemd/manager-job-dump", "w");
+        if (ferror(fil)) {
+                fclose(fil);
+                log_warning("Failed to write job dump to file.");
+        }
 
         HASHMAP_FOREACH(j, s->jobs, i)
-                job_dump(j, f, prefix);
+                job_dump(j, fil, prefix);
+
+        log_info("Jobs written to /run/systemd/manager-job-dump.");
+
+        fflush(fil);
+        fclose(fil);
 }
 
 void manager_dump_units(Manager *s, FILE *f, const char *prefix) {
         Iterator i;
         Unit *u;
         const char *t;
+        FILE *fil;
 
         assert(s);
-        assert(f);
+
+        fil = fopen("/run/systemd/manager-unit-dump", "w");
+        if (ferror(fil)) {
+                fclose(fil);
+                log_warning("Failed to write unit dump to file.");
+        }
 
         HASHMAP_FOREACH_KEY(u, t, s->units, i)
                 if (u->id == t)
-                        unit_dump(u, f, prefix);
+                        unit_dump(u, fil, prefix);
+
+        log_info("Units written to /run/systemd/manager-unit-dump.");
+
+        fflush(fil);
+        fclose(fil);
 }
 
 void manager_clear_jobs(Manager *m) {
