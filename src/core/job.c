@@ -280,7 +280,7 @@ void job_dependency_free(JobDependency *l) {
         free(l);
 }
 
-void job_dump(Job *j, FILE*f, const char *prefix) {
+void job_dump(Job *j, FILE *f, const char *prefix) {
         assert(j);
         assert(f);
 
@@ -298,6 +298,8 @@ void job_dump(Job *j, FILE*f, const char *prefix) {
                 prefix, job_state_to_string(j->state),
                 prefix, yes_no(j->override),
                 prefix, yes_no(j->irreversible));
+
+        fprintf(f, "%s\t--delimiter--\n", prefix);
 }
 
 /*

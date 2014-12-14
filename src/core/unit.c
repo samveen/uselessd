@@ -813,6 +813,8 @@ void unit_dump(Unit *u, FILE *f, const char *prefix) {
         if (u->nop_job)
                 job_dump(u->nop_job, f, prefix2);
 
+        fprintf(f, "%s\t--delimiter--\n", prefix);
+
 }
 
 /* Common implementation for multiple backends */
