@@ -173,39 +173,6 @@ void fifo_control_loop(Manager *m) {
                 } else if (streq("lsunf", fifobuf)) {
                         /* currently unsorted */
                         list_unit_files();
-                /* TODO: free jobs */
-                } else if (streq("lsjob", fifobuf)) {
-                        Iterator i;
-                        Job *j;
-                        struct job_info *jobs = NULL;
-                        size_t size = 0, used = 0;
-
-                        HASHMAP_FOREACH(j, m->jobs, i) {
-                                const char *name, *state, *type;
-                                uint32_t id;
-
-                                id = (uint32_t) j->id;
-                                state = job_state_to_string(j->state);
-                                type = job_type_to_string(j->type);
-
-                                if (!GREEDY_REALLOC(jobs, size, used + 1)) {
-                                        log_oom();
-                                }
-
-                                /*
-                                jobs[used++] = (struct job_info) { id,
-                                                                strdup(name),
-                                                                strdup(type),
-                                                                strdup(state) }; */
-
-                                if (!jobs[used-1].name || !jobs[used-1].type || !jobs[used-1].state) {
-                                        log_oom();
-                                        break;
-                                }
-
-                        }
-
-                        list_jobs_print(jobs, used);
                 } else if (streq("cnjob", fifobuf)) {
                         /* TODO: add overflow/errno checks */
                         Job *j;
