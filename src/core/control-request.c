@@ -234,8 +234,6 @@ void fifo_control_loop(Manager *m) {
                         qsort(unit_infos, cnt, sizeof(struct unit_info), compare_unit_info);
 
                         output_units_list(unit_infos, cnt);
-                } else if (streq("lssoc", fifobuf)) {
-                        /* base on lsuni */
                 /* These would be better served by isolating to targets.
                  * Also make sure char *m is a wall message later on. */
                 } else if (streq("powff", fifobuf)) {
