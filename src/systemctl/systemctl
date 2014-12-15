@@ -199,7 +199,19 @@ main() {
                         list-jobs) cmd_send 'mdump' && cat $RUNTIMEDIR/manager-job-dump;;
                         list-unit-files) cmd_send 'lsunf';;
                         list-units) cmd_send 'lsuni';;
-                        list-sockets) cmd_send 'lssoc';;
+                        list-sockets)
+                                cmd_send 'mdump'
+                                UNIT_SOCKETS=$(cat $RUNTIMEDIR/manager-unit-dump | grep 'socket:$' |
+                                                sed 's/.*Unit//' | tr -d ':' )
+                                TRIGGERS_SOCKETS=$(cat $RUNTIMEDIR/manager-unit-dump | grep -A 100 'socket:$' |
+                                                 grep 'Triggers:' | sed 's/.*Triggers://')
+                                LISTEN_SOCKETS=$(cat $RUNTIMEDIR/manager-unit-dump | grep -A 100 'socket:$' |
+                                                 grep 'Listen[DFS]' | sed 's/.*Listen[Datagram|Stream|FIFO]*://')
+                                printf "LISTEN\n----------\n$LISTEN_SOCKETS\n"
+                                printf "UNIT\n----------\n$UNIT_SOCKETS\n"
+                                printf "ACTIVATES\n----------\n$TRIGGERS_SOCKETS\n"
+
+                        ;;
                         reset-failed) cmd_send 'resfa';;
                         get-default) cmd_send 'getdt';;
                         clear-jobs) cmd_send 'clrjb';;
