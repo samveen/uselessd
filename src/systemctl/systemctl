@@ -327,6 +327,10 @@ main() {
                                 cmd_send 'start'
                         ;;
                         reload-or-try-restart|force-reload)
+                                # TODO: Implement reload_if_possible checks in core.
+                                printf "reload-or-start" > $RUNTIMEDIR/arg-job-type
+                                printf "$2" > $CONTROLFILES/launch
+                                cmd_send 'start'
                         ;;
                         isolate)
                                 printf "start" > $RUNTIMEDIR/arg-job-type
