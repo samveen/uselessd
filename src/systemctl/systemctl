@@ -189,7 +189,11 @@ main() {
                         kexec) cmd_send 'kexec';;
                         \exit)\
                                 cmd_send 'mexit';;
-                        switch-root) :;;
+                        switch-root)
+                                printf "$2" > $CONTRLFILES/switch-root-path
+                                printf "$3" > $CONTROLFILES/switch-root-init
+                                cmd_send 'swirt'
+                        ;;
                         suspend) cmd_send 'suspn';;
                         hibernate) cmd_send 'hiber';;
                         hybrid-sleep) cmd_send 'hybsl';;
@@ -220,62 +224,77 @@ main() {
                         is-enabled)
                                 printf "$2" > $CONTROLFILES/is-enabled
                                 cmd_send 'isena'
+                                break
                         ;;
                         set-default)
                                 printf "$2" > $CONTROLFILES/set-default-target
                                 cmd_send 'setdt'
+                                break
                         ;;
                         enable)
                                 printf "$2" > $CONTROLFILES/enable
                                 cmd_send 'enabl'
+                                break
                         ;;
                         disable)
                                 printf "$2" > $CONTROLFILES/disable
-                                cmd_send 'disabl'
+                                cmd_send 'disab'
+                                break
                         ;;
                         reenable)
                                 printf "$2" > $CONTROLFILES/reenable
-                                cmd_send 'reenab'
+                                cmd_send 'reena'
+                                break
                         ;;
                         preset)
                                 printf "$2" > $CONTROLFILES/preset
                                 cmd_send 'prset'
+                                break
                         ;;
                         mask)
                                 printf "$2" > $CONTROLFILES/mask
                                 cmd_send 'maskf'
+                                break
                         ;;
                         unmask)
                                 printf "$2" > $CONTROLFILES/unmask
                                 cmd_send 'umskf'
+                                break
                         ;;
                         link)
                                 printf "$2" > $CONTROLFILES/link
                                 cmd_send 'linkf'
+                                break
                         ;;
                         snapshot)
                                 printf "$2" > $CONTROLFILES/create-snapshot
                                 cmd_send 'mksnp'
+                                break
                         ;;
                         delete)
                                 printf "$2" > $CONTROLFILES/remove-snapshot
                                 cmd_send 'rmsnp'
+                                break
                         ;;
                         cancel)
                                 printf "$2" > $CONTROLFILES/cancel-job-id
                                 cmd_send 'cnjob'
+                                break
                         ;;
                         set-environment)
                                 printf "$2" > $CONTROLFILES/set-environment
                                 cmd_send 'stenv'
+                                break
                         ;;
                         unset-environment)
                                 printf "$2" > $CONTROLFILES/unset-environment
                                 cmd_send 'usenv'
+                                break
                         ;;
                         load)
                                 printf "$2" > $CONTROLFILES/load
                                 cmd_send 'uload'
+                                break
                         ;;
                         is-active|is-failed)
                                 cmd_send 'mdump'
@@ -312,53 +331,63 @@ main() {
                                 printf "start" > $RUNTIMEDIR/arg-job-type
                                 printf "$2" > $CONTROLFILES/launch
                                 cmd_send 'start'
+                                break
                         ;;
                         stop)
                                 printf "stop" > $RUNTIMEDIR/arg-job-type
                                 printf "$2" > $CONTROLFILES/launch
                                 cmd_send 'start'
+                                break
                         ;;
                         reload)
                                 printf "reload" > $RUNTIMEDIR/arg-job-type
                                 printf "$2" > $CONTROLFILES/launch
                                 cmd_send 'start'
+                                break
                         ;;
                         restart)
                                 printf "restart" > $RUNTIMEDIR/arg-job-type
                                 printf "$2" > $CONTROLFILES/launch
                                 cmd_send 'start'
+                                break
                         ;;
                         try-restart|condrestart)
                                 printf "try-restart" > $RUNTIMEDIR/arg-job-type
                                 printf "$2" > $CONTROLFILES/launch
                                 cmd_send 'start'
+                                break
                         ;;
                         reload-or-restart)
                                 printf "reload-or-start" > $RUNTIMEDIR/arg-job-type
                                 printf "$2" > $CONTROLFILES/launch
                                 cmd_send 'start'
+                                break
                         ;;
                         reload-or-try-restart|force-reload)
                                 # TODO: Implement reload_if_possible checks in core.
                                 printf "reload-or-start" > $RUNTIMEDIR/arg-job-type
                                 printf "$2" > $CONTROLFILES/launch
                                 cmd_send 'start'
+                                break
                         ;;
                         isolate)
                                 printf "start" > $RUNTIMEDIR/arg-job-type
                                 printf "isolate" > $RUNTIMEDIR/arg-job-mode
                                 printf "$2" > $CONTROLFILES/launch
                                 cmd_send 'start'
+                                break
                         ;;
                         kill)
                                 printf "$2" > $CONTROLFILES/kill
                                 cmd_send 'pkill'
+                                break
                         ;;
                         set-property)
                                 printf "$2" > $CONTROLFILES/set-property-unit
                                 printf "$3" > $CONTROLFILES/set-property-option
                                 printf "$4" > $CONTROLFILES/set-property-value
                                 cmd_send 'setpy'
+                                break
                         ;;
                         *)
                                 err 'Unknown option, mate.'
