@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # vim: softtabstop=8 expandtab
 
 # This file is part of uselessd.
@@ -138,18 +138,19 @@ reset_args() {
 
 main() {
         while [ "$1" ]; do
+                arg="${1#*=}"
                 case "$1" in
                         --help|-h) show_help; return 0;;
 
                         --runtime) flag_runtime='1';;
                         --force) flag_force='1';;
-                        --job-mode=*) j_mode="${1#*=}";;
-                        --root=*) unit_root="${1#*=}";;
-                        --scope=*) unit_scope="${1#*=}";;
-                        --signal=*) kill_sig="${1#*=}";;
-                        -s) kill_sig="$2";;
-                        --kill-who=*) kill_who="${1#*=}";;
-                        --job-type=*) j_type="${1#*=}";;
+                        --job-mode=*) j_mode="${arg}";;
+                        --root=*) unit_root="${arg}";;
+                        --scope=*) unit_scope="${arg}";;
+                        --signal=*) kill_sig="${arg}";;
+                        -s) kill_sig="$2"; shift;;
+                        --kill-who=*) kill_who="${arg}";;
+                        --job-type=*) j_type="${arg}";;
 
                         --) shift; break;;
                         -*)
@@ -167,14 +168,14 @@ main() {
                 return 1
         }
 
-        [[ "$flag_runtime" ]] && { printf "Y" > "${RUNTIMEDIR}/arg-runtime"; }
-        [[ "$flag_force" ]] && { printf "Y" > "${RUNTIMEDIR}/arg-force"; }
-        [[ "$j_type" ]] && { printf "$j_type" > "${RUNTIMEDIR}/arg-job-type"; }
-        [[ "$j_mode" ]] && { printf "$j_mode" > "${RUNTIMEDIR}/arg-job-mode"; }
-        [[ "$unit_root" ]] && { printf "$unit_root" > "${RUNTIMEDIR}/arg-root"; }
-        [[ "$unit_scope" ]] && { printf "$unit_scope" > "${RUNTIMEDIR}/arg-scope"; }
-        [[ "$kill_sig" ]] && { printf "$kill_sig" > "${CONTROLFILES}/kill-signal"; }
-        [[ "$kill_who" ]] && { printf "$kill_who" > "${CONTROLFILES}/kill-who"; }
+         [ "$flag_runtime" ] && { printf "Y" > "${RUNTIMEDIR}/arg-runtime"; }
+         [ "$flag_force" ] && { printf "Y" > "${RUNTIMEDIR}/arg-force"; }
+         [ "$j_type" ] && { printf "$j_type" > "${RUNTIMEDIR}/arg-job-type"; }
+         [ "$j_mode" ] && { printf "$j_mode" > "${RUNTIMEDIR}/arg-job-mode"; }
+         [ "$unit_root" ] && { printf "$unit_root" > "${RUNTIMEDIR}/arg-root"; }
+         [ "$unit_scope" ] && { printf "$unit_scope" > "${RUNTIMEDIR}/arg-scope"; }
+         [ "$kill_sig" ] && { printf "$kill_sig" > "${CONTROLFILES}/kill-signal"; }
+         [ "$kill_who" ] && { printf "$kill_who" > "${CONTROLFILES}/kill-who"; }
 
         # Imperative programming. Never again.
         for i in "$@"; do
@@ -292,7 +293,7 @@ main() {
                                 break
                         ;;
                         status)
-                                printf "status not yet implemented.\n"
+                                printf "status not yet implemented. Use 'show' for the time being.\n"
                                 return 1
                         ;;
                         start)
@@ -354,3 +355,4 @@ main() {
 
 main "$@"
 reset_args
+return 0
