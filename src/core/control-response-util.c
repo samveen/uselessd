@@ -712,7 +712,6 @@ int cgroup_set_property(
                 if (mode != UNIT_CHECK) {
                         _cleanup_free_ char *buf = NULL;
                         _cleanup_fclose_ FILE *f = NULL;
-                        CGroupBlockIODeviceBandwidth *a;
                         CGroupBlockIODeviceBandwidth *next;
                         size_t size = 0;
 
@@ -789,7 +788,6 @@ int cgroup_set_property(
                 if (mode != UNIT_CHECK) {
                         _cleanup_free_ char *buf = NULL;
                         _cleanup_fclose_ FILE *f = NULL;
-                        CGroupBlockIODeviceWeight *a;
                         size_t size = 0;
 
                         if (n == 0) {
@@ -901,7 +899,6 @@ int cgroup_set_property(
                 if (mode != UNIT_CHECK) {
                         _cleanup_free_ char *buf = NULL;
                         _cleanup_fclose_ FILE *f = NULL;
-                        CGroupDeviceAllow *a;
                         size_t size = 0;
 
                         if (n == 0) {
