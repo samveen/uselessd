@@ -52,8 +52,6 @@ bool test_force(void);
 void unit_file_operation_tango(const char *param, int fifoout);
 void output_unit_file_list(const UnitFileList *units, unsigned c);
 void list_unit_files(void);
-int compare_unit_info(const void *a, const void *b);
-void output_units_list(const struct unit_info *unit_infos, unsigned c);
 void unit_systemctl_status_print(Unit *u);
 int send_shutdownd(usec_t t, char mode, bool dry_run, bool warn, const char *message);
 int cgroup_set_property(Unit *u, CGroupContext *c, const char *name,
