@@ -70,7 +70,6 @@ uselessd System and Service Manager [original description do not steal]
         libkmod >= 14 (optional)
         PAM >= 1.1.2 (optional)
         libaudit (optional)
-        libacl (optional)
         libattr (optional)
         libselinux (optional)
         libpython (optional)
