@@ -184,7 +184,7 @@ bool test_force(void) {
 * or remove entirely.
 * enable_sysv_units()...
 */
-void unit_file_operation_tango(const char *param) {
+void unit_file_operation_tango(const char *param, int fifoout) {
         const char *argroot;
         UnitFileScope argscope;
         bool argruntime;
@@ -193,6 +193,7 @@ void unit_file_operation_tango(const char *param) {
         UnitFileChange *changes;
         unsigned n_changes = 0, ic;
 
+        const char *msg;
         char *p;
         char *s[] = {};
         int r;
@@ -215,11 +216,12 @@ void unit_file_operation_tango(const char *param) {
                 log_error("Failed to get unit file scope from /run/systemd/arg-scope.");
 
         if (streq("get-default-target", param)) {
-                char *default_target = NULL;
+                char *default_target;
 
                 r = unit_file_get_default(argscope, argroot, &default_target);
                 if (default_target)
-                        log_info("%s", default_target);
+                        loop_write(fifoout, default_target, strlen(default_target), false);
+                        loop_write(fifoout, "\n", strlen("\n"), false);
 
         } else if (streq("set-default-target", param)) {
                 k = read_one_line_file("/run/systemd/manager/set-default-target", &p);
@@ -301,8 +303,11 @@ void unit_file_operation_tango(const char *param) {
                 state = unit_file_get_state(argscope, argroot, p);
                 if (state < 0)
                         log_error("Failed to get state for unit file.");
+                        return;
 
-                puts(unit_file_state_to_string(state));
+                msg = unit_file_state_to_string(state);
+                loop_write(fifoout, msg, strlen(msg), false);
+                loop_write(fifoout, "\n", strlen("\n"), false);
 
         } else {
                 log_error("Unknown parameter.");
@@ -319,6 +324,7 @@ void unit_file_operation_tango(const char *param) {
 void output_unit_file_list(const UnitFileList *units, unsigned c) {
         unsigned max_id_len, id_cols, state_cols, n_shown = 0;
         const UnitFileList *u;
+        FILE *f;
 
         max_id_len = sizeof("UNIT FILE")-1;
         state_cols = sizeof("STATE")-1;
@@ -329,6 +335,12 @@ void output_unit_file_list(const UnitFileList *units, unsigned c) {
         }
 
         id_cols = max_id_len;
+
+        f = fopen("/run/systemd/uflist", "w");
+        if (ferror(f)) {
+                fclose(f);
+                log_warning("Failed to write unit file list to file.");
+        }
 
         for (u = units; u < units + c; u++) {
                 _cleanup_free_ char *e = NULL;
@@ -353,12 +365,15 @@ void output_unit_file_list(const UnitFileList *units, unsigned c) {
 
                 e = ellipsize(id, id_cols, 33);
 
-                printf("%-*s %s%-*s%s\n",
+                fprintf(f, "%-*s %s%-*s%s\n",
                        id_cols, e ? e : id,
                        on, state_cols, unit_file_state_to_string(u->state), off);
         }
 
-        printf("\n%u unit files listed.\n", n_shown);
+        fprintf(f, "\n%u unit files listed.\n", n_shown);
+
+        fflush(f);
+        fclose(f);
 }
 
 void list_unit_files(void) {

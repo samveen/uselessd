@@ -49,7 +49,7 @@ KillWho get_kill_who(void);
 int32_t get_kill_signal(void);
 bool test_runtime(void);
 bool test_force(void);
-void unit_file_operation_tango(const char *param);
+void unit_file_operation_tango(const char *param, int fifoout);
 void output_unit_file_list(const UnitFileList *units, unsigned c);
 void list_unit_files(void);
 int compare_unit_info(const void *a, const void *b);
