@@ -565,6 +565,7 @@ finish:
                 manager_free(m);
 
         close(f);
+        close(g);
         unlink_control_fifo();
 
         if (shutdown)
