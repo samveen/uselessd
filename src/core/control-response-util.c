@@ -193,7 +193,7 @@ void unit_file_operation_tango(const char *param, int fifoout) {
         UnitFileChange *changes;
         unsigned n_changes = 0, ic;
 
-        const char *msg;
+        //const char *msg;
         char *p;
         char *s[] = {};
         int r;
@@ -220,8 +220,11 @@ void unit_file_operation_tango(const char *param, int fifoout) {
 
                 r = unit_file_get_default(argscope, argroot, &default_target);
                 if (default_target)
+                        log_info("%s", default_target);
+                /*
                         loop_write(fifoout, default_target, strlen(default_target), false);
                         loop_write(fifoout, "\n", strlen("\n"), false);
+                        */
 
         } else if (streq("set-default-target", param)) {
                 k = read_one_line_file("/run/systemd/manager/set-default-target", &p);
@@ -305,9 +308,12 @@ void unit_file_operation_tango(const char *param, int fifoout) {
                         log_error("Failed to get state for unit file.");
                         return;
 
+                /*
                 msg = unit_file_state_to_string(state);
                 loop_write(fifoout, msg, strlen(msg), false);
                 loop_write(fifoout, "\n", strlen("\n"), false);
+                */
+                puts(unit_file_state_to_string(state));
 
         } else {
                 log_error("Unknown parameter.");
