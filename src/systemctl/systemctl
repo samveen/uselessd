@@ -202,7 +202,16 @@ main() {
                         show-environment) cmd_send 'lsenv';;
                         list-jobs) cmd_send 'mdump' && cat $RUNTIMEDIR/manager-job-dump;;
                         list-unit-files) cmd_send 'lsunf' && cat $RUNTIMEDIR/uflist;;
-                        list-units) cmd_send 'lsuni';;
+                        list-units)
+                                cmd_send 'mdump'
+                                UNIT_NAMES_STATES=$(cat $RUNTIMEDIR/manager-unit-dump | grep 'Unit' |
+                                                sed 's/.*Unit//' | tr -d ':' )
+                                UNIT_DESCRS=$(cat $RUNTIMEDIR/manager-unit-dump | grep 'Description' |
+                                                sed 's/.*Description://' | tr -d ':' )
+                                printf "$UNIT_NAMES_STATES\n" | column -c 100
+                                printf "\n---------------------------\n$UNIT_DESCRS\n"
+                                break
+                        ;;
                         list-sockets)
                                 cmd_send 'mdump'
                                 UNIT_SOCKETS=$(cat $RUNTIMEDIR/manager-unit-dump | grep 'socket:$' |
@@ -217,13 +226,17 @@ main() {
 
                         ;;
                         reset-failed) cmd_send 'resfa';;
-                        get-default) cmd_send 'getdt';;
+                        get-default)
+                                cmd_send 'getdt'
+                                cat $RUNTIMEDIR/fifoout &
+                                break
+                        ;;
                         clear-jobs) cmd_send 'clrjb';;
                         dump) cmd_send 'mdump';;
-
                         is-enabled)
                                 printf "$2" > $CONTROLFILES/is-enabled
                                 cmd_send 'isena'
+                                cat $RUNTIMEDIR/fifoout &
                                 break
                         ;;
                         set-default)
@@ -400,4 +413,5 @@ main() {
 
 main "$@"
 reset_args
+pkill -9 -f 'cat /run/systemd/fifoout'
 return 0
