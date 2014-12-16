@@ -201,7 +201,7 @@ main() {
                         daemon-reexec) cmd_send 'rexec';;
                         show-environment) cmd_send 'lsenv';;
                         list-jobs) cmd_send 'mdump' && cat $RUNTIMEDIR/manager-job-dump;;
-                        list-unit-files) cmd_send 'lsunf';;
+                        list-unit-files) cmd_send 'lsunf' && cat $RUNTIMEDIR/uflist;;
                         list-units) cmd_send 'lsuni';;
                         list-sockets)
                                 cmd_send 'mdump'
