@@ -197,48 +197,6 @@ void fifo_control_loop(Manager *m) {
                         job_finish_and_invalidate(j, JOB_CANCELED, true);
                 } else if (streq("clrjb", fifobuf)) {
                         manager_clear_jobs(m);
-                } else if (streq("lsuni", fifobuf)) {
-                        Iterator i;
-                        Unit *u;
-                        const char *k;
-                        _cleanup_free_ struct unit_info *unit_infos = NULL;
-                        unsigned cnt = 0;
-
-                        HASHMAP_FOREACH_KEY(u, k, m->units, i) {
-                                char *u_path = NULL, *j_path = NULL;
-                                const char *description, *load_state, *active_state, *sub_state, *sjob_type, *following;
-                                uint32_t job_id;
-                                Unit *follow;
-
-                                if (k != u->id)
-                                        continue;
-
-                                description = unit_description(u);
-                                load_state = unit_load_state_to_string(u->load_state);
-                                active_state = unit_active_state_to_string(unit_active_state(u));
-                                sub_state = unit_sub_state_to_string(u);
-
-                                follow = unit_following(u);
-                                following = follow ? follow->id : "";
-
-                                if (u->job) {
-                                        job_id = (uint32_t) u->job->id;
-
-                                        sjob_type = job_type_to_string(u->job->type);
-                                } else {
-                                        job_id = 0;
-                                        j_path = u_path;
-                                        sjob_type = "";
-                                }
-
-                                free(u_path);
-                                if (u->job)
-                                        free(j_path);
-                        }
-
-                        qsort(unit_infos, cnt, sizeof(struct unit_info), compare_unit_info);
-
-                        output_units_list(unit_infos, cnt);
                 /* These would be better served by isolating to targets.
                  * Also make sure char *m is a wall message later on. */
                 } else if (streq("powff", fifobuf)) {
