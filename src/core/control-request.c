@@ -90,7 +90,7 @@ void unlink_control_fifo(void) {
 
 /* Much of this should likely be moved and refactored later on. */
 void fifo_control_loop(Manager *m) {
-        int f, r;
+        int f, r, g;
         char fifobuf[BUFSIZ];
         usec_t when;
         when = now(CLOCK_REALTIME) + USEC_PER_MINUTE;
@@ -103,6 +103,11 @@ void fifo_control_loop(Manager *m) {
         f = open("/run/systemd/fifoctl", O_RDWR);
         if (f < 0) {
                 log_error("Opening fifoctl IPC endpoint failed: %s.", strerror(-f));
+        }
+
+        g = open("/run/systemd/fifoout", O_WRONLY);
+        if (g < 0) {
+                log_error("Opening fifoout IPC response point failed: %s.", strerror(-g));
         }
 
         for (;;) {
@@ -130,7 +135,7 @@ void fifo_control_loop(Manager *m) {
                         unlink_control_fifo();
                         _exit(EXIT_SUCCESS);
                 } else if (streq("getdt", fifobuf)) {
-                        unit_file_operation_tango("get-default-target");
+                        unit_file_operation_tango("get-default-target", g);
                 } else if (streq("lsenv", fifobuf)) {
                         strv_print(m->environment);
                 } else if (streq("stenv", fifobuf)) {
@@ -443,23 +448,23 @@ void fifo_control_loop(Manager *m) {
                 } else if (streq("resfa", fifobuf)) {
                         manager_reset_failed(m);
                 } else if (streq("enabl", fifobuf)) {
-                        unit_file_operation_tango("enable");
+                        unit_file_operation_tango("enable", g);
                 } else if (streq("disab", fifobuf)) {
-                        unit_file_operation_tango("disable");
+                        unit_file_operation_tango("disable", g);
                 } else if (streq("isena", fifobuf)) {
-                        unit_file_operation_tango("is-enabled");
+                        unit_file_operation_tango("is-enabled", g);
                 } else if (streq("reena", fifobuf)) {
-                        unit_file_operation_tango("reenable");
+                        unit_file_operation_tango("reenable", g);
                 } else if (streq("prset", fifobuf)) {
-                        unit_file_operation_tango("preset");
+                        unit_file_operation_tango("preset", g);
                 } else if (streq("maskf", fifobuf)) {
-                        unit_file_operation_tango("mask");
+                        unit_file_operation_tango("mask", g);
                 } else if (streq("umskf", fifobuf)) {
-                        unit_file_operation_tango("unmask");
+                        unit_file_operation_tango("unmask", g);
                 } else if (streq("linkf", fifobuf)) {
-                        unit_file_operation_tango("link");
+                        unit_file_operation_tango("link", g);
                 } else if (streq("setdt", fifobuf)) {
-                        unit_file_operation_tango("set-default-target");
+                        unit_file_operation_tango("set-default-target", g);
                 } else if (streq("mksnp", fifobuf)) {
                         int name;
                         _cleanup_free_ char *p = NULL;
