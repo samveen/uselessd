@@ -39,11 +39,5 @@
 #define _SYSVINIT_FEATURE_ "-SYSVINIT"
 #endif
 
-#ifdef HAVE_ACL
-#define _ACL_FEATURE_ "+ACL"
-#else
-#define _ACL_FEATURE_ "-ACL"
-#endif
-
 #define SYSTEMD_FEATURES \
-        _PAM_FEATURE_ "  " _AUDIT_FEATURE_ " " _SYSVINIT_FEATURE_ " "  _ACL_FEATURE_
+        _PAM_FEATURE_ "  " _AUDIT_FEATURE_ " " _SYSVINIT_FEATURE_
